@@ -1,2 +1,2 @@
 # DDRTMB
-A delay-difference model written in TMB
+A delay-difference model written in RTMB
