@@ -1,0 +1,14 @@
+Package: DDRTMB
+Title: Delay difference model in RTMB
+Authors@R: 
+    c(person("Forrest", "Robyn", , "Robyn.Forrest@dfo-mpo.gc.ca", role = c("aut", "cre")),
+      person("Wor", "Catarina", , "Catarina.Wor@dfo-mpo.gc.ca", role = "aut"))     
+Description: Delay difference model in RTMB.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends: 
+    R (>= 4.0.5)
+Imports:
+    RTMB 
+RoxygenNote: 7.2.3
