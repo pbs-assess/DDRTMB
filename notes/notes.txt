@@ -1,0 +1,21 @@
+Here I are the notes I had with it:
+Attached is the whole iscam folder for the 2020 Pacific Cod update for the 5ABCD stock, including ctl, dat, pfc, rep and mcmc outputs. I removed the iscam exe file.
+ 
+Here is the Science Response:
+https://www.dfo-mpo.gc.ca/csas-sccs/Publications/ScR-RS/2021/2021_002-eng.html
+https://github.com/pbs-assess/pacific-cod-2020
+ 
+And the full 2018 Res Doc with all the model details:
+https://www.dfo-mpo.gc.ca/csas-sccs/Publications/ResDocs-DocRech/2020/2020_070-eng.html
+https://github.com/pbs-assess/pacific-cod-2018
+
+Here I are the notes I had with it:
+Attached is the whole iscam folder for the 2020 Pacific Cod update for the 5ABCD stock, including ctl, dat, pfc, rep and mcmc outputs. I removed the iscam exe file.
+ 
+Here is the Science Response:
+https://www.dfo-mpo.gc.ca/csas-sccs/Publications/ScR-RS/2021/2021_002-eng.html
+https://github.com/pbs-assess/pacific-cod-2020
+ 
+And the full 2018 Res Doc with all the model details:
+https://www.dfo-mpo.gc.ca/csas-sccs/Publications/ResDocs-DocRech/2020/2020_070-eng.html
+https://github.com/pbs-assess/pacific-cod-2018
