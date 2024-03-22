@@ -87,7 +87,9 @@ f<-function(par){
   logFF <- logF[,keyF] # expand F ## still not sure why logF has 6 columns
   F <- exp(logFF) ## probably should call F something other than F, maybe Fmort
 
-  ssb <- ssbFUN(exp(logN),exp(logFF),M,SW,MO,PF,PM)
+
+  ssb <- ssbFUN(exp(logN),exp(logFF),M,SW,MO,PF,PM) ## calculate SSB
+
   jnll <- 0 ## initialize joint neg log likelihood
 
   ## loop over years
