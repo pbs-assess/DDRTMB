@@ -32,7 +32,6 @@ dat$age <-  min(fit$data$minAgePerFleet):max(fit$data$maxAgePerFleet) ## 10 age 
 dat$M <- fit$data$natMor ## M (constant in age and time)
 dat$SW <- fit$data$stockMeanWeight ## Mean weight at age
 dat$MO <- fit$data$propMat ## proportion mature each year
-
 dat$PF <- fit$data$propF ## proportion of Z that is F?? - all zero
 dat$PM <- fit$data$propM ## proportion of Z that is natM??  - all zero
 
@@ -66,8 +65,8 @@ par$missing <- numeric(sum(is.na(dat$logobs))) ## missing is identified in makeA
 par$logN <- matrix(0, nrow=length(dat$year), ncol=length(dat$age)) ## matrix for Na,t initialize at zero
 par$logF <- matrix(0, nrow=length(dat$year), ncol=max(dat$keyF)) ## matrix for Fa,t initialize at zero
 
-## spawning biomass - how does this work bc all the PF and MF are zeros??
-## Maybe because the decay in N is already taken care of in the calc of numbers?
+## spawning biomass - what are PF and PM for?
+## The decay in N is already taken care of in the calc of numbers?
 ## When would you set non-zero values of PF and PM
 ssbFUN <- function(N, F, M, SW, MO, PF, PM){
   rowSums(N*exp(-PF*F-PM*M)*MO*SW)
@@ -87,7 +86,7 @@ f<-function(par){
   sdO <- exp(logsdO) ## sd in observations for each fleet
   logFF <- logF[,keyF] # expand F ## still not sure why logF has 6 columns
   F <- exp(logFF) ## probably should call F something other than F, maybe Fmort
-  ## This ssb calculation must be wrong if PF and PM all 0. The exponent will go to zero
+
   ssb <- ssbFUN(exp(logN),exp(logFF),M,SW,MO,PF,PM)
   jnll <- 0 ## initialize joint neg log likelihood
 
