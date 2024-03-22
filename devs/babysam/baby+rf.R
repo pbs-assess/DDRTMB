@@ -32,12 +32,9 @@ dat$age <-  min(fit$data$minAgePerFleet):max(fit$data$maxAgePerFleet) ## 10 age 
 dat$M <- fit$data$natMor ## M (constant in age and time)
 dat$SW <- fit$data$stockMeanWeight ## Mean weight at age
 dat$MO <- fit$data$propMat ## proportion mature each year
-dat$PF <- fit$data$propF ## proportion female each year - all zero!!
-dat$PM <- fit$data$propM ## proportion male each year - all zero!!
 
-# experiment - set PF and PM to 0.5 - makes quite a difference
-dat$PF <- dat$PF+0.5
-dat$PM <- dat$PM+0.5
+dat$PF <- fit$data$propF ## proportion of Z that is F?? - all zero
+dat$PM <- fit$data$propM ## proportion of Z that is natM??  - all zero
 
 dat$srmode <- 2 ## SR model (0=Random Walk, 1=Ricker, 2=BH)
 dat$fcormode <- 2 ## I think this is switch for autocor in F (0 or not 0, see pars section)
@@ -70,9 +67,10 @@ par$logN <- matrix(0, nrow=length(dat$year), ncol=length(dat$age)) ## matrix for
 par$logF <- matrix(0, nrow=length(dat$year), ncol=max(dat$keyF)) ## matrix for Fa,t initialize at zero
 
 ## spawning biomass - how does this work bc all the PF and MF are zeros??
-## Must be a mistake in dat file
+## Maybe because the decay in N is already taken care of in the calc of numbers?
+## When would you set non-zero values of PF and PM
 ssbFUN <- function(N, F, M, SW, MO, PF, PM){
-  rowSums(N*exp(-PF*F-PM*M)*MO*SW) ## I think this needs an if statement to revert to rowSums(N*exp(-F-M)*MO*SW) if all PF and PM are zero
+  rowSums(N*exp(-PF*F-PM*M)*MO*SW)
 }
 
 f<-function(par){
@@ -225,8 +223,12 @@ opt$objective
 ## looks like there is a stock assessment package for making graphs
 stockassessment::ssbplot(fit)
 sdr<-sdreport(obj)
-plr<-as.list(sdr,report=TRUE, "Est")
-plrsd<-as.list(sdr,report=TRUE, "Std")
+plr<-as.list(sdr,report=TRUE, "Est") # param estimates
+plrsd<-as.list(sdr,report=TRUE, "Std") # param sds
 lines(dat$year, exp(plr$logssb), lwd=3, col="darkred")
 lines(dat$year, exp(plr$logssb-2*plrsd$logssb), lwd=3, col="darkred", lty="dotted")
 lines(dat$year, exp(plr$logssb+2*plrsd$logssb), lwd=3, col="darkred", lty="dotted")
+
+## Look at parameters
+plr
+## Look at Numbers at age
