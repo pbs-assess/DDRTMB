@@ -17,7 +17,7 @@ library(here)
 
 #library(stockassessment)
 #fit<-fitfromweb("NEA_sei_21_v5Reca")
-load(here("Exercises","babysam","files","neasaithe.RData"))
+load(here("devs","babysam","neasaithe.RData"))
 
 ## Data
 dat<-list()
