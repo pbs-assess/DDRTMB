@@ -12,3 +12,4 @@ Depends:
 Imports:
     RTMB 
 RoxygenNote: 7.2.3
+LazyData: true
