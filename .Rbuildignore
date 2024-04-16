@@ -1,4 +1,6 @@
 ^devs$
 ^docs$
 ^LICENSE\.md$
+^DDRTMB\.Rproj$
+^\.Rproj\.user$
 ^data-raw$
