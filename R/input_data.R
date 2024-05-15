@@ -1,10 +1,12 @@
+# TODO: Add descriptions of inputs
+
 #' pcod.dat iscam input file
 #'
 #' Data file used for input for iscam in the Pcod 2020 assessment
 #'
 #' @format ## `pcod2020dat`
 #' A list with 44 items:
-#' \describe{
+#' #' \describe{
 #'   \item{hasGearNames}{}
 #'   \item{gearNames}{Names of the separate gears considered in the model}
 #'   \item{hasAgeCompN}{Logical}
@@ -53,7 +55,7 @@
 #' @source <https://github.com/pbs-assess/pacific-cod-2020>
 "pcod2020dat"
 
- 
+
 
 
 
@@ -83,7 +85,7 @@
 
 
 
- 
+
 
 
 
