@@ -8,7 +8,7 @@
 \subsection{\code{pcod2020dat}}{
 
 A list with 44 items:
-\describe{
+#' \describe{
 \item{hasGearNames}{}
 \item{gearNames}{Names of the separate gears considered in the model}
 \item{hasAgeCompN}{Logical}
