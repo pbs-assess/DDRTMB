@@ -10,7 +10,7 @@
 
 # Authors: Robyn Forrest and Catarina Wor (Pacific Biological Station)
 
-# Date this script started: May 15, 2024
+# Date created: May 15, 2024
 # Last Modified: May 15, 2024
 
 # Notes:
