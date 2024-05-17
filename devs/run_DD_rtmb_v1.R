@@ -34,7 +34,7 @@
 # Put the dat, ctl and pfc stripping below into functions
 # Change parameter values to log
 # TIDY UP the three recruitment parameters - currently set to all be the same as per Paul Starr's request
-
+# Probably don't need all the counters
 
 # Document and build package (these are also buttons in Rstudio)
 #    this will incorporate new functions saved in the R and data folders
@@ -177,7 +177,7 @@ dat$num.mean.weight <- rawdat$num.mean.weight.cv # Number of annual mean weight 
 dat$weight.sig <- rawdat$weight.sig # SD for likelihood for fitting to annual mean weight (one for each series)
 
 # Miscellaneous controls
-ctl$misc      <- rawctl$misc # A matrix 13 x 1 with row names
+ctl$misc      <- rawctl$misc[1:13] # A matrix 13 x 1 with row names
 # 1  -verbose ADMB output (0=off, 1=on)
 # 2  -recruitment model (1=beverton-holt, 2=ricker)
 # 3  -std in observed catches in first phase.
@@ -191,6 +191,27 @@ ctl$misc      <- rawctl$misc # A matrix 13 x 1 with row names
 # 11 -std in deviations for natural mortality
 # 12 -number of estimated nodes for deviations in natural mortality
 # 13 -fraction of total mortality that takes place prior to spawning
+
+# Projection control file
+rawpfc <- pcod2020pfc
+pfc <- list()
+pfc$num.tac <- rawpfc$num.tac # Number of TAC options for decision table projections
+pfc$tac.vec <- rawpfc$tac.vec # TAC options for decision table projections
+pfc$num.ctl.options <- rawpfc$num.ctl.options # Number of options in ctl.options
+pfc$ctl.options <- rawpfc$ctl.options # options for projections: Matrix 1 x 9
+## - 1) Start year for mean natural mortality rate
+## - 2)  Last year for mean natural mortality rate
+
+## - 3) Start year for average fecundity/weight-at-age in projections. CHECK IF USED IN D-D
+## - 4)  Last year for average fecundity/weight-at-age in projections. CHECK IF USED IN D-D
+
+## - 5) Start year for average recruitment period in projections
+## - 6) End year for average recruitment period in projections
+
+## - 7)Short time series: "historical" control points based on biomass and F reconstruction
+## - 8) Long time series:"historical" control points based on biomass and F reconstruction
+
+## - 9) bmin for "minimum biomass from which the stock recovered to above average" for "historical" control points based on biomass and F reconstruction
 
 
 
