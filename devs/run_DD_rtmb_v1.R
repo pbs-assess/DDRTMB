@@ -32,16 +32,20 @@
 # CHECK how to set dat$alloc if more than one commercial gear
 # Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
 # Put the dat, ctl and pfc stripping below into functions
+# Change parameter values to log
+# TIDY UP the three recruitment parameters - currently set to all be the same as per Paul Starr's request
 
-# document and build package (these are also buttons in Rstudio)
-# this will incorporate new functions saved in the R and data folders
+
+# Document and build package (these are also buttons in Rstudio)
+#    this will incorporate new functions saved in the R and data folders
 devtools::document()
 devtools::load_all()
 
 library(tidyverse)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Set up data and parameter controls. Maybe make this a function.
+# Set up data and parameter controls. Better to make this a function, or even just
+#  make it part of the package.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,4 +130,42 @@ dat$meanwtdata  <- dat$meanwtdata %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 rawctl<- pcod2020ctl # this is a list already loaded into the package
 # Strip out anything not needed for this d-d model
+ctl$num.params <- rawctl$num.params # Number of leading parameters to be estimated with priors
+#                                  (does not include nuisance pars like q)
+ctl$params <- rawctl$params # A matrix rawctl$num.params x 7 (with row names)
+# Some of these settings will be redundant in tmb (e.g., lb, ub, phz)?
+# NEED to convert some of these to log space
+# ROWS
+# 1. log_ro = log unfished recruitment
+# 2. steepness = steepness
+# 3. log_m = log natural Mortality
+# 4. log_avrec = log average recruitment (set the same as ro)
+# 5. log_recinit = log average of initial recruitments to fill first year (set the same as ro)
+# 6. rho = EIV: fraction of the total variance associated with observation error
+# 7. kappa (varphi) = EIV: total precision (inverse of variance) of the total error
+# NOTE: For P. cod VARPHI AND RHO ARE FIXED TO make average ratio of sds from the two surveys the same as 2005
 
+# ival = starting value
+# lb = lower bound (not sure if this can be used in tmb)
+# ub = upper bound (not sure if this can be used in tmb)
+# phz = phase of estimation (in ADMB). Won't need this in tmb but need to check how to fix a par
+# prior = prior type:
+#   -0 uniform      (0,0)
+#   -1 normal       (p1=mu,p2=sig)
+#   -2 lognormal    (p1=log(mu),p2=sig)
+#   -3 beta         (p1=alpha,p2=beta)
+#   -4 gamma        (p1=alpha,p2=beta)
+# p1, p2 = prior distribution parameters, see above
+
+# Priors for q
+ctl$num.indices <- dat$nit # this was a separate parameter in iscam - don't use this one, but keep for now
+ctl$surv.q      <- rawctl$surv.q # parameters for priors on q. a matrix 3 x dat$nit with row names
+# ROWS:
+# priortype - see below
+# priormeanlog = mean of prior in log space
+# priorsd = sd of prior
+# Prior type:
+#       0 - uninformative prior
+#       1 - normal prior density for log(q)
+#       2 - random walk in q
+## Need one column for each survey.
