@@ -129,6 +129,7 @@ dat$meanwtdata  <- dat$meanwtdata %>%
 # 2. Parameter controls
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 rawctl<- pcod2020ctl # this is a list already loaded into the package
+ctl <- list()
 # Strip out anything not needed for this d-d model
 ctl$num.params <- rawctl$num.params # Number of leading parameters to be estimated with priors
 #                                  (does not include nuisance pars like q)
@@ -169,3 +170,28 @@ ctl$surv.q      <- rawctl$surv.q # parameters for priors on q. a matrix 3 x dat$
 #       1 - normal prior density for log(q)
 #       2 - random walk in q
 ## Need one column for each survey.
+
+# Controls for fitting mean weight data
+dat$fit.mean.weight <- rawdat$fit.mean.weight # 1 = fit to annual mean weights, 0 = do not fit to annual mean weights
+dat$num.mean.weight <- rawdat$num.mean.weight.cv # Number of annual mean weight series
+dat$weight.sig <- rawdat$weight.sig # SD for likelihood for fitting to annual mean weight (one for each series)
+
+# Miscellaneous controls
+ctl$misc      <- rawctl$misc # A matrix 13 x 1 with row names
+# 1  -verbose ADMB output (0=off, 1=on)
+# 2  -recruitment model (1=beverton-holt, 2=ricker)
+# 3  -std in observed catches in first phase.
+# 4  -std in observed catches in last phase.
+# 5  -Assume unfished equilibrium in first year (0=FALSE, 1=TRUE, 2 = AT EQUILIBRIUM WITH FISHING MORTALITY IN SYR - IMPLEMENTED ONLY IN DELAY DIFF MODEL)
+# 6  -Maternal effects multiplier
+# 7  -Mean fishing mortality for regularizing the estimates of Ft
+# 8  -std in mean fishing mortality in first phase
+# 9  -std in mean fishing mortality in last phase
+# 10 -phase for estimating m_deviations (use -1 to turn off mdevs)
+# 11 -std in deviations for natural mortality
+# 12 -number of estimated nodes for deviations in natural mortality
+# 13 -fraction of total mortality that takes place prior to spawning
+
+
+
+
