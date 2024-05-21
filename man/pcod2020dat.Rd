@@ -7,52 +7,33 @@
 \format{
 \subsection{\code{pcod2020dat}}{
 
-A list with 44 items:
+A list with xx items:
 #' \describe{
-\item{hasGearNames}{}
-\item{gearNames}{Names of the separate gears considered in the model}
-\item{hasAgeCompN}{Logical}
-\item{narea}{number of areas in the assessment}
-\item{ngroup}{number of groups in the assessment}
-\item{nsex}{number of sex in the assessment}
-\item{syr}{start year for the assessment model}
-\item{nyr}{end year for the assessment model}
-\item{sage}{start age of assessment}
-\item{nage}{maximum age in the assessment}
-\item{ngear}{number of gears in the assessment}
-\item{alloc}{allocation of catch between gears}
-\item{linf}{Von Bertallanffy Linf growth parameter estimate}
-\item{k}{Von Bertallanffy k growth parameter estimate}
-\item{to}{Von Bertallanffy t0 parameter estimate}
-\item{lwscal}{length-weight "a" (scale) parameters}
-\item{lwpow}{length-weight "b" (power) parameters}
-\item{age50}{}
-\item{sd50}{}
-\item{usemat}{}
-\item{matvec}{}
-\item{dd.kage}{}
-\item{dd.alpha.g}{}
-\item{dd.rho.g}{}
-\item{dd.wk}{}
-\item{nctobs}{}
-\item{catch}{catch data matrix, 65 rows and 7 columns}
-\item{nit}{number of survey indexes}
-\item{nitnobs}{number of observations for each index of abundance}
-\item{survtype}{}
-\item{indices}{list of length nit including matrices with index of abundance information}
-\item{nagears}{number of gears with age data}
-\item{nagearsvec}{}
-\item{nagearssage}{start age in catch at age data}
-\item{nagearsnage}{start age in catch at age data}
-\item{eff}{effective sample size for age composition}
-\item{agecompflag}{}
-\item{agearsN}{}
-\item{nwttab}{}
-\item{nwtobs}{}
-\item{nmeanwt}{}
-\item{nmeanwtobs}{number of observations for mean weight of the catch}
-\item{meanwtdata}{mean weight of the catch data}
-\item{eof}{end of file check}
+\item{gearNames}{Names of the separate gears considered in the model, includes commercial and survey}
+\item{syr}{Start year of data}
+\item{nyr}{End year of data}
+\item{sage}{Start age -- might not use this, just use kage}
+\item{nage}{Maximum age}
+\item{ngear}{Number of gears, includes commercial and survey}
+\item{alloc}{Allocation of catch between gears, CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey}
+\item{linf}{Growth, von Bertalanffy Linf}
+\item{k}{Growth, von Bertalanffy k}
+\item{to}{Growth, von Bertalanffy t0}
+\item{lwscal}{Length-weight "a" (scale) parameter}
+\item{lwpow}{Length-weight "b" (power) parameter}
+\item{kage}{Knife-edge age-at-recruitment -- should be same as sage}
+\item{alpha.g}{Growth, Ford-Walford alpha}
+\item{rho.g}{Growth, Ford-Walford rho}
+\item{wk}{Weight at age of recruitment}
+\item{nctobs}{Number of catch observations}
+\item{catch}{Catch data matrix, nctobs rows, 4 columns: year, gear, type, value. Type: 1 = catch in weight; 2 = catch in numbers}
+\item{nit}{Number of survey indexes}
+\item{nitnobs}{Number of observations for each index of abundance. A vector of length nit.}
+\item{survtype}{Survey type, a vector of length nit. Type: 1 = survey is proportional to numbers, 2 = survey is proportional to biomass, 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
+\item{indices}{List of length nit of matrices nitnobs\link{i} rows x 5 columns: iyr, it, gear, wt, timing}
+\item{nmeanwt}{Number of mean weight series (if none, must be set to 1 - CAN NOW CHANGE THIS REQUIREMENT)}
+\item{nmeanwtobs}{Number of observations for mean weight of the catch}
+\item{meanwtdata}{Annual commercial mean weights (kg)}
 }
 }
 }
