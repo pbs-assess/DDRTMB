@@ -40,7 +40,7 @@ pcod2020dat$gearNames <- rawpcod2020dat$gearNames # names of the fleets
 pcod2020dat$syr     <- rawpcod2020dat$syr # Start year
 pcod2020dat$nyr     <- rawpcod2020dat$nyr # Final year
 pcod2020dat$sage    <- rawpcod2020dat$sage # Start age
-pcod2020dat$nage    <- rawpcod2020dat$nage # Final age
+pcod2020dat$nage    <- rawpcod2020dat$nage # Max age
 pcod2020dat$ngear   <- rawpcod2020dat$ngear # Number of gears (includes commercial and survey)
 pcod2020dat$alloc   <- rawpcod2020dat$alloc # CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey
 # Fixed parameters
@@ -74,7 +74,7 @@ pcod2020dat$meanwtdata <- rawpcod2020dat$meanwtdata # Annual commercial mean wei
 # Clean up unnecessary data columns
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Catch data: a matrix of pcod2020dat$nctobs x 4
-# Type: 1 = catch in numbers; 2 = catch in weight
+# Type: 1 = catch in weight; 2 = catch in numbers
 # gear is gear index from pcod2020dat$ngear, which includes both catch and surveys
 # If no data, just skip the row for that year
 pcod2020dat$catch  <- pcod2020dat$catch %>%
