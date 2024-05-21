@@ -8,7 +8,7 @@
 \subsection{\code{pcod2020dat}}{
 
 A list with 25 items:
-#' \describe{
+\describe{
 \item{gearNames}{Names of the separate gears considered in the model, includes commercial and survey}
 \item{syr}{Start year of data}
 \item{nyr}{End year of data}
@@ -26,7 +26,17 @@ A list with 25 items:
 \item{rho.g}{Growth, Ford-Walford rho}
 \item{wk}{Weight at age of recruitment}
 \item{nctobs}{Number of catch observations}
-\item{catch}{Catch data matrix, nctobs rows, 4 columns: year, gear, type, value (tonnes). Type: 1 = catch in weight; 2 = catch in numbers}
+\item{catch}{Catch data matrix, nctobs rows, 4 columns:}
+\itemize{
+\item year
+\item gear
+\item type:
+\itemize{
+\item 1 = catch in weight
+\item 2 = catch in numbers
+}
+\item value (tonnes).
+}
 \item{nit}{Number of survey indexes}
 \item{nitnobs}{Number of observations for each index of abundance. A vector of length nit.}
 \item{survtype}{Survey type, a vector of length nit. Type: 1 = survey is proportional to numbers, 2 = survey is proportional to biomass, 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}

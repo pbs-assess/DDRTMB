@@ -6,25 +6,25 @@
 #'
 #' @format ## `pcod2020dat`
 #' A list with 25 items:
-#' #' \describe{
+#'  \describe{
 #'   \item{gearNames}{Names of the separate gears considered in the model, includes commercial and survey}
-#'   \item \code{syr}{Start year of data}
-#'   \item \code{nyr}{End year of data}
-#'   \item \code{sage}{Start age -- might not use this, just use kage}
-#'   \item \code{nage}{Maximum age}
-#'   \item \code{ngear}{Number of gears, includes commercial and survey}
-#'   \item \code{alloc}{Allocation of catch between gears, CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey}
-#'   \item \code{linf}{Growth, von Bertalanffy Linf}
-#'   \item \code{k}{Growth, von Bertalanffy k}
-#'   \item \code{to}{Growth, von Bertalanffy t0}
-#'   \item \code{lwscal}{Length-weight "a" (scale) parameter}
-#'   \item \code{lwpow}{Length-weight "b" (power) parameter}
-#'   \item \code{kage}{Knife-edge age-at-recruitment -- should be same as sage}
-#'   \item \code{alpha.g}{Growth, Ford-Walford alpha}
-#'   \item \code{rho.g}{Growth, Ford-Walford rho}
-#'   \item \code{wk}{Weight at age of recruitment}
-#'   \item \code{nctobs}{Number of catch observations}
-#'   \item \code{catch}{Catch data matrix, nctobs rows, 4 columns:
+#'   \item{syr}{Start year of data}
+#'   \item{nyr}{End year of data}
+#'   \item{sage}{Start age -- might not use this, just use kage}
+#'   \item{nage}{Maximum age}
+#'   \item{ngear}{Number of gears, includes commercial and survey}
+#'   \item{alloc}{Allocation of catch between gears, CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey}
+#'   \item{linf}{Growth, von Bertalanffy Linf}
+#'   \item{k}{Growth, von Bertalanffy k}
+#'   \item{to}{Growth, von Bertalanffy t0}
+#'   \item{lwscal}{Length-weight "a" (scale) parameter}
+#'   \item{lwpow}{Length-weight "b" (power) parameter}
+#'   \item{kage}{Knife-edge age-at-recruitment -- should be same as sage}
+#'   \item{alpha.g}{Growth, Ford-Walford alpha}
+#'   \item{rho.g}{Growth, Ford-Walford rho}
+#'   \item{wk}{Weight at age of recruitment}
+#'   \item{nctobs}{Number of catch observations}
+#'   \item{catch}{Catch data matrix, nctobs rows, 4 columns:}
 #'   \itemize{
 #'     \item year
 #'     \item gear
@@ -35,13 +35,13 @@
 #'    }
 #'     \item value (tonnes).
 #'    }
-#'   \item \code{nit}{Number of survey indexes}
-#'   \item \code{nitnobs}{Number of observations for each index of abundance. A vector of length nit.}
-#'   \item \code{survtype}{Survey type, a vector of length nit. Type: 1 = survey is proportional to numbers, 2 = survey is proportional to biomass, 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
-#'   \item \code{indices}{List of length nit of matrices nitnobs[i] rows x 5 columns: iyr = Survey year, omits missing years, it = survey value, gear = gear index from ngear (includes commercial and surveys), wt = 1/CV (used as precision to multiplicatively weight observations), timing = the fraction of total mortality that has occurred prior to survey. Usually zero.}
-#'   \item \code{nmeanwt}{Number of mean weight series}
-#'   \item \code{nmeanwtobs}{Number of observations for mean weight of the catch}
-#'   \item \code{meanwtdata}{Annual commercial mean weights (kg)}
+#'   \item{nit}{Number of survey indexes}
+#'   \item{nitnobs}{Number of observations for each index of abundance. A vector of length nit.}
+#'   \item{survtype}{Survey type, a vector of length nit. Type: 1 = survey is proportional to numbers, 2 = survey is proportional to biomass, 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
+#'   \item{indices}{List of length nit of matrices nitnobs[i] rows x 5 columns: iyr = Survey year, omits missing years, it = survey value, gear = gear index from ngear (includes commercial and surveys), wt = 1/CV (used as precision to multiplicatively weight observations), timing = the fraction of total mortality that has occurred prior to survey. Usually zero.}
+#'   \item{nmeanwt}{Number of mean weight series}
+#'   \item{nmeanwtobs}{Number of observations for mean weight of the catch}
+#'   \item{meanwtdata}{Annual commercial mean weights (kg)}
 #' }
 #' @source <https://github.com/pbs-assess/pacific-cod-2020>
 "pcod2020dat"
