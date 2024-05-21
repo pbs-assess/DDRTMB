@@ -3,6 +3,8 @@
 # For this first version, this is a ONE group, ONE area, ONE sex model
 # Therefore, we can also strip out a lot of the indexing in the iscam inputs
 
+# ONLY DO THIS ONCE. THE LAST LINE ADDS THE FILTERED INPUTS TO THE PACKAGE #
+
 # Authors: Robyn Forrest and Catarina Wor (Pacific Biological Station)
 
 # Date created: May 15, 2024
@@ -14,17 +16,18 @@ devtools::document()
 devtools::load_all()
 
 library(tidyverse)
+source("devs/load-models.R")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls. Better to make this a function, or even just
 #  make it part of the package.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Read in raw input files
-rawpcod2020dat<-read.data.file("data-raw/pcod.pcod2020dat")
-rawpcod2020ctl<-read.control.file("data-raw/pcod.pcod2020dctl",
+rawpcod2020dat<-read.data.file("data-raw/pcod.dat")
+rawpcod2020ctl<-read.control.file("data-raw/pcod.ctl",
                                num.gears =6,
                                num.age.gears = 1,)
-rawpcod2020pfc<-read.projection.file("data-raw/pcod.pcod2020dpfc")
+rawpcod2020pfc<-read.projection.file("data-raw/pcod.pfc")
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,9 +111,9 @@ pcod2020dat$meanwtdata  <- pcod2020dat$meanwtdata %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pcod2020ctl <- list()
 # Strip out anything not needed for this d-d model
-pcod2020dctl$num.params <- rawpcod2020dctl$num.params # Number of leading parameters to be estimated with priors
+pcod2020ctl$num.params <- rawpcod2020ctl$num.params # Number of leading parameters to be estimated with priors
 #                                  (does not include nuisance pars like q)
-pcod2020dctl$params <- rawpcod2020dctl$params # A matrix rawpcod2020dctl$num.params x 7 (with row names)
+pcod2020ctl$params <- rawpcod2020ctl$params # A matrix rawpcod2020ctl$num.params x 7 (with row names)
 # Some of these settings will be redundant in tmb (e.g., lb, ub, phz)?
 # NEED to convert some of these to log space
 # ROWS
@@ -136,8 +139,8 @@ pcod2020dctl$params <- rawpcod2020dctl$params # A matrix rawpcod2020dctl$num.par
 # p1, p2 = prior distribution parameters, see above
 
 # Priors for q
-pcod2020dctl$num.indices <- pcod2020dat$nit # this was a separate parameter in iscam - don't use this one, but keep for now
-pcod2020dctl$surv.q      <- rawpcod2020dctl$surv.q # parameters for priors on q. a matrix 3 x pcod2020dat$nit with row names
+pcod2020ctl$num.indices <- pcod2020dat$nit # this was a separate parameter in iscam in the ctl file - don't use this one, but keep for now
+pcod2020ctl$surv.q      <- rawpcod2020ctl$surv.q # parameters for priors on q. a matrix 3 x pcod2020dat$nit with row names
 # ROWS:
 # priortype - see below
 # priormeanlog = mean of prior in log space
@@ -149,12 +152,12 @@ pcod2020dctl$surv.q      <- rawpcod2020dctl$surv.q # parameters for priors on q.
 ## Need one column for each survey.
 
 # Controls for fitting mean weight data
-pcod2020dat$fit.mean.weight <- rawpcod2020dat$fit.mean.weight # 1 = fit to annual mean weights, 0 = do not fit to annual mean weights
-pcod2020dat$num.mean.weight <- rawpcod2020dat$num.mean.weight.cv # Number of annual mean weight series
-pcod2020dat$weight.sig <- rawpcod2020dat$weight.sig # SD for likelihood for fitting to annual mean weight (one for each series)
+pcod2020ctl$fit.mean.weight <- rawpcod2020ctl$fit.mean.weight # 1 = fit to annual mean weights, 0 = do not fit to annual mean weights
+pcod2020ctl$num.mean.weight <- rawpcod2020ctl$num.mean.weight.cv # Number of annual mean weight series
+pcod2020ctl$weight.sig <- rawpcod2020ctl$weight.sig # SD for likelihood for fitting to annual mean weight (one for each series)
 
 # Miscellaneous controls
-pcod2020dctl$misc      <- rawpcod2020dctl$misc[1:13] # A matrix 13 x 1 with row names
+pcod2020ctl$misc      <- rawpcod2020ctl$misc[1:13] # A matrix 13 x 1 with row names
 # 1  -verbose ADMB output (0=off, 1=on)
 # 2  -recruitment model (1=beverton-holt, 2=ricker)
 # 3  -std in observed catches in first phase.
@@ -170,11 +173,11 @@ pcod2020dctl$misc      <- rawpcod2020dctl$misc[1:13] # A matrix 13 x 1 with row 
 # 13 -fraction of total mortality that takes place prior to spawning
 
 # Projection control file
-pcod2020dpfc <- list()
-pcod2020dpfc$num.tac <- rawpcod2020dpfc$num.tac # Number of TAC options for decision table projections
-pcod2020dpfc$tac.vec <- rawpcod2020dpfc$tac.vec # TAC options for decision table projections
-pcod2020dpfc$num.pcod2020dctl.options <- rawpcod2020dpfc$num.pcod2020dctl.options # Number of options in pcod2020dctl.options
-pcod2020dpfc$pcod2020dctl.options <- rawpcod2020dpfc$pcod2020dctl.options # options for projections: Matrix 1 x 9
+pcod2020pfc <- list()
+pcod2020pfc$num.tac <- rawpcod2020pfc$num.tac # Number of TAC options for decision table projections
+pcod2020pfc$tac.vec <- rawpcod2020pfc$tac.vec # TAC options for decision table projections
+pcod2020pfc$num.pcod2020ctl.options <- rawpcod2020pfc$num.pcod2020ctl.options # Number of options in pcod2020ctl.options
+pcod2020pfc$pcod2020ctl.options <- rawpcod2020pfc$pcod2020ctl.options # options for projections: Matrix 1 x 9
 ## - 1) Start year for mean natural mortality rate
 ## - 2)  Last year for mean natural mortality rate
 
@@ -190,6 +193,7 @@ pcod2020dpfc$pcod2020dctl.options <- rawpcod2020dpfc$pcod2020dctl.options # opti
 ## - 9) bmin for "minimum biomass from which the stock recovered to above average" for "historical" control points based on biomass and F reconstruction
 
 #save these to a data folder
-usethis::use_data_raw()
-
+usethis::use_data(pcod2020dat, overwrite = TRUE)
+usethis::use_data(pcod2020ctl, overwrite = TRUE)
+usethis::use_data(pcod2020pfc, overwrite = TRUE)
 

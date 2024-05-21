@@ -3,7 +3,7 @@
 \docType{data}
 \name{pcod2020dat}
 \alias{pcod2020dat}
-\title{pcod.dat iscam input file}
+\title{pcod.dat iscam input file, filtered to only include inputs relevant to delay-difference model}
 \format{
 \subsection{\code{pcod2020dat}}{
 
