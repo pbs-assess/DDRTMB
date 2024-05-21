@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{pcod2020dat}}{
 
-A list with xx items:
+A list with 25 items:
 #' \describe{
 \item{gearNames}{Names of the separate gears considered in the model, includes commercial and survey}
 \item{syr}{Start year of data}
@@ -26,12 +26,12 @@ A list with xx items:
 \item{rho.g}{Growth, Ford-Walford rho}
 \item{wk}{Weight at age of recruitment}
 \item{nctobs}{Number of catch observations}
-\item{catch}{Catch data matrix, nctobs rows, 4 columns: year, gear, type, value. Type: 1 = catch in weight; 2 = catch in numbers}
+\item{catch}{Catch data matrix, nctobs rows, 4 columns: year, gear, type, value (tonnes). Type: 1 = catch in weight; 2 = catch in numbers}
 \item{nit}{Number of survey indexes}
 \item{nitnobs}{Number of observations for each index of abundance. A vector of length nit.}
 \item{survtype}{Survey type, a vector of length nit. Type: 1 = survey is proportional to numbers, 2 = survey is proportional to biomass, 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
-\item{indices}{List of length nit of matrices nitnobs\link{i} rows x 5 columns: iyr, it, gear, wt, timing}
-\item{nmeanwt}{Number of mean weight series (if none, must be set to 1 - CAN NOW CHANGE THIS REQUIREMENT)}
+\item{indices}{List of length nit of matrices nitnobs\link{i} rows x 5 columns: iyr = Survey year, omits missing years, it = survey value, gear = gear index from ngear (includes commercial and surveys), wt = 1/CV (used as precision to multiplicatively weight observations), timing = the fraction of total mortality that has occurred prior to survey. Usually zero.}
+\item{nmeanwt}{Number of mean weight series}
 \item{nmeanwtobs}{Number of observations for mean weight of the catch}
 \item{meanwtdata}{Annual commercial mean weights (kg)}
 }
