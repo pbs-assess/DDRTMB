@@ -1,6 +1,6 @@
 # TODO: Add descriptions of inputs
 
-#' pcod.dat iscam input file
+#' pcod.dat iscam input file, filtered to only include inputs relevant to delay-difference model
 #'
 #' Data file used for input for iscam in the Pcod 2020 assessment
 #'

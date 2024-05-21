@@ -1,40 +1,12 @@
-# This is a development script for a delay-difference model in rtmb
-# The first draft attempts to reproduce the iscam delay difference model from
-#   the 2018 Pacific Cod stock assessment for Haida Gwaii/Queen Charlotte
-#   Sound stock in Pacific Canada (Area 5ABCD) [published in 2020]
-
-# **For this first version, this is a ONE group, ONE area, ONE sex model
-# Therefore, we can strip out a lot of the indexing in the iscam inputs**
-
-# Package name: DDRTMB
+# Read in Pacific Cod 2020 assessment inputs (Stock Area 5ABCD)
+# Strip out any inputs that only relate to the iscam age-structured model
+# For this first version, this is a ONE group, ONE area, ONE sex model
+# Therefore, we can also strip out a lot of the indexing in the iscam inputs
 
 # Authors: Robyn Forrest and Catarina Wor (Pacific Biological Station)
 
 # Date created: May 15, 2024
-# Last Modified: May 15, 2024
-
-# Notes:
-# - The iscam input files are already loaded into the package:
-#   1. pcod2020dat (the input data)
-#   2. pcod2020ctl (controls for running the model,
-#      including prior descriptions and misc settings)
-#   3. pcod2020pfc (controls for projections and decision tables)
-#
-# - The input files include some inputs for the iscam age structured model
-#       that are not used in the delay-difference implementation. The input
-#       files will eventually be customised
-# - Iscam uses an errors-in-variables approach to partition observation error,
-#       with multiplicative weighting of each index observation using annual CVs
-# - Want to change this to additive weightings (as per SS3), then also explore
-#       state space options. But first try to reproduce the iscam results!
-
-# TODO:
-# CHECK how to set dat$alloc if more than one commercial gear
-# Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
-# Put the dat, ctl and pfc stripping below into functions
-# Change parameter values to log
-# TIDY UP the three recruitment parameters - currently set to all be the same as per Paul Starr's request
-# Probably don't need all the counters
+# Last Modified: May 21, 2024
 
 # Document and build package (these are also buttons in Rstudio)
 #    this will incorporate new functions saved in the R and data folders
@@ -47,93 +19,98 @@ library(tidyverse)
 # Set up data and parameter controls. Better to make this a function, or even just
 #  make it part of the package.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in raw input files
+rawpcod2020dat<-read.data.file("data-raw/pcod.pcod2020dat")
+rawpcod2020ctl<-read.control.file("data-raw/pcod.pcod2020dctl",
+                               num.gears =6,
+                               num.age.gears = 1,)
+rawpcod2020pfc<-read.projection.file("data-raw/pcod.pcod2020dpfc")
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rawdat<- pcod2020dat # this is a list already loaded into the package
 # Strip out anything not needed for this d-d model
-dat <- list()
-dat$gearNames <- rawdat$gearNames # names of the fleets
+pcod2020dat <- list()
+pcod2020dat$gearNames <- rawpcod2020dat$gearNames # names of the fleets
 # Index markers
-dat$syr     <- rawdat$syr # Start year
-dat$nyr     <- rawdat$nyr # Final year
-dat$sage    <- rawdat$sage # Start age
-dat$nage    <- rawdat$nage # Final age
-dat$ngear   <- rawdat$ngear # Number of gears (includes commercial and survey)
-dat$alloc   <- rawdat$alloc # CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey
+pcod2020dat$syr     <- rawpcod2020dat$syr # Start year
+pcod2020dat$nyr     <- rawpcod2020dat$nyr # Final year
+pcod2020dat$sage    <- rawpcod2020dat$sage # Start age
+pcod2020dat$nage    <- rawpcod2020dat$nage # Final age
+pcod2020dat$ngear   <- rawpcod2020dat$ngear # Number of gears (includes commercial and survey)
+pcod2020dat$alloc   <- rawpcod2020dat$alloc # CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey
 # Fixed parameters
-dat$linf    <- rawdat$linf # Growth linfinity (not sure if used in d-d, has its own growth pars)
-dat$k       <- rawdat$k # Growth vonB K (not sure if used in d-d, has its own growth pars)
-dat$to      <- rawdat$to # Growth t_0 (not sure if used in d-d, has its own growth pars)
-dat$lwscal  <- rawdat$lwscal # Growth L-W a (not sure if used in d-d)
-dat$lwpow   <- rawdat$lwpow # Growth L-W b (not sure if used in d-d)
-dat$kage    <- rawdat$dd.kage # Knife-edge age at recruitment
-dat$alpha.g <- rawdat$dd.alpha.g # Growth Ford-Walford alpha
-dat$rho.g   <- rawdat$dd.rho.g # Growth Ford-Walford rho
-dat$wk      <- rawdat$wk # Weight at age of recruitment
+pcod2020dat$linf    <- rawpcod2020dat$linf # Growth linfinity (not sure if used in d-d, has its own growth pars)
+pcod2020dat$k       <- rawpcod2020dat$k # Growth vonB K (not sure if used in d-d, has its own growth pars)
+pcod2020dat$to      <- rawpcod2020dat$to # Growth t_0 (not sure if used in d-d, has its own growth pars)
+pcod2020dat$lwscal  <- rawpcod2020dat$lwscal # Growth L-W a (not sure if used in d-d)
+pcod2020dat$lwpow   <- rawpcod2020dat$lwpow # Growth L-W b (not sure if used in d-d)
+pcod2020dat$kage    <- rawpcod2020dat$dd.kage # Knife-edge age at recruitment
+pcod2020dat$alpha.g <- rawpcod2020dat$dd.alpha.g # Growth Ford-Walford alpha
+pcod2020dat$rho.g   <- rawpcod2020dat$dd.rho.g # Growth Ford-Walford rho
+pcod2020dat$wk      <- rawpcod2020dat$wk # Weight at age of recruitment
 # Catch and Index observations
 # Catch
 # Unneeded columns removed below. See below for column descriptions.
-dat$nctobs  <- rawdat$nctobs # Number of catch observations
-dat$catch   <- rawdat$catch # Catch observations (tonnes).
+pcod2020dat$nctobs  <- rawpcod2020dat$nctobs # Number of catch observations
+pcod2020dat$catch   <- rawpcod2020dat$catch # Catch observations (tonnes).
 # Survey indices
 # Unneeded columns removed below. See below for column descriptions.
-dat$nit     <- rawdat$nit # Number of surveys
-dat$nitnobs <- rawdat$nitnobs # Number of survey obs (a vector of length dat$nit)
-dat$survtype <- rawdat$survtype # Survey type (a vector of length dat$nit) - see below
-dat$indices <- rawdat$indices # a list of dataframes (n list elements = length dat$nit)
+pcod2020dat$nit     <- rawpcod2020dat$nit # Number of surveys
+pcod2020dat$nitnobs <- rawpcod2020dat$nitnobs # Number of survey obs (a vector of length pcod2020dat$nit)
+pcod2020dat$survtype <- rawpcod2020dat$survtype # Survey type (a vector of length pcod2020dat$nit) - see below
+pcod2020dat$indices <- rawpcod2020dat$indices # a list of dataframes (n list elements = length pcod2020dat$nit)
 # Annual commercial mean weight data
 # Unneeded columns removed below. See below for column descriptions.
-dat$nmeanwt <- rawdat$nmeanwt # Number of mean weight series (if none, must be set to 1 - CAN NOW CHANGE THIS REQUIREMENT)
-dat$nmeanwtobs <- rawdat$nmeanwtobs # Number of mean weight observations
-dat$meanwtdata <- rawdat$meanwtdata # Annual commercial mean weights (kg)
+pcod2020dat$nmeanwt <- rawpcod2020dat$nmeanwt # Number of mean weight series (if none, must be set to 1 - CAN NOW CHANGE THIS REQUIREMENT)
+pcod2020dat$nmeanwtobs <- rawpcod2020dat$nmeanwtobs # Number of mean weight observations
+pcod2020dat$meanwtdata <- rawpcod2020dat$meanwtdata # Annual commercial mean weights (kg)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean up unnecessary data columns
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Catch data: a matrix of dat$nctobs x 4
+# Catch data: a matrix of pcod2020dat$nctobs x 4
 # Type: 1 = catch in numbers; 2 = catch in weight
-# gear is gear index from dat$ngear, which includes both catch and surveys
+# gear is gear index from pcod2020dat$ngear, which includes both catch and surveys
 # If no data, just skip the row for that year
-dat$catch  <- dat$catch %>%
+pcod2020dat$catch  <- pcod2020dat$catch %>%
   as.data.frame() %>%
   select(year, gear, type, value)
 
-# Index data: a list with dat$nit elements, each is a matrix of 1:dat$nitnobs[i] x 5
-# it: Index value. Set type in dat$survtype:
+# Index data: a list with pcod2020dat$nit elements, each is a matrix of 1:pcod2020dat$nitnobs[i] x 5
+# it: Index value. Set type in pcod2020dat$survtype:
 #   1 = survey is proportional to vulnerable numbers
 #   2 = survey is proportional to vulnerable biomass
 #   3 = survey is proportional to spawning biomass (e.g., a spawn survey)
-# gear: gear index from dat$ngear, which includes both catch and surveys.
-#      So if there is one commercial gear then all the survey gears will be 1:dat$nit + 1
+# gear: gear index from pcod2020dat$ngear, which includes both catch and surveys.
+#      So if there is one commercial gear then all the survey gears will be 1:pcod2020dat$nit + 1
 # wt: 1/CV (used as precision to multiplicatively weight observations).
 #     Relative weights for each relative abundance normalized to have a
 #     mean = 1 so rho = sig^2/(sig^2+tau^2) holds true in variance pars.
 # timing: The fraction of total mortality that has occurred prior to survey. Usually zero.
 # If no data, just skip the row for that year
-for(i in 1:dat$nit){
-  dat$indices[[i]] <- dat$indices[[i]] %>%
+for(i in 1:pcod2020dat$nit){
+  pcod2020dat$indices[[i]] <- pcod2020dat$indices[[i]] %>%
     as.data.frame() %>%
     select(iyr, it, gear, wt, timing)
 }
 
-# Annual mean weight data: a matrix of dat$nmeanwtobs x 4
+# Annual mean weight data: a matrix of pcod2020dat$nmeanwtobs x 4
 # Timing should match survey (usually 0)
 # If no data, just skip the row for that year
-dat$meanwtdata  <- dat$meanwtdata %>%
+pcod2020dat$meanwtdata  <- pcod2020dat$meanwtdata %>%
   as.data.frame() %>%
   select(year, meanwt, gear, timing)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Parameter controls
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rawctl<- pcod2020ctl # this is a list already loaded into the package
-ctl <- list()
+pcod2020ctl <- list()
 # Strip out anything not needed for this d-d model
-ctl$num.params <- rawctl$num.params # Number of leading parameters to be estimated with priors
+pcod2020dctl$num.params <- rawpcod2020dctl$num.params # Number of leading parameters to be estimated with priors
 #                                  (does not include nuisance pars like q)
-ctl$params <- rawctl$params # A matrix rawctl$num.params x 7 (with row names)
+pcod2020dctl$params <- rawpcod2020dctl$params # A matrix rawpcod2020dctl$num.params x 7 (with row names)
 # Some of these settings will be redundant in tmb (e.g., lb, ub, phz)?
 # NEED to convert some of these to log space
 # ROWS
@@ -159,8 +136,8 @@ ctl$params <- rawctl$params # A matrix rawctl$num.params x 7 (with row names)
 # p1, p2 = prior distribution parameters, see above
 
 # Priors for q
-ctl$num.indices <- dat$nit # this was a separate parameter in iscam - don't use this one, but keep for now
-ctl$surv.q      <- rawctl$surv.q # parameters for priors on q. a matrix 3 x dat$nit with row names
+pcod2020dctl$num.indices <- pcod2020dat$nit # this was a separate parameter in iscam - don't use this one, but keep for now
+pcod2020dctl$surv.q      <- rawpcod2020dctl$surv.q # parameters for priors on q. a matrix 3 x pcod2020dat$nit with row names
 # ROWS:
 # priortype - see below
 # priormeanlog = mean of prior in log space
@@ -172,12 +149,12 @@ ctl$surv.q      <- rawctl$surv.q # parameters for priors on q. a matrix 3 x dat$
 ## Need one column for each survey.
 
 # Controls for fitting mean weight data
-dat$fit.mean.weight <- rawdat$fit.mean.weight # 1 = fit to annual mean weights, 0 = do not fit to annual mean weights
-dat$num.mean.weight <- rawdat$num.mean.weight.cv # Number of annual mean weight series
-dat$weight.sig <- rawdat$weight.sig # SD for likelihood for fitting to annual mean weight (one for each series)
+pcod2020dat$fit.mean.weight <- rawpcod2020dat$fit.mean.weight # 1 = fit to annual mean weights, 0 = do not fit to annual mean weights
+pcod2020dat$num.mean.weight <- rawpcod2020dat$num.mean.weight.cv # Number of annual mean weight series
+pcod2020dat$weight.sig <- rawpcod2020dat$weight.sig # SD for likelihood for fitting to annual mean weight (one for each series)
 
 # Miscellaneous controls
-ctl$misc      <- rawctl$misc[1:13] # A matrix 13 x 1 with row names
+pcod2020dctl$misc      <- rawpcod2020dctl$misc[1:13] # A matrix 13 x 1 with row names
 # 1  -verbose ADMB output (0=off, 1=on)
 # 2  -recruitment model (1=beverton-holt, 2=ricker)
 # 3  -std in observed catches in first phase.
@@ -193,12 +170,11 @@ ctl$misc      <- rawctl$misc[1:13] # A matrix 13 x 1 with row names
 # 13 -fraction of total mortality that takes place prior to spawning
 
 # Projection control file
-rawpfc <- pcod2020pfc
-pfc <- list()
-pfc$num.tac <- rawpfc$num.tac # Number of TAC options for decision table projections
-pfc$tac.vec <- rawpfc$tac.vec # TAC options for decision table projections
-pfc$num.ctl.options <- rawpfc$num.ctl.options # Number of options in ctl.options
-pfc$ctl.options <- rawpfc$ctl.options # options for projections: Matrix 1 x 9
+pcod2020dpfc <- list()
+pcod2020dpfc$num.tac <- rawpcod2020dpfc$num.tac # Number of TAC options for decision table projections
+pcod2020dpfc$tac.vec <- rawpcod2020dpfc$tac.vec # TAC options for decision table projections
+pcod2020dpfc$num.pcod2020dctl.options <- rawpcod2020dpfc$num.pcod2020dctl.options # Number of options in pcod2020dctl.options
+pcod2020dpfc$pcod2020dctl.options <- rawpcod2020dpfc$pcod2020dctl.options # options for projections: Matrix 1 x 9
 ## - 1) Start year for mean natural mortality rate
 ## - 2)  Last year for mean natural mortality rate
 
@@ -213,6 +189,7 @@ pfc$ctl.options <- rawpfc$ctl.options # options for projections: Matrix 1 x 9
 
 ## - 9) bmin for "minimum biomass from which the stock recovered to above average" for "historical" control points based on biomass and F reconstruction
 
-
+#save these to a data folder
+usethis::use_data_raw()
 
 
