@@ -7,13 +7,12 @@
 \format{
 \subsection{\code{pcod2020pfc}}{
 
-A list with 5 items:
+A list with 4 items:
 \describe{
-\item{num.tac}{}
-\item{tac.vec}{}
-\item{num.ctl.options}{}
+\item{num.tac}{Number of fixed TAC values to be used in projections}
+\item{tac.vec}{The fixed TAC values to loop over in projections}
+\item{num.ctl.options}{Number of control options for projections}
 \item{ctl.options}{}
-\item{eof}{end of file check}
 }
 }
 }

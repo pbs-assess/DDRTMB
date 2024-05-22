@@ -176,8 +176,8 @@ pcod2020ctl$misc      <- rawpcod2020ctl$misc[1:13] # A matrix 13 x 1 with row na
 pcod2020pfc <- list()
 pcod2020pfc$num.tac <- rawpcod2020pfc$num.tac # Number of TAC options for decision table projections
 pcod2020pfc$tac.vec <- rawpcod2020pfc$tac.vec # TAC options for decision table projections
-pcod2020pfc$num.pcod2020ctl.options <- rawpcod2020pfc$num.pcod2020ctl.options # Number of options in pcod2020ctl.options
-pcod2020pfc$pcod2020ctl.options <- rawpcod2020pfc$pcod2020ctl.options # options for projections: Matrix 1 x 9
+pcod2020pfc$num.ctl.options <- rawpcod2020pfc$num.ctl.options # Number of options in pcod2020ctl.options
+pcod2020pfc$ctl.options <- rawpcod2020pfc$ctl.options # options for projections: Matrix 1 x 9
 ## - 1) Start year for mean natural mortality rate
 ## - 2)  Last year for mean natural mortality rate
 

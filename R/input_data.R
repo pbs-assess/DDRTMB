@@ -149,13 +149,12 @@
 #' projection file used for input for iscam in the Pcod 2020 assessment
 #'
 #' @format ## `pcod2020pfc`
-#' A list with 5 items:
+#' A list with 4 items:
 #' \describe{
-#'   \item{num.tac}{}
-#'   \item{tac.vec}{}
-#'   \item{num.ctl.options}{}
+#'   \item{num.tac}{Number of fixed TAC values to be used in projections}
+#'   \item{tac.vec}{The fixed TAC values to loop over in projections}
+#'   \item{num.ctl.options}{Number of control options for projections}
 #'   \item{ctl.options}{}
-#'   \item{eof}{end of file check}
 #' }
 #' @source <https://github.com/pbs-assess/pacific-cod-2020>
 "pcod2020pfc"
