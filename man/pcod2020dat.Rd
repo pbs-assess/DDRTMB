@@ -39,11 +39,31 @@ A list with 25 items:
 }
 \item{nit}{Number of survey indexes}
 \item{nitnobs}{Number of observations for each index of abundance. A vector of length nit.}
-\item{survtype}{Survey type, a vector of length nit. Type: 1 = survey is proportional to numbers, 2 = survey is proportional to biomass, 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
-\item{indices}{List of length nit of matrices nitnobs\link{i} rows x 5 columns: iyr = Survey year, omits missing years, it = survey value, gear = gear index from ngear (includes commercial and surveys), wt = 1/CV (used as precision to multiplicatively weight observations), timing = the fraction of total mortality that has occurred prior to survey. Usually zero.}
+\item{survtype}{Survey type, a vector of length nit.
+Type:
+\itemize{
+\item 1 = survey is proportional to numbers
+\item 2 = survey is proportional to biomass
+\item 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
+}
+\item{indices}{List of length nit of matrices nitnobs\link{i} rows x 5 columns:
+\itemize{
+\item \code{iyr} = Survey year, omits missing years
+\item \code{it} = survey value
+\item \code{gear} = gear index from ngear (includes commercial and surveys)
+\item \code{wt} = 1/CV (used as precision to multiplicatively weight observations)
+\item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero.}
+}
 \item{nmeanwt}{Number of mean weight series}
-\item{nmeanwtobs}{Number of observations for mean weight of the catch}
-\item{meanwtdata}{Annual commercial mean weights (kg)}
+\item{nmeanwtobs}{Number of observations for mean weight of the catch, a vector of length nmeanwt}
+\item{meanwtdata}{Annual commercial mean weights (kg). A matrix with nmeanwt x nmeanwtobs rows x 4 columns:
+\itemize{
+\item \code{year} = Survey year, omits missing years
+\item \code{meanwt} = Mean weight value (kg)
+\item \code{gear} = gear index from ngear (includes commercial and surveys)
+\item \code{wt} = fixed sd to use in likelihood. Usually 0.2 or 0.25, but subject to sensitivity analysis.
+\item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero. Set same as for survey.}
+}
 }
 }
 }
