@@ -25,8 +25,8 @@
 #'   \item{nctobs}{Number of catch observations}
 #'   \item{catch}{Catch data matrix, nctobs rows, 4 columns:}
 #'   \itemize{
-#'     \item year
-#'     \item gear
+#'     \item year = Year
+#'     \item gear = Gear index from ngear
 #'     \item type:
 #'     \itemize{
 #'      \item 1 = catch in weight
@@ -46,18 +46,18 @@
 #'   \item{indices}{List of length nit of matrices nitnobs[i] rows x 5 columns:
 #'     \itemize{
 #'      \item \code{iyr} = Survey year, omits missing years
-#'      \item \code{it} = survey value
-#'      \item \code{gear} = gear index from ngear (includes commercial and surveys)
+#'      \item \code{it} = Survey value
+#'      \item \code{gear} = Gear index from ngear (includes both commercial and surveys)
 #'      \item \code{wt} = 1/CV (used as precision to multiplicatively weight observations)
 #'      \item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero.}
 #'   }
 #'   \item{nmeanwt}{Number of mean weight series}
 #'   \item{nmeanwtobs}{Number of observations for mean weight of the catch, a vector of length nmeanwt}
-#'   \item{meanwtdata}{Annual commercial mean weights (kg). A matrix with nmeanwt x nmeanwtobs rows x 4 columns:
+#'   \item{meanwtdata}{Annual commercial mean weights (kg). A matrix with nmeanwtobs rows x 4 columns:
 #'    \itemize{
-#'      \item \code{year} = Survey year, omits missing years
+#'      \item \code{year} = Year, omits missing years
 #'      \item \code{meanwt} = Mean weight value (kg)
-#'      \item \code{gear} = gear index from ngear (includes commercial and surveys)
+#'      \item \code{gear} = gear index from ngear
 #'      \item \code{wt} = fixed sd to use in likelihood. Usually 0.2 or 0.25, but subject to sensitivity analysis.
 #'      \item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero. Set same as for survey.}
 #'   }
