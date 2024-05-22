@@ -176,21 +176,18 @@ pcod2020ctl$misc      <- rawpcod2020ctl$misc[1:13] # A matrix 13 x 1 with row na
 pcod2020pfc <- list()
 pcod2020pfc$num.tac <- rawpcod2020pfc$num.tac # Number of TAC options for decision table projections
 pcod2020pfc$tac.vec <- rawpcod2020pfc$tac.vec # TAC options for decision table projections
-pcod2020pfc$num.ctl.options <- rawpcod2020pfc$num.ctl.options # Number of options in pcod2020ctl.options
+pcod2020pfc$num.ctl.options <- 7# rawpcod2020pfc$num.ctl.options # Number of options in pcod2020ctl.options
 pcod2020pfc$ctl.options <- rawpcod2020pfc$ctl.options # options for projections: Matrix 1 x 9
 ## - 1) Start year for mean natural mortality rate
 ## - 2)  Last year for mean natural mortality rate
 
-## - 3) Start year for average fecundity/weight-at-age in projections. CHECK IF USED IN D-D
-## - 4)  Last year for average fecundity/weight-at-age in projections. CHECK IF USED IN D-D
+## - 3) Start year for average recruitment period in projections
+## - 4) End year for average recruitment period in projections
 
-## - 5) Start year for average recruitment period in projections
-## - 6) End year for average recruitment period in projections
+## - 5)Short time series: "historical" control points based on biomass and F reconstruction
+## - 6) Long time series:"historical" control points based on biomass and F reconstruction
 
-## - 7)Short time series: "historical" control points based on biomass and F reconstruction
-## - 8) Long time series:"historical" control points based on biomass and F reconstruction
-
-## - 9) bmin for "minimum biomass from which the stock recovered to above average" for "historical" control points based on biomass and F reconstruction
+## - 7) bmin for "minimum biomass from which the stock recovered to above average" for "historical" control points based on biomass and F reconstruction
 
 #save these to a data folder
 usethis::use_data(pcod2020dat, overwrite = TRUE)

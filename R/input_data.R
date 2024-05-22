@@ -154,7 +154,17 @@
 #'   \item{num.tac}{Number of fixed TAC values to be used in projections}
 #'   \item{tac.vec}{The fixed TAC values to loop over in projections}
 #'   \item{num.ctl.options}{Number of control options for projections}
-#'   \item{ctl.options}{}
+#'   \item{ctl.options}{A vector with 7 control options:
+#'    \itemize{
+#'     \item \code{syrmeanm} = Start year for calculating average M
+#'     \item \code{nyrmeanm} = End year for calculating average M
+#'     \item \code{syrmeanrecproj} = Start year for average recruitment period in projections
+#'     \item \code{nyrmeanrecproj} = End year for average recruitment period in projections
+#'     \item \code{shortcntrlpts} = Use short time series for averaging historical reference points (syr-\code{shortcntrlpts})
+#'     \item \code{longcntrlpts} = Use long time series for averaging historical reference points (syr-\code{longcntrlpts})
+#'     \item \code{bmin} = Year of bmin for historical Limit Reference Point (LRP), i.e., year of "minimum biomass from which the stock recovered to above average"
+#'    }
+#'   }
 #' }
 #' @source <https://github.com/pbs-assess/pacific-cod-2020>
 "pcod2020pfc"
