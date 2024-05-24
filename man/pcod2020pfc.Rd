@@ -14,13 +14,13 @@ A list with 4 items:
 \item{num.ctl.options}{Number of control options for projections}
 \item{ctl.options}{A vector with 7 control options:
 \itemize{
-\item \code{syrmeanm} Start year for calculating average M
-\item \code{nyrmeanm} End year for calculating average M
-\item \code{syrmeanrecproj} Start year for average recruitment period in projections
-\item \code{nyrmeanrecproj} End year for average recruitment period in projections
-\item \code{shortcntrlpts} Use short time series for averaging historical reference points (syr-\code{shortcntrlpts})
-\item \code{longcntrlpts} Use long time series for averaging historical reference points (syr-\code{longcntrlpts})
-\item \code{bmin} Year of bmin for historical Limit Reference Point (LRP), i.e., year of "minimum biomass from which the stock recovered to above average"
+\item \code{syrmeanm} = Start year for calculating average M
+\item \code{nyrmeanm} = End year for calculating average M
+\item \code{syrmeanrecproj} = Start year for average recruitment period in projections
+\item \code{nyrmeanrecproj} = End year for average recruitment period in projections
+\item \code{shortcntrlpts} = Use short time series for averaging historical reference points (syr-\code{shortcntrlpts})
+\item \code{longcntrlpts} = Use long time series for averaging historical reference points (syr-\code{longcntrlpts})
+\item \code{bmin} = Year of bmin for historical Limit Reference Point (LRP), i.e., year of "minimum biomass from which the stock recovered to above average"
 }
 }
 }

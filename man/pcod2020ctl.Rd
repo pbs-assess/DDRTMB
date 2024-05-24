@@ -18,7 +18,7 @@ Parameters (rows):
 \item \code{steepness} steepness.
 \item \code{log_m} log natural mortality.
 \item \code{log_avrec} log average recruitment.
-\item \code{log_recinit} log average of initial recruitments to fill first year.
+\item \code{log_recinit} log average of initial recruitments to fill first year if population is not unfished at syr.
 \item \code{rho} EIV: fraction of the total variance associated with observation error.
 \item \code{kappa (varphi)} EIV: total precision (inverse of variance) of the total error.
 }

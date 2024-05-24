@@ -6,13 +6,17 @@
 #' @format ## `pcod2020dat`
 #' A list with 25 items:
 #'  \describe{
-#'   \item{gearNames}{Names of the separate gears considered in the model, includes commercial and survey}
+#'   \item{gearNames}{Names of the separate gears considered in the model, includes fisheries and survey}
 #'   \item{syr}{Start year of data}
 #'   \item{nyr}{End year of data}
 #'   \item{sage}{Start age -- might not use this, just use kage}
 #'   \item{nage}{Maximum age}
-#'   \item{ngear}{Number of gears, includes commercial and survey}
-#'   \item{alloc}{Allocation of catch between gears, CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey}
+#'   \item{ngear}{Number of gears, includes fisheries and survey}
+#'   \item{alloc}{Allocation of catch, a vector of length ngear:
+#'   \itemize{
+#'     \item If fishery: Set to the proportion of each catch taken by that gear (fishery gears must sum to 1)
+#'     \item If survey: 0}
+#'    }
 #'   \item{linf}{Growth, von Bertalanffy Linf}
 #'   \item{k}{Growth, von Bertalanffy k}
 #'   \item{to}{Growth, von Bertalanffy t0}
@@ -47,7 +51,7 @@
 #'     \itemize{
 #'      \item \code{iyr} = Survey year, omits missing years
 #'      \item \code{it} = Survey value
-#'      \item \code{gear} = Gear index from ngear (includes both commercial and surveys)
+#'      \item \code{gear} = Gear index from ngear (includes both fisheries and surveys)
 #'      \item \code{wt} = 1/CV (used as precision to multiplicatively weight observations)
 #'      \item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero.}
 #'   }
@@ -81,7 +85,7 @@
 #'      \item \code{steepness} steepness.
 #'      \item \code{log_m} log natural mortality.
 #'      \item \code{log_avrec} log average recruitment.
-#'      \item \code{log_recinit} log average of initial recruitments to fill first year.
+#'      \item \code{log_recinit} log average of initial recruitments to fill first year if population is not unfished at syr.
 #'      \item \code{rho} EIV: fraction of the total variance associated with observation error.
 #'      \item \code{kappa (varphi)} EIV: total precision (inverse of variance) of the total error.
 #'    }
