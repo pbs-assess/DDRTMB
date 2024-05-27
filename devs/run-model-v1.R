@@ -89,8 +89,10 @@ par$log_avgrec <- pcod2020ctl$params[4,1] # log average recruitment (syr+1 to ny
 par$log_recinit <- pcod2020ctl$params[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
 par$log_rho <- pcod2020ctl$params[6,1] # Errors in Variables: fraction of the total variance associated with observation error
 par$log_kappa <- pcod2020ctl$params[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
-par$log_ft <- matrix(0, nrow=length(dat$year), ncol=nfleet)
-par$log_rt <- vector(length=nyrs-dat$sage) # I think this is length nyrs-sage
+# Check these are dimensioned correctly
+par$log_ft <- matrix(0, nrow=nyrs, ncol=nfleet)
+par$init_log_rec_devs <- rep(0,(dat$nage-dat$sage)) #vector(length=dat$nage - dat$sage) # I think this is length nage-sage
+par$log_rec_devs <- rep(0,nyrs) #vector(length=nyrs)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Model
