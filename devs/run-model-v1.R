@@ -5,6 +5,7 @@
 
 # **For this first version, this is a ONE group, ONE area, ONE sex model
 # Therefore, we can strip out a lot of the indexing in the iscam inputs**
+# M is fixed, not time-varying - adapt later for tvm
 
 # Package name: DDRTMB
 
@@ -33,6 +34,9 @@
 #  - CHECK length of log_rec_devs and log_init_rec_devs
 #  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
 #  - Probably don't need all the counters
+#  - Check that pars list is complete
+#  - Move some of model sections into separate functions
+#  - Implement MCMC
 
 # 2. Potential model changes:
 #  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
@@ -41,7 +45,10 @@
 #  - Look at bias correction (see Thorson and Kristensen paper)
 #  - Look at alternate settings for Errors in Variables (e.g., weights additive instead of multiplicative)
 #  - Look at state-space implementation
-#  - Implement MCMC
+#  - Add time-varying M
+#  - Think about how to make this a multi-species, multi-area model? (MICE)
+#     - Some of the architecture is already in iscam
+
 
 # 3. Graphic outputs and diagnostics
 #  - Work with Sean, Nick, Catarina, others, ... for standardized set of visualizations of outputs and diagnostics
@@ -95,10 +102,11 @@ par <- list()
 par$log_ro <- pcod2020ctl$params[1,1] # log unfished recruitment (syr)
 par$h <- pcod2020ctl$params[2,1] # steepness
 par$log_m <- pcod2020ctl$params[3,1] # log natural mortality
-par$log_avgrec <- pcod2020ctl$params[4,1] # log average recruitment (syr+1 to nyr)
-par$log_recinit <- pcod2020ctl$params[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
-par$log_rho <- pcod2020ctl$params[6,1] # Errors in Variables: fraction of the total variance associated with observation error
-par$log_kappa <- pcod2020ctl$params[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
+# In the current version of the P cod model, these are set the same as ro so do not estimate
+#   par$log_avgrec <- pcod2020ctl$params[4,1] # log average recruitment (syr+1 to nyr)
+#   par$log_recinit <- pcod2020ctl$params[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
+par$rho <- pcod2020ctl$params[6,1] # Errors in Variables: fraction of the total variance associated with observation error
+par$kappa <- pcod2020ctl$params[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
 # TODO: Check these are dimensioned correctly
 par$log_ft <- matrix(0, nrow=nyrs, ncol=nfleet)
 par$init_log_rec_devs <- rep(0,(dat$nage-dat$sage)) #vector(length=dat$nage - dat$sage) # I think this is length nage-sage
@@ -113,20 +121,22 @@ model <- function(par){
 
   getAll(par,dat, pfc)
   jnll <- 0 # initialize joint neg log likelihood
-  pll  <- 0 # initialize prior component of neg log likelihood
-  jnll <- jnll + pll
+  pll  <- 0 # initialize priors component of neg log likelihood
 
   # Pseudocode from iscam
-  # 1 initParameters()
-  # 2 calcTotalMortality_deldiff();
-  # 3 calcNumbersBiomass_deldiff();
-  # 4 calcFisheryObservations_deldiff();
-  # 5 calcSurveyObservations_deldiff();
-  # 6 calcStockRecruitment_deldiff();
-  # 7 calcAnnualMeanWeight_deldiff(); //RF added this for P cod - only gets added to objective function if cntrl(15)==1
-  # 8 calcObjectiveFunction
+  # 1. initParameters()
+  # 2. calcTotalMortality_deldiff()
+  # 3. calcNumbersBiomass_deldiff()
+  # 4. calcFisheryObservations_deldiff()
+  # 5. calcSurveyObservations_deldiff()
+  # 6. calcStockRecruitment_deldiff()
+  # 7. calcAnnualMeanWeight_deldiff() //RF added this for P cod - only gets added to objective function if cntrl(15)==1
+  # 8. calcObjectiveFunction()
 
-  # 1 Initiate parameters
+  # MOVE SOME OF THESE SECTIONS INTO SEPARATE FUNCTIONS
+
+#|---------------------------------------------------------------------|
+  # 1. Initiate parameters
   ro        <- exp(par$log_ro)
   steepness <- par$steepness
   m         <- exp(par$log_m)
@@ -134,13 +144,69 @@ model <- function(par){
   varphi    <- sqrt(1.0/par$log_kappa)
   sig       <- sqrt(rho)*varphi  # elem_prod(sqrt(rho) , varphi)
   tau       <- sqrt(1.0-rho)*varphi # elem_prod(sqrt(1.0-rho) , varphi)
+  Ft        <- exp(log_ft)
 
   # A decision was made in 2018 to fix these two parameters to be the same
   #   as ro (P. Starr). May revisit this later
-  par$log_avrec <- par$log_ro
-  par$log_recinit <- par$log_ro
+  log_avrec <- par$log_ro
+  log_recinit <- par$log_ro
+#|---------------------------------------------------------------------|
 
-  # 2 calcTotalMortality
+#|---------------------------------------------------------------------|
+  # 2. calcTotalMortality_deldiff();
+  # Purpose: This function calculates fishing mortality, total mortality and annual
+  #          survival rates S=exp(-Z) for each year.
+  #          Z also is updated with time-varying natural mortality rates if
+  #          specificed by user.
+  Mt <- rep(m,nyrs) # natural mortality
+  Zt <- Ft+Mt # total mortality
+  surv <- exp(-Zt) # survival rate
+
+#|---------------------------------------------------------------------|
+
+#|---------------------------------------------------------------------|
+  # 3. calcNumbersBiomass_deldiff();
+
+
+#|---------------------------------------------------------------------|
+
+
+#|---------------------------------------------------------------------|
+  # 4. calcFisheryObservations_deldiff();
+
+
+#|---------------------------------------------------------------------|
+
+
+#|---------------------------------------------------------------------|
+# 5. calcSurveyObservations_deldiff()
+
+
+#|---------------------------------------------------------------------|
+
+
+#|---------------------------------------------------------------------|
+# 6. calcStockRecruitment_deldiff();
+
+
+#|---------------------------------------------------------------------|
+
+#|---------------------------------------------------------------------|
+# 7. calcAnnualMeanWeight_deldiff(); //RF added this for P cod - only gets added to objective function if cntrl(15)==1
+
+
+#|---------------------------------------------------------------------|
+
+#|---------------------------------------------------------------------|
+# calcObjectiveFunction();
+
+
+
+
+
+ jnll <- jnll + pll
+#|---------------------------------------------------------------------|
+
 
   jnll # return joint neg log likelihood
 }
