@@ -52,7 +52,7 @@ pcod2020dat$lwpow   <- rawpcod2020dat$lwpow # Growth L-W b (not sure if used in 
 pcod2020dat$kage    <- rawpcod2020dat$dd.kage # Knife-edge age at recruitment
 pcod2020dat$alpha.g <- rawpcod2020dat$dd.alpha.g # Growth Ford-Walford alpha
 pcod2020dat$rho.g   <- rawpcod2020dat$dd.rho.g # Growth Ford-Walford rho
-pcod2020dat$wk      <- rawpcod2020dat$wk # Weight at age of recruitment
+pcod2020dat$wk      <- rawpcod2020dat$dd.wk # Weight at age of recruitment
 # Catch and Index observations
 # Catch
 # Unneeded columns removed below. See below for column descriptions.

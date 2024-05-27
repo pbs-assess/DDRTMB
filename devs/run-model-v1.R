@@ -9,10 +9,10 @@
 
 # Package name: DDRTMB
 
-# Authors: Robyn Forrest and Catarina Wor (Pacific Biological Station)
+# Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station)
 
-# Date created: May 15, 2024
-# Last Modified: May 15, 2024
+# Date created:  May 15, 2024
+# Last Modified: May 27, 2024
 
 # Notes:
 # - The iscam input files are already loaded into the package:
@@ -31,6 +31,7 @@
 
 # TODO (move these to Issues on gitHub repo):
 # 1. Translation of iscam to RTMB:
+#  - CHECK all estimated parameters are included in pars
 #  - CHECK length of log_rec_devs and log_init_rec_devs
 #  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
 #  - Probably don't need all the counters
@@ -98,6 +99,7 @@ fleetindex <- which(dat$alloc>0)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 par <- list()
 # Begin by using initial values specified in pcod2020ctl
+# Check all estimated pars are here
 # Leading parameters
 par$log_ro <- pcod2020ctl$params[1,1] # log unfished recruitment (syr)
 par$h <- pcod2020ctl$params[2,1] # steepness
@@ -136,9 +138,9 @@ model <- function(par){
   # MOVE SOME OF THESE SECTIONS INTO SEPARATE FUNCTIONS
 
 #|---------------------------------------------------------------------|
-  # 1. Initiate parameters
+  # 1. initParameters
   ro        <- exp(par$log_ro)
-  steepness <- par$steepness
+  steepness <- par$h
   m         <- exp(par$log_m)
   rho       <- par$rho
   varphi    <- sqrt(1.0/par$log_kappa)
@@ -150,6 +152,26 @@ model <- function(par){
   #   as ro (P. Starr). May revisit this later
   log_avrec <- par$log_ro
   log_recinit <- par$log_ro
+
+  # Get the Goodyear Compensation Ratio
+  # This is the ratio of juvenile survival at low stock size (alpha) to unfished juvenile survival
+  # Calculation differs between BH and Ricker S-R functions (see Forrest et al. 2010 and refs therein https://doi.org/10.1139/F10-077)
+  # **IMPORTANT: Steve called this kappa in iscam**
+  # **To avoid confusion with the leading variance parameter kappa**
+  # **RF has renamed this parameter CR**
+  if(ctl$misc[2]==1){
+    # Beverton-Holt formulation
+    CR <- (4*steepness)/(1-steepness)
+  }
+  if(ctl$misc[2]==2){
+    # Ricker formulation
+    CR <- (5*steepness)^1.25
+  }
+  if(!ctl$misc[2] %in% 1:2){
+    stop("Error. S-R relationship not specified! In the controls, ctl$misc[2] must be set to 1 (BH) or 2 (Ricker).")
+  }
+
+  # End initParameters
 #|---------------------------------------------------------------------|
 
 #|---------------------------------------------------------------------|
@@ -162,39 +184,74 @@ model <- function(par){
   Zt <- Ft+Mt # total mortality
   surv <- exp(-Zt) # survival rate
 
+  # End calcTotalMortality_deldiff
 #|---------------------------------------------------------------------|
 
 #|---------------------------------------------------------------------|
   # 3. calcNumbersBiomass_deldiff();
+  # Purpose: This function calculates  total biomass and total numbers
+  # according to the delay difference model equations from Hilborn and Walters.
+  # Quantities are calculated for each year.
 
+  # DD initialization
+  # Equilibrium mean weight - obtained from weq = Beq/Neq and solving for weq
+  # i.e., weq = [surv(alpha.Neq + rho.Beq + wk.R] / [surv.Neq + R]
+  #  with substitutions Neq = Beq/weq and R = Neq(1 - surv)
+  # From SJDM, also used by Sinclair in 2005 p cod assessment
 
+  snat <- exp(-m) # natural survival rate
+  # Eqm mean weight
+  wbar <- (snat*alpha.g + wk*(1-snat))/(1-snat*rho.g) # RF: calculation checked against rep file
+
+  # Unfished numbers and biomass
+  no <- ro/(1-snat)
+  bo <- no*wbar # RF: calculation checked against rep file
+
+  # Parameters of Stock-Recruit relationship
+  # Maximum juvenile survival rate (same for BH and Ricker)
+  alpha.sr <- (CR*ro)/bo # NOTE: Steve called this so. RF thinks this is confusing notation because the o implies unfished, whereas this is max juv survival rate when the biomass is close to zero
+
+  # Beta parameter (density-dependence in juvenile survival)
+  if(ctl$misc[2]==1){
+    # Beverton-Holt
+    beta.sr <- (CR -1)/bo
+  }
+  if(ctl$misc[2]==2){
+    # Ricker
+    beta.sr <- log(CR)/bo
+  }
+
+ # End calcNumbersBiomass_deldiff
 #|---------------------------------------------------------------------|
 
 
 #|---------------------------------------------------------------------|
-  # 4. calcFisheryObservations_deldiff();
+  # 4. calcFisheryObservations_deldiff()
 
 
+  # End calcFisheryObservations_deldiff
 #|---------------------------------------------------------------------|
 
 
 #|---------------------------------------------------------------------|
-# 5. calcSurveyObservations_deldiff()
+  # 5. calcSurveyObservations_deldiff()
 
 
+  # End calcSurveyObservations_deldiff
 #|---------------------------------------------------------------------|
 
 
 #|---------------------------------------------------------------------|
-# 6. calcStockRecruitment_deldiff();
+  # 6. calcStockRecruitment_deldiff()
 
-
+  # End calcStockRecruitment_deldiff
 #|---------------------------------------------------------------------|
 
 #|---------------------------------------------------------------------|
-# 7. calcAnnualMeanWeight_deldiff(); //RF added this for P cod - only gets added to objective function if cntrl(15)==1
+  # 7. calcAnnualMeanWeight_deldiff() //RF added this for P cod - only gets added to objective function if cntrl(15)==1
 
 
+  # End calcAnnualMeanWeight_deldiff
 #|---------------------------------------------------------------------|
 
 #|---------------------------------------------------------------------|
@@ -202,9 +259,8 @@ model <- function(par){
 
 
 
-
-
  jnll <- jnll + pll
+ # End calcObjectiveFunction
 #|---------------------------------------------------------------------|
 
 
