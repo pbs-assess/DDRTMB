@@ -67,7 +67,6 @@ pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see def
 nyrs <- dat$nyr-dat$syr+1
 yrs <-  dat$syr:dat$nyr
 
-
 # get the number of and index for commercial (fishery) fleets
 nfleet <- 0 # number of fishing fleets (not surveys)
 for(i in 1:dat$ngear){
@@ -86,7 +85,7 @@ par <- list()
 par$log_ro <- pcod2020ctl$params[1,1] # log unfished recruitment (syr)
 par$h <- pcod2020ctl$params[2,1] # steepness
 par$log_m <- pcod2020ctl$params[3,1] # log natural mortality
-par$log_avrec <- pcod2020ctl$params[4,1] # log average recruitment (syr+1 to nyr)
+par$log_avgrec <- pcod2020ctl$params[4,1] # log average recruitment (syr+1 to nyr)
 par$log_recinit <- pcod2020ctl$params[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
 par$log_rho <- pcod2020ctl$params[6,1] # Errors in Variables: fraction of the total variance associated with observation error
 par$log_kappa <- pcod2020ctl$params[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
@@ -121,8 +120,8 @@ model <- function(par){
   m         <- exp(par$log_m)
   rho       <- par$rho
   varphi    <- sqrt(1.0/par$log_kappa)
-  sig       <- elem_prod(sqrt(rho) , varphi)
-  tau       <- elem_prod(sqrt(1.0-rho) , varphi)
+  sig       <- sqrt(rho)*varphi  # elem_prod(sqrt(rho) , varphi)
+  tau       <- sqrt(1.0-rho)*varphi # elem_prod(sqrt(1.0-rho) , varphi)
 
   # A decision was made in 2018 to fix these two parameters to be the same
   #   as ro (P. Starr). May revisit this later
