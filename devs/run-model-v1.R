@@ -28,13 +28,23 @@
 # - Want to change this to additive weightings (as per SS3), then also explore
 #       state space options. But first try to reproduce the iscam results!
 
-# TODO:
-# CHECK how to set dat$alloc if more than one commercial gear
-# Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
-# Put the dat, ctl and pfc stripping below into functions
-# Change parameter values to log
-# TIDY UP the three recruitment parameters - currently set to all be the same as per Paul Starr's request
-# Probably don't need all the counters
+# TODO (move these to Issues on gitHub repo):
+# 1. Translation of iscam to RTMB:
+#  - CHECK length of log_rec_devs and log_init_rec_devs
+#  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
+#  - Probably don't need all the counters
+
+# 2. Potential model changes:
+#  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
+#  - Transform normal space parameters to log
+#  - Need for Jacobian transformations?
+#  - Look at bias correction (see Thorson and Kristensen paper)
+#  - Look at alternate settings for Errors in Variables (e.g., weights additive instead of multiplicative)
+#  - Look at state-space implementation
+#  - Implement MCMC
+
+# 3. Graphic outputs and diagnostics
+#  - Work with Sean, Nick, Catarina, others, ... for standardized set of visualizations of outputs and diagnostics
 
 # Document and build package (these are also buttons in Rstudio)
 #    this will incorporate new functions saved in the R and data folders
@@ -89,7 +99,7 @@ par$log_avgrec <- pcod2020ctl$params[4,1] # log average recruitment (syr+1 to ny
 par$log_recinit <- pcod2020ctl$params[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
 par$log_rho <- pcod2020ctl$params[6,1] # Errors in Variables: fraction of the total variance associated with observation error
 par$log_kappa <- pcod2020ctl$params[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
-# Check these are dimensioned correctly
+# TODO: Check these are dimensioned correctly
 par$log_ft <- matrix(0, nrow=nyrs, ncol=nfleet)
 par$init_log_rec_devs <- rep(0,(dat$nage-dat$sage)) #vector(length=dat$nage - dat$sage) # I think this is length nage-sage
 par$log_rec_devs <- rep(0,nyrs) #vector(length=nyrs)
