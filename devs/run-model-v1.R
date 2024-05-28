@@ -158,7 +158,7 @@ model <- function(par){
   Ft        <- exp(log_ft)
 
   # A decision was made in 2018 to fix these two parameters to be the same
-  #   as ro (P. Starr). May revisit this later
+  #   as log_ro (P. Starr). May revisit this later
   log_avgrec <- par$log_ro
   log_recinit <- par$log_ro # RF: I don't think it makes sense to use this one
 
