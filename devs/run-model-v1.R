@@ -7,6 +7,13 @@
 # Therefore, we can strip out a lot of the indexing in the iscam inputs**
 # M is fixed, not time-varying - adapt later for tvm
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# IMPORTANT: BEFORE RUNNING THIS CODE, PLEASE SOURCE devs/filter-inputs.R
+
+# This will load the raw 2020 5ABCD Pacific Cod inputs into the package
+# Need to do this while package is in development
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # Package name: DDRTMB
 
 # Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station)
@@ -38,6 +45,8 @@
 #  - Check that pars list is complete
 #  - Move some of model sections into separate functions
 #  - Implement MCMC
+#  - Check predicted rt against rep file
+#  - Check source of fished equilibrium equation and check code (in calcNumbersBiomass_deldiff)
 
 # 2. Potential model changes:
 #  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
@@ -48,7 +57,7 @@
 #  - Look at state-space implementation
 #  - Add time-varying M
 #  - Think about how to make this a multi-species, multi-area model? (MICE)
-#     - Some of the architecture is already in iscam
+#  - Some of the architecture is already in iscam
 
 
 # 3. Graphic outputs and diagnostics
@@ -57,12 +66,6 @@
 # Document and build package (these are also buttons in Rstudio)
 #    this will incorporate new functions saved in the R and data folders
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# IMPORTANT: BEFORE RUNNING THIS CODE, PLEASE SOURCE devs/filter-inputs.R
-
-# This will load the raw 2020 5ABCD Pacific Cod inputs into the package
-# Need to do this while package is in development
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Load documentation and inputs
 devtools::document()
 devtools::load_all()
@@ -73,10 +76,10 @@ library(RTMB)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Data inputs and controls
+# DATA_SECTION
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Input lists (run filter-inputs.R first)
 dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
@@ -84,6 +87,7 @@ ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
 nyrs <- dat$nyr-dat$syr+1
 yrs <-  dat$syr:dat$nyr
+ages <-  dat$sage:dat$nage
 
 # get the number of and index for commercial (fishery) fleets
 nfleet <- 0 # number of fishing fleets (not surveys)
@@ -94,8 +98,14 @@ for(i in 1:dat$ngear){
 # Index to identfy which gears are fishing fleets
 fleetindex <- which(dat$alloc>0)
 
+# Get length and weight at age for first year (for initializing population at non-equilibrium, ctl$misc[5]==0)
+la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
+wa <- dat$lwscal*la^dat$lwpow
+d3_wt_avg <- wa #just to be consistent with rep file
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Parameters
+# PARAMETER_SECTION
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 par <- list()
 # Begin by using initial values specified in pcod2020ctl
@@ -118,7 +128,6 @@ par$log_rec_devs <- rep(0,nyrs) #vector(length=nyrs)
 # 3. Model
 # Eventually move functions to separate R scripts
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 model <- function(par){
 
   getAll(par,dat, pfc)
@@ -152,7 +161,6 @@ model <- function(par){
   #   as ro (P. Starr). May revisit this later
   log_avgrec <- par$log_ro
   log_recinit <- par$log_ro # RF: I don't think it makes sense to use this one
-
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
@@ -219,7 +227,11 @@ model <- function(par){
   # Initialize numbers and biomass
   numbers <- vector(length=nyrs+1)
   biomass <- vector(length=nyrs+1)
+  sbt <- vector(length=nyrs+1) # can eliminate this eventually. It's the same as biomass in the dd model
   log_rt <- vector(length=nage-sage + nyrs) # log recruits for entire time series including init period
+  annual_mean_wt <- vector(length=nyrs+1)
+  # Add recruitment for projection year ... assume it is average
+  rnplus=exp(log_avgrec)
 
   # Initial Conditions
   snat <- exp(-m) # natural survival rate
@@ -251,19 +263,20 @@ model <- function(par){
   if(ctl$misc[5]==0){
     # Unfished and not at equilibrium - initialize with age structure as in ASM
     # Set up a vector of n-at-age for the first year (length sage:nage) with devs
-    # Then decay each age according to M
-    tmp_nAge <- vector(length=length(sage:nage))
+    # Decay exp(log_recinit + init_log_rec_devs[j-1]) by exp(-M) to fill n-at-age in first year
+    tmp_nAge <- vector(length=length(sage:nage)) # Numbers at age in first year
 
-    # First age is exp(log_avgrec + log_rec_devs[1]
+    # First age is exp(log_avgrec + log_rec_devs[1]) because this is recruits in year 1
     tmp_nAge[1] <- exp(log_avgrec + log_rec_devs[1])
 
     # Now fill in the other numbers at age for year 1
-    for(j in 2:length(nAge)){
-      tmp_nAge[j] <- exp(log_recinit + init_log_rec_devs[j-1]) *exp(-Mt[1]*(j-1))
+    for(j in 2:length(tmp_nAge)){
+      tmp_nAge[j] <- exp(log_recinit + init_log_rec_devs[j-1]) * exp(-Mt[1]*(j-1))
     }
     tmp_nAge[j] <- tmp_nAge[j]/(1 - exp(-Mt[1])) # plus group
 
-    ## TEST (from iscam calcNumbersAtAge) - make sure tr is the same as log(tmp_nAge)
+    ## TEST (see iscam calcNumbersAtAge function) - make sure tr is the same as log(tmp_nAge)
+    ## DELETE THIS IN LATER VERSIONS
     ## A little tricky  because ADMB indexes actual ages or years rather than indexes
     ## **YES, calculations are identical**
     # tr <- vector(length=length(sage:nage)) # iscam ASM's version of log(tmp_n_Age)
@@ -280,36 +293,76 @@ model <- function(par){
     # exp(tr)
 
     # Add up the numbers at age to get numbers in year 1
-    numbers[1] <- sum(nAge)
+    # RF confirmed numbers, biomass and mean wt calculations with rep file
+    numbers[1] <- sum(tmp_nAge)
+    biomass[1] <- sum(tmp_nAge*d3_wt_avg) # d3_wt_avg calculated in data section from vonB parameters
+    annual_mean_wt[1] <- biomass[1]/numbers[1]
 
-    log_rt[1] <- log_avgrec+log_rec_devs[1] # this is same as log(tmp_nAge[1])
+    #  Initialise log recruits
+    # This does not match log of rt from rep file but I think iscam reports value from S-R function
+    log_rt[1] <- log_avgrec+log_rec_devs[1] # this is just the same as log(tmp_nAge[1])
 
-
-    # RFUpdate Correction: below biomass is the sum of weight at age x numbers at age not wbar
-    biomass[1] = sum(elem_prod(tmp_N,d3_wt_avg[1]))
-    annual_mean_wt[1] = biomass(ig,syr)/numbers[1]
 
   }
   if(ctl$misc[5]==1){
-    # Unfished equilibrium
+    # Unfished equilibrium - **not tested for P. cod**
+    numbers[1] <- no
+    biomass[1] <- bo
+    annual_mean_wt[1] <- biomass[1]/numbers[1]
+    log_rt[1] <- log(ro) # Shouldn't this be plus log_rec_devs[1]???
 
   }
   if(ctl$misc[5]==2){
-    # Fished at equilibrium with Ft in first year
+    # Fished at equilibrium with Ft in first year **not tested for P. cod**
+    # NEED TO CHECK THESE CALCS. SOURCE IS 2004 P.COD ASSESSMENT OR H&W 1992 - need to check
+    # RF: I think I have some code from SJDM somewhere with these calcs
+    sfished = surv[1] # equilibrium survivorship at initial fishing mortality (gear 1 commercial fishery)
+    annual_mean_wt[1] = (sfished*alpha.g + wk*(1.-sfished))/(1-rho.g*sfished)
 
+    biomass[1] = -(annual_mean_wt[1]*(wk*alpha.sr-1)
+                   +sfished*(alpha.g + rho.g * annual_mean_wt[1]))/
+                  (beta.sr*(sfished*alpha.g + sfished*rho.g*annual_mean_wt[1]-
+                  annual_mean_wt[1]))
+    numbers[1] = biomass[1]/annual_mean_wt[1]
+
+   # log rt originally missing from this option
+   # chose log_avgrec as placeholder-- dangerous if fishing in first year and before was very high.
+   log_rt[1] <- log_avgrec[1]  # Shouldn't this be plus log_rec_devs[1]???
   }
   if(!ctl$misc[5] %in% 0:2){
     stop("Starting conditions not specified! ctl$misc[5] must be set to 0, 1 or 2 (see ?pcod2020ctl for definitions).")
   }
 
-
+  # Set sbt[1] <- biomass[1]
+  # Eventually can delete this duplication but for now will be easier
+  # bc sbt appears elsewhere in code as hangover from ASM
+  sbt[1] <- biomass[1]
 
   # Time dynamics
+  for(i in 2:nyrs){
+
+    # Update recruits
+    log_rt[i] <- log_avgrec +log_rec_devs[i]
+
+    # Update biomass and numbers
+    biomass[i] <- surv[i-1]*(rho.g*biomass[i-1]+alpha.g*numbers[i-1])+
+								wk*exp(log_rt[i]) # eq. 9.2.5 in HW
+		numbers[i] <- surv[i-1]*numbers[i-1]+exp(log_rt[i])
+		annual_mean_wt[i] <- biomass[i]/numbers[i]		# calculate predicted weight in dynamics - possible option to fit to it
+		sbt[i] <- biomass[i]
+	}
+
+  biomass[nyrs+1]  <- (surv[nyrs]*(rho.g*biomass[nyrs]+alpha.g*numbers[nyrs]) + wk*rnplus)
+	numbers[nyrs+1]  <- surv[nyrs]*numbers[nyrs]+rnplus
+  sbt[nyrs+1] <- biomass[nyrs+1] # set spawning biomass to biomass
+	}
+
+	# added sbo for delay diff model
+	 sbo <- bo
 
 
 
-  # Add recruitment for projection year ... assume it is average
-  rnplus=exp(log_avgrec)
+
 
  # End calcNumbersBiomass_deldiff
 #|---------------------------------------------------------------------|

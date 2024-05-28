@@ -44,11 +44,11 @@ pcod2020dat$nage    <- rawpcod2020dat$nage # Max age
 pcod2020dat$ngear   <- rawpcod2020dat$ngear # Number of gears (includes commercial and survey)
 pcod2020dat$alloc   <- rawpcod2020dat$alloc # CHECK: Catch allocation: 0 < alloc <= 1 if commercial, 0 if survey
 # Fixed parameters
-pcod2020dat$linf    <- rawpcod2020dat$linf # Growth linfinity (not sure if used in d-d, has its own growth pars)
-pcod2020dat$k       <- rawpcod2020dat$k # Growth vonB K (not sure if used in d-d, has its own growth pars)
-pcod2020dat$to      <- rawpcod2020dat$to # Growth t_0 (not sure if used in d-d, has its own growth pars)
-pcod2020dat$lwscal  <- rawpcod2020dat$lwscal # Growth L-W a (not sure if used in d-d)
-pcod2020dat$lwpow   <- rawpcod2020dat$lwpow # Growth L-W b (not sure if used in d-d)
+pcod2020dat$linf    <- rawpcod2020dat$linf # Growth linfinity
+pcod2020dat$k       <- rawpcod2020dat$k # Growth vonB K
+pcod2020dat$to      <- rawpcod2020dat$to # Growth t_0
+pcod2020dat$lwscal  <- rawpcod2020dat$lwscal # Growth L-W a
+pcod2020dat$lwpow   <- rawpcod2020dat$lwpow # Growth L-W b
 pcod2020dat$kage    <- rawpcod2020dat$dd.kage # Knife-edge age at recruitment
 pcod2020dat$alpha.g <- rawpcod2020dat$dd.alpha.g # Growth Ford-Walford alpha
 pcod2020dat$rho.g   <- rawpcod2020dat$dd.rho.g # Growth Ford-Walford rho
