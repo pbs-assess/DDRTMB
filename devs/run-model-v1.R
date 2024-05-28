@@ -40,6 +40,7 @@
 # 1. Translation of iscam to RTMB:
 #  - CHECK all estimated parameters are included in pars
 #  - CHECK length of log_rec_devs and log_init_rec_devs
+#  - CHECK length of log_rt vector and make sure we are filling it correctly!
 #  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
 #  - Probably don't need all the counters
 #  - Check that pars list is complete
@@ -173,6 +174,7 @@ model <- function(par){
   log_avgrec <- log(ro)
   log_recinit <- log(ro)
   Ft <- c(0.100901, 0.162811, 0.218133, 0.172062, 0.135691, 0.0919969, 0.139881, 0.0772674, 0.129473, 0.191035, 0.236091, 0.209665, 0.18531, 0.149684, 0.0791808, 0.134725, 0.135795, 0.114886, 0.152902, 0.178127, 0.167726, 0.138626, 0.128951, 0.25108, 0.210596, 0.145312, 0.137206, 0.120306, 0.104469, 0.0661442, 0.16161, 0.360395, 0.24175, 0.141831, 0.152064, 0.339467, 0.306043, 0.273561, 0.121854, 0.100894, 0.111752, 0.12076, 0.1013, 0.0790893, 0.0660031, 0.0333779, 0.037986, 0.0554713, 0.0657476, 0.0801039, 0.0748695, 0.0352134, 0.0291054, 0.0524231, 0.095605, 0.0769179, 0.0558788, 0.0562869, 0.0645536, 0.0709053, 0.0428528, 0.0288908, 0.0189564, 0.0296574, 0.0258504)
+  # from iscam.par file
   init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
   log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
 
@@ -228,6 +230,7 @@ model <- function(par){
   numbers <- vector(length=nyrs+1)
   biomass <- vector(length=nyrs+1)
   sbt <- vector(length=nyrs+1) # can eliminate this eventually. It's the same as biomass in the dd model
+  # FIXME: I think this should just be from syr:(nyr-sage)
   log_rt <- vector(length=nage-sage + nyrs) # log recruits for entire time series including init period
   annual_mean_wt <- vector(length=nyrs)
   # Add recruitment for projection year ... assume it is average
@@ -301,6 +304,8 @@ model <- function(par){
     annual_mean_wt[1] <- biomass[1]/numbers[1]
 
     #  Initialise log recruits
+    # FIXME - check length of this time series and when it starts
+    # Remember log_rt starts nage-sage years before the start of the time series!
     # This does not match log of rt from rep file but I think iscam reports value from S-R function
     log_rt[1] <- log_avgrec+log_rec_devs[1] # this is just the same as log(tmp_nAge[1])
 
