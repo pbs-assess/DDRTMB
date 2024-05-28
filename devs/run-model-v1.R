@@ -151,7 +151,7 @@ model <- function(par){
   # A decision was made in 2018 to fix these two parameters to be the same
   #   as ro (P. Starr). May revisit this later
   log_avgrec <- par$log_ro
-  #log_recinit <- par$log_ro # RF: I don't think it makes sense to use this one
+  log_recinit <- par$log_ro # RF: I don't think it makes sense to use this one
 
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -163,6 +163,7 @@ model <- function(par){
   rho       <- 0.058824
   varphi    <- 0.824621
   log_avgrec <- log(ro)
+  log_recinit <- log(ro)
   Ft <- c(0.100901, 0.162811, 0.218133, 0.172062, 0.135691, 0.0919969, 0.139881, 0.0772674, 0.129473, 0.191035, 0.236091, 0.209665, 0.18531, 0.149684, 0.0791808, 0.134725, 0.135795, 0.114886, 0.152902, 0.178127, 0.167726, 0.138626, 0.128951, 0.25108, 0.210596, 0.145312, 0.137206, 0.120306, 0.104469, 0.0661442, 0.16161, 0.360395, 0.24175, 0.141831, 0.152064, 0.339467, 0.306043, 0.273561, 0.121854, 0.100894, 0.111752, 0.12076, 0.1013, 0.0790893, 0.0660031, 0.0333779, 0.037986, 0.0554713, 0.0657476, 0.0801039, 0.0748695, 0.0352134, 0.0291054, 0.0524231, 0.095605, 0.0769179, 0.0558788, 0.0562869, 0.0645536, 0.0709053, 0.0428528, 0.0288908, 0.0189564, 0.0296574, 0.0258504)
   init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
   log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
@@ -251,24 +252,37 @@ model <- function(par){
     # Unfished and not at equilibrium - initialize with age structure as in ASM
     # Set up a vector of n-at-age for the first year (length sage:nage) with devs
     # Then decay each age according to M
-    nAge <- vector(length=length(sage:nage))
-    for(j in 1:length(nAge)){
-      nAge[j] <- exp(log_avgrec + init_log_rec_devs[j])*exp(-Mt[1]*(j-1))
+    tmp_nAge <- vector(length=length(sage:nage))
+
+    # First age is exp(log_avgrec + log_rec_devs[1]
+    tmp_nAge[1] <- exp(log_avgrec + log_rec_devs[1])
+
+    # Now fill in the other numbers at age for year 1
+    for(j in 2:length(nAge)){
+      tmp_nAge[j] <- exp(log_recinit + init_log_rec_devs[j-1]) *exp(-Mt[1]*(j-1))
     }
-    nAge[length(nAge)] <- nAge[length(nAge)]/(1 - exp(-Mt[1])) # plus group
+    tmp_nAge[j] <- tmp_nAge[j]/(1 - exp(-Mt[1])) # plus group
 
-    ## TEST (from iscam calcNumbersAtAge)
-    #tr <- vector(length(sage:nage))
-    #tr(sage)        = ( log_avgrec(ih)+log_rec_devs(ih)(syr));
-    #tr(sage+1,nage) = (log_recinit(ih)+init_log_rec_devs(ih));
-    #tr(sage+1,nage) = tr(sage+1,nage)+log(lx(sage+1,nage));
-
-
+    ## TEST (from iscam calcNumbersAtAge) - make sure tr is the same as log(tmp_nAge)
+    ## A little tricky  because ADMB indexes actual ages or years rather than indexes
+    ## **YES, calculations are identical**
+    # tr <- vector(length=length(sage:nage)) # iscam ASM's version of log(tmp_n_Age)
+    # lx <- vector(length=length(sage:nage)) # unfished survivorship at age
+    # lx[1] <- 1
+    # for(j in 2:length(sage:nage)){
+    #   lx[j] = lx[j-1] * exp(-Mt[1])
+    # }
+    # lx[j] <- lx[j]/(1-exp(-Mt[1]))
+    #
+    # tr[1]  <- log_avgrec+log_rec_devs[1]
+    # tr[2:length(tr)] <- log_recinit +init_log_rec_devs
+    # tr[2:length(tr)] <- tr[2:length(tr)]+log(lx[2:length(tr)])
+    # exp(tr)
 
     # Add up the numbers at age to get numbers in year 1
     numbers[1] <- sum(nAge)
 
-    log_rt[1] <- log_avgrec+log_rec_devs[1] # Check: this should be same as log(nAge[1]) but only if
+    log_rt[1] <- log_avgrec+log_rec_devs[1] # this is same as log(tmp_nAge[1])
 
 
     # RFUpdate Correction: below biomass is the sum of weight at age x numbers at age not wbar
