@@ -229,7 +229,7 @@ model <- function(par){
   biomass <- vector(length=nyrs+1)
   sbt <- vector(length=nyrs+1) # can eliminate this eventually. It's the same as biomass in the dd model
   log_rt <- vector(length=nage-sage + nyrs) # log recruits for entire time series including init period
-  annual_mean_wt <- vector(length=nyrs+1)
+  annual_mean_wt <- vector(length=nyrs)
   # Add recruitment for projection year ... assume it is average
   rnplus=exp(log_avgrec)
 
@@ -241,6 +241,8 @@ model <- function(par){
   # Unfished numbers and biomass
   no <- ro/(1-snat)
   bo <- no*wbar # RF: calculation checked against rep file
+  # added sbo for delay diff model - delete later
+  sbo <- bo
 
   # Parameters of Stock-Recruit relationship
   # Maximum juvenile survival rate (same for BH and Ricker)
@@ -350,21 +352,15 @@ model <- function(par){
 		numbers[i] <- surv[i-1]*numbers[i-1]+exp(log_rt[i])
 		annual_mean_wt[i] <- biomass[i]/numbers[i]		# calculate predicted weight in dynamics - possible option to fit to it
 		sbt[i] <- biomass[i]
-	}
+  }
 
+  # RF confirmed numbers, biomass and mean wt calculations with rep file
   biomass[nyrs+1]  <- (surv[nyrs]*(rho.g*biomass[nyrs]+alpha.g*numbers[nyrs]) + wk*rnplus)
 	numbers[nyrs+1]  <- surv[nyrs]*numbers[nyrs]+rnplus
   sbt[nyrs+1] <- biomass[nyrs+1] # set spawning biomass to biomass
-	}
-
-	# added sbo for delay diff model
-	 sbo <- bo
 
 
-
-
-
- # End calcNumbersBiomass_deldiff
+	  # End calcNumbersBiomass_deldiff
 #|---------------------------------------------------------------------|
 
 
