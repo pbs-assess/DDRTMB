@@ -101,6 +101,10 @@ fleetindex <- which(dat$alloc>0)
 # get number of estimated log_ft parameters
 ft_count = dat$nctobs # one estimated ft per catch obs
 
+# Create a lookup for years because ADMB works with actual years as index
+year_lookup <- as.data.frame(cbind(yrs, 1:nyrs))
+colnames(year_lookup) <- c("year", "year_index")
+
 # Get length and weight at age for first year (for initializing population at non-equilibrium, ctl$misc[5]==0)
 la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
 wa <- dat$lwscal*la^dat$lwpow
@@ -207,19 +211,16 @@ model <- function(par){
   #          Z also is updated with time-varying natural mortality rates if
   #          specified by user.
 
-  # Need to create a lookup for years because ADMB works with actual years as index
-  year_lookup <- as.data.frame(cbind(yrs, 1:nyrs))
-  colnames(year_lookup) <- c("year", "year_index")
-
   # Set up F objects
   # In the one fleet case for the delay-diff model, these are the same.
-  # Ft is used in subsequent model dynamics
   ft <- matrix(0, nrow=ngear, ncol=nyrs) # a matrix of fishing mortality for each gear and year
   Ft <- rep(0,nyrs) # a vector of total F for each year (in the ASM this would account for selectivity but for delay-diff, selectivity is knife-edged)
 
   # Work down catch obs matrix to associate Fs with catch for each gear
-  # Reminder that the catch matrix has four columns: year, gear, type (weight or numbers), catch
-  for(ii in 1:nctobs){
+  # The catch matrix in the data file has 4 columns:
+  #   year, gear, type (1=catch in weight (tonnes); 2=catch in numbers), catch
+  # nctobs is from the dat list and indicates the total number of catch obs
+   for(ii in 1:nctobs){
       # Set up counters
       iyear <- catch[ii,1] # actual year
       i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index
@@ -339,7 +340,6 @@ model <- function(par){
     biomass[1] <- bo
     annual_mean_wt[1] <- biomass[1]/numbers[1]
     log_rt[1] <- log(ro) # Shouldn't this be plus log_rec_devs[1]???
-
   }
   if(ctl$misc[5]==2){
     # Fished at equilibrium with Ft in first year **not tested for P. cod**
@@ -384,7 +384,7 @@ model <- function(par){
   # RF confirmed numbers, biomass and mean wt calculations with rep file
   biomass[nyrs+1]  <- (surv[nyrs]*(rho.g*biomass[nyrs]+alpha.g*numbers[nyrs]) + wk*rnplus)
 	numbers[nyrs+1]  <- surv[nyrs]*numbers[nyrs]+rnplus
-  sbt[nyrs+1] <- biomass[nyrs+1] # set spawning biomass to biomass
+  sbt[nyrs+1]      <- biomass[nyrs+1] # set spawning biomass to biomass
 
   # End calcNumbersBiomass_deldiff
 #|---------------------------------------------------------------------|
@@ -396,9 +396,32 @@ model <- function(par){
   # The catch matrix in the data file has 4 columns:
   #   year, gear, type (1=catch in weight (tonnes); 2=catch in numbers), catch
   # nctobs is from the dat list and indicates the total number of catch obs
-  Ct <- vector(length=nctobs)
 
+  # Set up predicted catch by gear and year
+  # like log_ft_pars, this is one long vector of all catches from all gears
+  ct <- vector(length=nctobs)
 
+  for(ii in 1:nctobs){
+    # Set up counters
+    iyear <- catch[ii,1] # actual year
+    i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index
+    k <- catch[ii,2] # gear
+    m <- catch[ii,3] # type: 1=catch in weight; 2=catch in numbers
+
+    # Baranov catch equation
+    if(m==1) {
+      # catch in weight
+      ct[ii] = (ft[k,i]/(Mt[i] + ft[k,i]))*(1-exp(-Mt[i]-ft[k,i]))*biomass[i]
+
+    }
+    if(m==2){
+      # catch in numbers
+      ct[ii] = (ft[k,i]/(Mt[i] + ft[k,i]))*(1-exp(-Mt[i]-ft[k,i]))*numbers[i]
+    }
+    if(!m %in% 1:2){
+      stop("Catch type must be 1 (weight) or 2 (numbers). Set in column 3 of dat$catch")
+    }
+  } # end for ii
 
   # End calcFisheryObservations_deldiff
 #|---------------------------------------------------------------------|
