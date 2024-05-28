@@ -60,7 +60,6 @@
 #  - Think about how to make this a multi-species, multi-area model? (MICE)
 #  - Some of the architecture is already in iscam
 
-
 # 3. Graphic outputs and diagnostics
 #  - Work with Sean, Nick, Catarina, others, ... for standardized set of visualizations of outputs and diagnostics
 
@@ -99,6 +98,9 @@ for(i in 1:dat$ngear){
 # Index to identfy which gears are fishing fleets
 fleetindex <- which(dat$alloc>0)
 
+# get number of estimated log_ft parameters
+ft_count = dat$nctobs # one estimated ft per catch obs
+
 # Get length and weight at age for first year (for initializing population at non-equilibrium, ctl$misc[5]==0)
 la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
 wa <- dat$lwscal*la^dat$lwpow
@@ -120,10 +122,10 @@ par$log_m <- pcod2020ctl$params[3,1] # log natural mortality
 #   par$log_recinit <- pcod2020ctl$params[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
 par$rho <- pcod2020ctl$params[6,1] # Errors in Variables: fraction of the total variance associated with observation error
 par$kappa <- pcod2020ctl$params[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
-# TODO: Check these are dimensioned correctly
-par$log_ft <- matrix(0, nrow=nyrs, ncol=nfleet)
-par$init_log_rec_devs <- rep(0,(dat$nage-dat$sage + 1)) #vector(length=dat$nage - dat$sage + 1) # I think this is length nage-sage+1 (i.e., length 2:9)
-par$log_rec_devs <- rep(0,nyrs) #vector(length=nyrs)
+# TODO: Check these are dimensioned and initialized correctly
+par$log_ft_pars <- rep(0,nyrs) # estimated log fishing mortalities (total across fleets)
+par$init_log_rec_devs <- rep(0,(dat$nage-dat$sage + 1)) # vector(length=dat$nage - dat$sage + 1) # I think this is length nage-sage+1 (i.e., length 2:9)
+par$log_rec_devs <- rep(0,nyrs) # vector(length=nyrs)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Model
@@ -145,8 +147,6 @@ model <- function(par){
   # 7. calcAnnualMeanWeight_deldiff() //RF added this for P cod - only gets added to objective function if cntrl(15)==1
   # 8. calcObjectiveFunction()
 
-  # MOVE SOME OF THESE SECTIONS INTO SEPARATE FUNCTIONS
-
 #|---------------------------------------------------------------------|
   # 1. initParameters
   ro        <- exp(par$log_ro)
@@ -156,7 +156,6 @@ model <- function(par){
   varphi    <- sqrt(1.0/par$log_kappa)
   sig       <- sqrt(rho)*varphi  # elem_prod(sqrt(rho) , varphi)
   tau       <- sqrt(1.0-rho)*varphi # elem_prod(sqrt(1.0-rho) , varphi)
-  Ft        <- exp(log_ft)
 
   # A decision was made in 2018 to fix these two parameters to be the same
   #   as log_ro (P. Starr). May revisit this later
@@ -173,14 +172,14 @@ model <- function(par){
   varphi    <- 0.824621
   log_avgrec <- log(ro)
   log_recinit <- log(ro)
-  Ft <- c(0.100901, 0.162811, 0.218133, 0.172062, 0.135691, 0.0919969, 0.139881, 0.0772674, 0.129473, 0.191035, 0.236091, 0.209665, 0.18531, 0.149684, 0.0791808, 0.134725, 0.135795, 0.114886, 0.152902, 0.178127, 0.167726, 0.138626, 0.128951, 0.25108, 0.210596, 0.145312, 0.137206, 0.120306, 0.104469, 0.0661442, 0.16161, 0.360395, 0.24175, 0.141831, 0.152064, 0.339467, 0.306043, 0.273561, 0.121854, 0.100894, 0.111752, 0.12076, 0.1013, 0.0790893, 0.0660031, 0.0333779, 0.037986, 0.0554713, 0.0657476, 0.0801039, 0.0748695, 0.0352134, 0.0291054, 0.0524231, 0.095605, 0.0769179, 0.0558788, 0.0562869, 0.0645536, 0.0709053, 0.0428528, 0.0288908, 0.0189564, 0.0296574, 0.0258504)
   # from iscam.par file
+  log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
   init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
   log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
   # Get the Goodyear Compensation Ratio
+
   # This is the ratio of juvenile survival at low stock size (alpha) to unfished juvenile survival
   # Calculation differs between BH and Ricker S-R functions (see Forrest et al. 2010 and refs therein https://doi.org/10.1139/F10-077)
   # **IMPORTANT: Steve called this kappa in iscam**
@@ -206,9 +205,34 @@ model <- function(par){
   # Purpose: This function calculates fishing mortality, total mortality and annual
   #          survival rates S=exp(-Z) for each year.
   #          Z also is updated with time-varying natural mortality rates if
-  #          specificed by user.
+  #          specified by user.
+
+  # Need to create a lookup for years because ADMB works with actual years as index
+  year_lookup <- as.data.frame(cbind(yrs, 1:nyrs))
+  colnames(year_lookup) <- c("year", "year_index")
+
+  # Set up F objects
+  # In the one fleet case for the delay-diff model, these are the same.
+  # Ft is used in subsequent model dynamics
+  ft <- matrix(0, nrow=ngear, ncol=nyrs) # a matrix of fishing mortality for each gear and year
+  Ft <- rep(0,nyrs) # a vector of total F for each year (in the ASM this would account for selectivity but for delay-diff, selectivity is knife-edged)
+
+  # Work down catch obs matrix to associate Fs with catch for each gear
+  # Reminder that the catch matrix has four columns: year, gear, type (weight or numbers), catch
+  for(ii in 1:nctobs){
+      # Set up counters
+      iyear <- catch[ii,1] # actual year
+      i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index
+      k <- catch[ii,2] # gear
+
+      ftmp    <- exp(log_ft_pars[ii]) # log_ft_pars has length nctobs
+      # ft is a matrix with ngear rows and nyr columns
+      ft[k,i] <- ftmp # fishing mortality for gear k in year i (in ASM this is modified by selectivity)
+      Ft[i]   <- Ft[i] + ftmp # Total fishing mortality in year i
+   } # end for ii
+
   Mt <- rep(m,nyrs) # natural mortality
-  Zt <- Ft+Mt # total mortality
+  Zt <- Ft+Mt       # total mortality
   surv <- exp(-Zt) # fished survival rate
 
   # End calcTotalMortality_deldiff
@@ -231,7 +255,7 @@ model <- function(par){
   biomass <- vector(length=nyrs+1)
   sbt <- vector(length=nyrs+1) # can eliminate this eventually. It's the same as biomass in the dd model
   # FIXME: I think this should just be from syr:(nyr-sage)
-  log_rt <- vector(length=nage-sage + nyrs) # log recruits for entire time series including init period
+  log_rt <- vector(length=nyrs-sage) # log recruits
   annual_mean_wt <- vector(length=nyrs)
   # Add recruitment for projection year ... assume it is average
   rnplus=exp(log_avgrec)
@@ -304,8 +328,6 @@ model <- function(par){
     annual_mean_wt[1] <- biomass[1]/numbers[1]
 
     #  Initialise log recruits
-    # FIXME - check length of this time series and when it starts
-    # Remember log_rt starts nage-sage years before the start of the time series!
     # This does not match log of rt from rep file but I think iscam reports value from S-R function
     log_rt[1] <- log_avgrec+log_rec_devs[1] # this is just the same as log(tmp_nAge[1])
 
@@ -334,7 +356,7 @@ model <- function(par){
 
    # log rt originally missing from this option
    # chose log_avgrec as placeholder-- dangerous if fishing in first year and before was very high.
-   log_rt[1] <- log_avgrec[1]  # Shouldn't this be plus log_rec_devs[1]???
+   log_rt[1] <- log_avgrec[1] #+ log_rec_devs[1]  # Shouldn't this be plus log_rec_devs[1]???
   }
   if(!ctl$misc[5] %in% 0:2){
     stop("Starting conditions not specified! ctl$misc[5] must be set to 0, 1 or 2 (see ?pcod2020ctl for definitions).")
@@ -364,13 +386,18 @@ model <- function(par){
 	numbers[nyrs+1]  <- surv[nyrs]*numbers[nyrs]+rnplus
   sbt[nyrs+1] <- biomass[nyrs+1] # set spawning biomass to biomass
 
-
-	  # End calcNumbersBiomass_deldiff
+  # End calcNumbersBiomass_deldiff
 #|---------------------------------------------------------------------|
 
 
 #|---------------------------------------------------------------------|
   # 4. calcFisheryObservations_deldiff()
+  # Purpose: This function calculates commercial catches for each year and gear
+  # The catch matrix in the data file has 4 columns:
+  #   year, gear, type (1=catch in weight (tonnes); 2=catch in numbers), catch
+  # nctobs is from the dat list and indicates the total number of catch obs
+  Ct <- vector(length=nctobs)
+
 
 
   # End calcFisheryObservations_deldiff

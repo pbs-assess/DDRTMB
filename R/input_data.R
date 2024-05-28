@@ -26,10 +26,10 @@
 #'   \item{alpha.g}{Growth, Ford-Walford alpha}
 #'   \item{rho.g}{Growth, Ford-Walford rho}
 #'   \item{wk}{Weight at age of recruitment}
-#'   \item{nctobs}{Number of catch observations}
+#'   \item{nctobs}{Number of catch observations.}
 #'   \item{catch}{Catch data matrix, nctobs rows, 4 columns:}
 #'   \itemize{
-#'     \item year = Year
+#'     \item year = Year (no missing years)
 #'     \item gear = Gear index from ngear
 #'     \item type:
 #'     \itemize{

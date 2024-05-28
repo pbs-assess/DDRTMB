@@ -2160,7 +2160,7 @@ FUNCTION calcTotalMortality
 	// |
        	for(ig=1;ig<=nCtNobs;ig++)
 	{
-		i  = dCatchData(ig)(1);	 //year
+		i  = dCatchData(ig)(1);   //year
 		k  = dCatchData(ig)(2);  //gear
 		f  = dCatchData(ig)(3);  //area
 		g  = dCatchData(ig)(4);  //group
@@ -3227,7 +3227,7 @@ FUNCTION calcNumbersBiomass_deldiff
 				sbt(g,i) += biomass(ig,i);
 		}
 
-    biomass(ig,nyr+1)=(surv(ig,nyr)*(rho_g(gs)*biomass(ig,nyr)+alpha_g(gs)*numbers(ig,nyr))+wk(gs)*rnplus(ih)/nsex);
+                biomass(ig,nyr+1)=(surv(ig,nyr)*(rho_g(gs)*biomass(ig,nyr)+alpha_g(gs)*numbers(ig,nyr))+wk(gs)*rnplus(ih)/nsex);
 		numbers(ig,nyr+1)=surv(ig,nyr)*numbers(ig,nyr)+rnplus(ih)/nsex;
 
 	  	sbt(g,nyr+1) += biomass(ig,nyr+1); //set spawning biomass to biomass
