@@ -443,7 +443,8 @@ model <- function(par){
   # Purpose: This function calculates predicted survey observations for each year
 
   # Set up predicted survey index by gear and year
-  # like log_ft_pars, this is one long vector of all survey obs from all gears
+  # Follow iscam and set this up as a 3d array
+
 
 
 

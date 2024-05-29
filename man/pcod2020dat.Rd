@@ -50,7 +50,7 @@ Type:
 \item 2 = survey is proportional to biomass
 \item 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
 }
-\item{indices}{Matrix of indices of abundance nitnobs rows x 5 columns:
+\item{indices}{List of length nit, consisting of nit matrices with nitnobs(i) rows x 5 columns:
 \itemize{
 \item \code{iyr} = Survey year, omits missing years
 \item \code{it} = Survey value
