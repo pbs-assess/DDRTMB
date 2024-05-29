@@ -41,6 +41,7 @@
 #  - CHECK all estimated parameters are included in pars
 #  - CHECK length of log_rec_devs and log_init_rec_devs
 #  - CHECK length of log_rt vector and make sure we are filling it correctly!
+#  - CHECK all test calcs. Catches are a little bit off. Could be rounding in iscam rep and par files
 #  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
 #  - Probably don't need all the counters
 #  - Check that pars list is complete
@@ -109,6 +110,9 @@ colnames(year_lookup) <- c("year", "year_index")
 la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
 wa <- dat$lwscal*la^dat$lwpow
 d3_wt_avg <- wa #just to be consistent with rep file
+
+# Tiny number to stop logs breaking in some places
+TINY <- 1.e-08
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Parameters
@@ -331,8 +335,6 @@ model <- function(par){
     #  Initialise log recruits
     # This does not match log of rt from rep file but I think iscam reports value from S-R function
     log_rt[1] <- log_avgrec+log_rec_devs[1] # this is just the same as log(tmp_nAge[1])
-
-
   }
   if(ctl$misc[5]==1){
     # Unfished equilibrium - **not tested for P. cod**
@@ -399,7 +401,8 @@ model <- function(par){
 
   # Set up predicted catch by gear and year
   # like log_ft_pars, this is one long vector of all catches from all gears
-  ct <- vector(length=nctobs)
+  ct <- vector(length=nctobs) # predicted catch
+  eta <- vector(length=nctobs) # catch residuals
 
   for(ii in 1:nctobs){
     # Set up counters
@@ -407,6 +410,7 @@ model <- function(par){
     i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index
     k <- catch[ii,2] # gear
     m <- catch[ii,3] # type: 1=catch in weight; 2=catch in numbers
+    d_ct <- catch[ii,4] # observed catch
 
     # Baranov catch equation
     if(m==1) {
@@ -421,6 +425,13 @@ model <- function(par){
     if(!m %in% 1:2){
       stop("Catch type must be 1 (weight) or 2 (numbers). Set in column 3 of dat$catch")
     }
+
+    # catch residual
+    eta[ii] = log(d_ct+TINY) - log(ct[ii]+TINY)
+
+    # NOTE: Catches are not exactly as in rep file - could be rounding in the reported
+    # log_ft_pars from the par file. GO BACK AND CHECK ALL CALCS AND VALUES
+
   } # end for ii
 
   # End calcFisheryObservations_deldiff
