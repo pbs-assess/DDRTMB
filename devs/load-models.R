@@ -432,9 +432,9 @@ read.data.file <- function(file = NULL,
   tmp$nit     <- as.numeric(dat[ind <- ind + 1])
   tmp$nitnobs <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
   tmp$survtype <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
-  tmp$indices  <- matrix(NA, nrow = tmp$nitnobs, ncol = 8)
+  tmp$indices  <- matrix(NA, nrow = sum(tmp$nitnobs), ncol = 8)
 
-  for(row in 1:tmp$nitnobs){
+  for(row in 1:sum(tmp$nitnobs)){
     tmp$indices[row,] <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
   }
   colnames(tmp$indices) <- c("iyr","it","gear","area","group","sex","wt","timing")

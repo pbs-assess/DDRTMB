@@ -16,7 +16,7 @@ devtools::document()
 devtools::load_all()
 
 library(tidyverse)
-source("devs/load-models.R")
+source("devs/load-models.R") # need this for read.data.file(), read.control.file() and read.projection.file(). TODO: strip out unused functions in load-models.R
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls. Better to make this a function, or even just
@@ -63,7 +63,7 @@ pcod2020dat$catch   <- rawpcod2020dat$catch # Catch observations (tonnes).
 pcod2020dat$nit     <- rawpcod2020dat$nit # Number of surveys
 pcod2020dat$nitnobs <- rawpcod2020dat$nitnobs # Number of survey obs (a vector of length pcod2020dat$nit)
 pcod2020dat$survtype <- rawpcod2020dat$survtype # Survey type (a vector of length pcod2020dat$nit) - see below
-pcod2020dat$indices <- rawpcod2020dat$indices # a list of dataframes (n list elements = length pcod2020dat$nit)
+pcod2020dat$indices <- rawpcod2020dat$indices # Index observations
 # Annual commercial mean weight data
 # Unneeded columns removed below. See below for column descriptions.
 pcod2020dat$nmeanwt <- rawpcod2020dat$nmeanwt # Number of mean weight series (if none, must be set to 1 - CAN NOW CHANGE THIS REQUIREMENT)
