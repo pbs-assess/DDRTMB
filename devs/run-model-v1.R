@@ -443,11 +443,92 @@ model <- function(par){
   # Purpose: This function calculates predicted survey observations for each year
 
   # Set up predicted survey index by gear and year
-  # Follow iscam and set this up as a 3d array
+  # Data is a ragged 3d array in iscam. Here, a list with nit elements.
 
+  q <- vector(length=nit) # vector of q
 
+  # set up lists for storing residuals and predicted indices
+  # these are ragged arrays in iscam
+  epsilon <- list() # residuals
+  it_hat <- list() # predicted indices
+  qt <- list() # time varying q (if ctl$surv.q prior type == 2)
 
+  #loop over surveys to create list
+  for(kk in 1:nit){
+    epsilon[[kk]] <- vector(length=nitnobs[kk])
+    it_hat[[kk]]  <- vector(length=nitnobs[kk])
+    qt[[kk]]  <- vector(length=nitnobs[kk])
+    epsilon[[kk]][1:nitnobs[kk]] <- 0.
+    it_hat[[kk]][1:nitnobs[kk]] <- 0.
+    qt[[kk]][1:nitnobs[kk]] <- 0.
+  }
 
+  # Now loop through gears and index obs to predict survey obs
+  for(kk in 1:nit){
+    # Vulnerable numbers
+    V <- vector(length=nitnobs[kk])
+    V[1:nitnobs[kk]] <- 0.
+
+    nz <- 0 # counter for number of observations
+    iz <- 1  # index for first year of data for prospective analysis
+
+    for(ii in 1:nitnobs[kk]){
+      iyear    <- indices[[kk]][ii,1] # actual year (not used)
+      i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index - need this to match biomass to survey obs
+      k    <- indices[[kk]][ii,3] # gear
+      di   <- indices[[kk]][ii,5] # timing
+
+      nz <- nz+1  # counter for number of observations
+
+      z = ft[k,i]+Mt[i]
+      Np = numbers[i] * exp( -z * di)
+      Bp = biomass[i] * exp( -z * di)
+
+      # Two different survey types: 1=prop to numbers; 2=prop to biomass
+      if(survtype[kk]==1){
+        V[ii] <- V[ii] + Np
+      }
+      if(survtype[kk]==2){
+        V[ii] <- V[ii] + Bp
+      }
+      if(!survtype[kk] %in% 1:2){
+        stop(("Survey type must be 1 (survey proporional to numbers) or 2 (survey proporional to biomass). Set in dat$survtype"))
+      }
+    } #end of ii loop
+
+    it 	= t(indicesindices[[kk]][2,iz:nz]) # index
+    wt 	= t(indicesindices[[kk]][4,iz:nz]) # index weight
+    wt 	= wt/sum(wt) # normalized weight
+
+    zt 	= log(it) - log(V[iz:nz])
+    zbar = sum(zt*wt)
+    #dvariable 	zbar = mean(zt); RFUpdate: this old weighting may have been incorrect but check above line with CW
+    q[kk] = exp(zbar)
+
+    # survey residuals
+    epsilon[[kk]][iz,nz] = zt - zbar
+    it_hat[[kk]][iz,nz] = q[kk] * V[iz:nz]
+
+    # SPECIAL CASE: penalized random walk in q.
+    if(q_prior[kk]==2 ){
+      epsilon[[kk]][1:nitnobs[kk]] <- 0 # initialize epsilon
+
+      # iscam ADMB code:
+       # fd_zt <- first_difference(zt)
+      # From the admb source code, looks like first_difference returns a vector of
+      # i+1 - i:
+      # i.e., differences.elem(i) = values.elem(i + 1) - values.elem(i);
+      fd_zt <- diff(zt)
+      zw_bar <- sum(fd_zt*wt[iz,nz-1])
+      epsilon[[kk]][iz:nz-1] <- fd_zt - zw_bar
+      qt[[kk]][iz] = exp(zt[iz])
+
+      for(ii in (iz+1):nz){
+        qt[[kk]][ii] = qt[[kk]][ii-1] * exp(fd_zt[ii-1])
+      }
+      it_hat[kk,iz:nz] = qt[[kk]][iz:nz]*V[iz:nz]
+    }
+  } #end kk loop
 
   # End calcSurveyObservations_deldiff
 #|---------------------------------------------------------------------|

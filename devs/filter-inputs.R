@@ -85,7 +85,6 @@ pcod2020dat$catch  <- pcod2020dat$catch %>%
 # it: Index value. Set type in pcod2020dat$survtype:
 #   1 = survey is proportional to vulnerable numbers
 #   2 = survey is proportional to vulnerable biomass
-#   3 = survey is proportional to spawning biomass (e.g., a spawn survey)
 # gear: gear index from pcod2020dat$ngear, which includes both catch and surveys.
 #      So if there is one commercial gear then all the survey gears will be 1:pcod2020dat$nit + 1
 # wt: 1/CV (used as precision to multiplicatively weight observations).

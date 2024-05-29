@@ -442,8 +442,6 @@ read.data.file <- function(file = NULL,
     colnames(tmp$indices[[index]]) <- c("iyr","it","gear","area","group","sex","wt","timing")
   }
 
-
-
   # Age composition data are a ragged object and are stored as a list of matrices
   tmp$nagears     <- as.numeric(dat[ind <- ind + 1])
   #if(!tmp$hasAgeGearNames){

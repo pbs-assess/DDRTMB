@@ -44,8 +44,7 @@
 #'   Type:
 #'      \itemize{
 #'     \item 1 = survey is proportional to numbers
-#'     \item 2 = survey is proportional to biomass
-#'     \item 3 = survey is proportional to spawning biomass (e.g., a spawn survey)}
+#'     \item 2 = survey is proportional to biomass}
 #'   }
 #'   \item{indices}{List of length nit, consisting of nit matrices with nitnobs(i) rows x 5 columns:
 #'     \itemize{
