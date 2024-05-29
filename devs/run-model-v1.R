@@ -440,6 +440,12 @@ model <- function(par){
 
 #|---------------------------------------------------------------------|
   # 5. calcSurveyObservations_deldiff()
+  # Purpose: This function calculates predicted survey observations for each year
+
+  # Set up predicted survey index by gear and year
+  # like log_ft_pars, this is one long vector of all survey obs from all gears
+
+
 
 
   # End calcSurveyObservations_deldiff

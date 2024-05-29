@@ -424,21 +424,40 @@ read.data.file <- function(file = NULL,
     tmp$catch[row,] <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
   }
   colnames(tmp$catch) <- c("year","gear","area","group","sex","type","value")
-  ## Abundance indices are a ragged object and are stored as a list of matrices
+
+
+  # MAY 29 2024: RF REMOVED THIS CONVERSION OF INDICES TO LIST OBJECTS
+  # THE LIST MIGHT BE BETTER FOR PLOTTING BUT NOT FOR CALCULATING THE OBJECTIVE
+  # FUNCTION. DO THE SAME HERE AS FOR CATCH (I.E., LEAVE AS IN THE DAT FILE)
   tmp$nit     <- as.numeric(dat[ind <- ind + 1])
   tmp$nitnobs <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
   tmp$survtype <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
-  #nrows <- sum(tmp$nitnobs)
-  tmp$indices <- list()
-  for(index in 1:tmp$nit){
-    nrows <- tmp$nitnobs[index]
-    ncols <- 8
-    tmp$indices[[index]] <- matrix(NA, nrow = nrows, ncol = ncols)
-    for(row in 1:nrows){
-      tmp$indices[[index]][row,] <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
-    }
-    colnames(tmp$indices[[index]]) <- c("iyr","it","gear","area","group","sex","wt","timing")
+  tmp$indices  <- matrix(NA, nrow = tmp$nitnobs, ncol = 8)
+
+  for(row in 1:tmp$nitnobs){
+    tmp$indices[row,] <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
   }
+  colnames(tmp$indices) <- c("iyr","it","gear","area","group","sex","wt","timing")
+
+
+  # ## Abundance indices are a ragged object and are stored as a list of matrices
+  # tmp$nit     <- as.numeric(dat[ind <- ind + 1])
+  # tmp$nitnobs <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
+  # tmp$survtype <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
+  # #nrows <- sum(tmp$nitnobs)
+  # tmp$indices <- list()
+  # for(index in 1:tmp$nit){
+  #   nrows <- tmp$nitnobs[index]
+  #   ncols <- 8
+  #   tmp$indices[[index]] <- matrix(NA, nrow = nrows, ncol = ncols)
+  #   for(row in 1:nrows){
+  #     tmp$indices[[index]][row,] <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
+  #   }
+  #   colnames(tmp$indices[[index]]) <- c("iyr","it","gear","area","group","sex","wt","timing")
+  # }
+
+
+
   # Age composition data are a ragged object and are stored as a list of matrices
   tmp$nagears     <- as.numeric(dat[ind <- ind + 1])
   #if(!tmp$hasAgeGearNames){
