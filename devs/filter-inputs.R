@@ -81,7 +81,7 @@ pcod2020dat$catch  <- pcod2020dat$catch %>%
   as.data.frame() %>%
   select(year, gear, type, value)
 
-# Index data: a list with pcod2020dat$nit elements, each is a matrix of 1:pcod2020dat$nitnobs[i] x 5
+# Index data: a matrix with sum(pcod2020dat$nitnobs) elements x 5
 # it: Index value. Set type in pcod2020dat$survtype:
 #   1 = survey is proportional to vulnerable numbers
 #   2 = survey is proportional to vulnerable biomass
@@ -93,11 +93,9 @@ pcod2020dat$catch  <- pcod2020dat$catch %>%
 #     mean = 1 so rho = sig^2/(sig^2+tau^2) holds true in variance pars.
 # timing: The fraction of total mortality that has occurred prior to survey. Usually zero.
 # If no data, just skip the row for that year
-for(i in 1:pcod2020dat$nit){
-  pcod2020dat$indices[[i]] <- pcod2020dat$indices[[i]] %>%
-    as.data.frame() %>%
-    select(iyr, it, gear, wt, timing)
-}
+pcod2020dat$indices  <- pcod2020dat$indices %>%
+  as.data.frame() %>%
+  select(iyr, it, gear, wt, timing)
 
 # Annual mean weight data: a matrix of pcod2020dat$nmeanwtobs x 4
 # Timing should match survey (usually 0)
