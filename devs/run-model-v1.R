@@ -75,6 +75,10 @@ library(here)
 library(tidyverse)
 library(RTMB)
 
+# FOR TESTING
+source("devs/load-models.R")
+pcod2020rep<-read.report.file("data-raw/iscam.rep")
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls
 
@@ -110,6 +114,12 @@ colnames(year_lookup) <- c("year", "year_index")
 la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
 wa <- dat$lwscal*la^dat$lwpow
 d3_wt_avg <- wa #just to be consistent with rep file
+
+# Get settings for priors
+# Leading parameters
+num_params <- ctl$num.params
+prior_settings_params <- ctl$params
+prior_settings_q <- ctl$surv.q
 
 # Tiny number to stop logs breaking in some places
 TINY <- 1.e-08
@@ -431,7 +441,6 @@ model <- function(par){
 
     # NOTE: Catches are not exactly as in rep file - could be rounding in the reported
     # log_ft_pars from the par file. GO BACK AND CHECK ALL CALCS AND VALUES
-
   } # end for ii
 
   # End calcFisheryObservations_deldiff
@@ -442,10 +451,11 @@ model <- function(par){
   # 5. calcSurveyObservations_deldiff()
   # Purpose: This function calculates predicted survey observations for each year
 
-  # Set up predicted survey index by gear and year
-  # Data is a ragged 3d array in iscam. Here, a list with nit elements.
+  # Needed to determin if q is random walk
+  q_prior <- prior_settings_q[1,]
 
-  q <- vector(length=nit) # vector of q
+  # Set up vector for mle qs (per Walters&Ludwig 1993 https://doi.org/10.1139/f94-07)
+  q <- vector(length=nit) # vector of q for each survey
 
   # set up lists for storing residuals and predicted indices
   # these are ragged arrays in iscam
@@ -469,8 +479,9 @@ model <- function(par){
     V <- vector(length=nitnobs[kk])
     V[1:nitnobs[kk]] <- 0.
 
-    nz <- 0 # counter for number of observations
-    iz <- 1  # index for first year of data for prospective analysis
+    # not sure why we need these
+    #nz <- 0 # counter for number of observations
+    #iz <- 1  # index for first year of data for prospective analysis
 
     for(ii in 1:nitnobs[kk]){
       iyear    <- indices[[kk]][ii,1] # actual year (not used)
@@ -478,56 +489,59 @@ model <- function(par){
       k    <- indices[[kk]][ii,3] # gear
       di   <- indices[[kk]][ii,5] # timing
 
-      nz <- nz+1  # counter for number of observations
+      #nz <- nz+1  # counter for number of observations
 
+      # TODO: check these correctly matched up with years - yes, checked against rep file
       z = ft[k,i]+Mt[i]
+      # Adjust numbers and biomass for survey timing. If di=0, no adjustment
       Np = numbers[i] * exp( -z * di)
       Bp = biomass[i] * exp( -z * di)
 
       # Two different survey types: 1=prop to numbers; 2=prop to biomass
       if(survtype[kk]==1){
-        V[ii] <- V[ii] + Np
+        V[ii] <- Np
       }
       if(survtype[kk]==2){
-        V[ii] <- V[ii] + Bp
+        V[ii] <- Bp
       }
       if(!survtype[kk] %in% 1:2){
         stop(("Survey type must be 1 (survey proporional to numbers) or 2 (survey proporional to biomass). Set in dat$survtype"))
       }
     } #end of ii loop
 
-    it 	= t(indicesindices[[kk]][2,iz:nz]) # index
-    wt 	= t(indicesindices[[kk]][4,iz:nz]) # index weight
-    wt 	= wt/sum(wt) # normalized weight
+    it 	= t(indices[[kk]])[2,1:nitnobs[kk]] # index
+    wt 	= t(indices[[kk]])[4,1:nitnobs[kk]] # index weight
+    wt 	= wt/sum(wt) # normalized weight (sum to 1)
 
-    zt 	= log(it) - log(V[iz:nz])
+    # get mle q (same as for ASM, from Walters&Ludwig 1993 https://doi.org/10.1139/f94-07)
+    zt 	= log(it) - log(V[1:nitnobs[kk]])
     zbar = sum(zt*wt)
-    #dvariable 	zbar = mean(zt); RFUpdate: this old weighting may have been incorrect but check above line with CW
     q[kk] = exp(zbar)
 
-    # survey residuals
-    epsilon[[kk]][iz,nz] = zt - zbar
-    it_hat[[kk]][iz,nz] = q[kk] * V[iz:nz]
+    # survey residuals - checked against rep file
+    epsilon[[kk]][1:nitnobs[kk]] = zt - zbar
+    it_hat[[kk]][1:nitnobs[kk]] = q[kk] * V[1:nitnobs[kk]]
 
     # SPECIAL CASE: penalized random walk in q.
+    # !!!NOT TESTED!!! This is dimensioned correctly but have not checked calcs
     if(q_prior[kk]==2 ){
-      epsilon[[kk]][1:nitnobs[kk]] <- 0 # initialize epsilon
+        epsilon[[kk]][1:nitnobs[kk]] <- 0 # initialize epsilon
 
-      # iscam ADMB code:
-       # fd_zt <- first_difference(zt)
-      # From the admb source code, looks like first_difference returns a vector of
-      # i+1 - i:
-      # i.e., differences.elem(i) = values.elem(i + 1) - values.elem(i);
-      fd_zt <- diff(zt)
-      zw_bar <- sum(fd_zt*wt[iz,nz-1])
-      epsilon[[kk]][iz:nz-1] <- fd_zt - zw_bar
-      qt[[kk]][iz] = exp(zt[iz])
+        # iscam ADMB code:
+         # fd_zt <- first_difference(zt)
+        # From the admb source code, looks like first_difference returns a vector of
+        # i+1 - i:
+        # i.e., differences.elem(i) = values.elem(i + 1) - values.elem(i);
+        fd_zt <- diff(zt)
+        zw_bar <- sum(fd_zt*wt[1:(nitnobs[kk]-1)])
+        epsilon[[kk]][1:(nitnobs[kk]-1)] <- fd_zt - zw_bar
+        qt[[kk]][1] = exp(zt[1])
 
-      for(ii in (iz+1):nz){
-        qt[[kk]][ii] = qt[[kk]][ii-1] * exp(fd_zt[ii-1])
+        for(ii in 2:nitnobs[k]){
+          qt[[kk]][ii] = qt[[kk]][ii-1] * exp(fd_zt[ii-1])
+        }
+        it_hat[[kk]][1:nitnobs[kk]] = qt[[kk]][1:nitnobs[kk]]*V[1:nitnobs[kk]]
       }
-      it_hat[kk,iz:nz] = qt[[kk]][iz:nz]*V[iz:nz]
-    }
   } #end kk loop
 
   # End calcSurveyObservations_deldiff
@@ -573,10 +587,4 @@ obj <- MakeADFun(f, pars, silent=FALSE)
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
 opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
 opt$objective
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 3. Parameters for priors
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 

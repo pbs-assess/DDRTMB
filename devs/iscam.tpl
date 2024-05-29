@@ -2696,7 +2696,7 @@ FUNCTION calcSurveyObservations
 		dvar_vector t1 = rowsum(V);
 		dvar_vector zt = log(it) - log(t1(iz,nz));
 		dvariable zbar = sum(elem_prod(zt,wt));
-				 q(kk) = mfexp(zbar);
+		q(kk) = mfexp(zbar);
 
 
 		// | survey residuals
