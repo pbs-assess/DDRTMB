@@ -49,7 +49,7 @@ Type:
 \item 1 = survey is proportional to numbers
 \item 2 = survey is proportional to biomass}
 }
-\item{indices}{List of length nit, consisting of nit matrices with nitnobs(i) rows x 5 columns:
+\item{indices}{
 \itemize{
 \item \code{iyr} = Survey year, omits missing years
 \item \code{it} = Survey value
@@ -59,12 +59,11 @@ Type:
 }
 \item{nmeanwt}{Number of mean weight series}
 \item{nmeanwtobs}{Number of observations for mean weight of the catch, a vector of length nmeanwt}
-\item{meanwtdata}{Annual commercial mean weights (kg). A matrix with nmeanwtobs rows x 4 columns:
+\item{meanwtdata}{List of length nmeanwt, consisting of nmeanwt matrices with nmeanwtobs(i) rows x 4 columns:
 \itemize{
 \item \code{year} = Year, omits missing years
 \item \code{meanwt} = Mean weight value (kg)
 \item \code{gear} = gear index from ngear
-\item \code{wt} = fixed sd to use in likelihood. Usually 0.2 or 0.25, but subject to sensitivity analysis.
 \item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero. Set same as for survey.}
 }
 }

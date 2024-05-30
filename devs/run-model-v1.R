@@ -611,7 +611,34 @@ model <- function(par){
 
 #|---------------------------------------------------------------------|
   # 7. calcAnnualMeanWeight_deldiff() //RF added this for P cod - only gets added to objective function if cntrl(15)==1
+  # Purpose: This function calculates the mean weight of the catch for each year, gear by dividing the total
+  #          biomass by the total numbers
 
+  # loop through series with empirical annual mean weight data
+  for(kk in 1:nmeanwt){
+
+    Vn <- vector(length = nmeanwtobs[kk])	      # Vulnerable numbers to gear
+    Vb <- vector(length = nmeanwtobs[kk])	      # Vulnerable biomass to gear
+    Vn[1:nmeanwtobs[kk]] <- Vb[1:nmeanwtobs[kk]] <- 0
+
+    # Loop through observations
+    for(ii in 1:nmeanwtobs[kk])	{
+
+      i    = meanwtdata(kk)(ii)(1);  # year
+      k    = meanwtdata(kk)(ii)(3);  # gear
+      di   = d3_mean_wt_data(kk)(ii)(7);  # timing
+
+        ws  = mfexp( -Z_dd(ig)(i)*di );   //accounts for survey timing
+        wN  = numbers(ig)(i)*ws;
+        wB  = biomass(ig)(i)*ws;
+        Vn(ii) += wN;  //adds sexes
+        Vb(ii) += wB;//TODO: need to replace d3wtavg for something else
+
+
+      annual_mean_weight(kk)(ii) = Vb(ii)/Vn(ii);
+      obs_annual_mean_weight(kk)(ii)	= d3_mean_wt_data(kk)(ii)(2);	  //fill a matrix with observed annual mean weights - makes objective function calcs easier
+    }	// end of ii loop
+  } // end of kk loop
 
   # End calcAnnualMeanWeight_deldiff
 #|---------------------------------------------------------------------|

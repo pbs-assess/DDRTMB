@@ -62,12 +62,12 @@ pcod2020dat$catch   <- rawpcod2020dat$catch # Catch observations (tonnes).
 pcod2020dat$nit     <- rawpcod2020dat$nit # Number of surveys
 pcod2020dat$nitnobs <- rawpcod2020dat$nitnobs # Number of survey obs (a vector of length pcod2020dat$nit)
 pcod2020dat$survtype <- rawpcod2020dat$survtype # Survey type (a vector of length pcod2020dat$nit) - see below
-pcod2020dat$indices <- rawpcod2020dat$indices # Index observations
+pcod2020dat$indices <- rawpcod2020dat$indices # Index observations (a list of matrices)
 # Annual commercial mean weight data
 # Unneeded columns removed below. See below for column descriptions.
 pcod2020dat$nmeanwt <- rawpcod2020dat$nmeanwt # Number of mean weight series (if none, must be set to 1 - CAN NOW CHANGE THIS REQUIREMENT)
 pcod2020dat$nmeanwtobs <- rawpcod2020dat$nmeanwtobs # Number of mean weight observations
-pcod2020dat$meanwtdata <- rawpcod2020dat$meanwtdata # Annual commercial mean weights (kg)
+pcod2020dat$meanwtdata <- rawpcod2020dat$meanwtdata # Annual commercial mean weights (kg) (a list of matrices)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean up unnecessary data columns
@@ -80,7 +80,8 @@ pcod2020dat$catch  <- pcod2020dat$catch %>%
   as.data.frame() %>%
   select(year, gear, type, value)
 
-# Index data: a list with pcod2020dat$nit elements, each is a matrix of 1:pcod2020dat$nitnobs[i] x 5
+# Index data: a list with pcod2020dat$nit elements,
+#    each is a matrix of 1:pcod2020dat$nitnobs[i] x 5
 # it: Index value. Set type in pcod2020dat$survtype:
 #   1 = survey is proportional to vulnerable numbers
 #   2 = survey is proportional to vulnerable biomass
@@ -97,12 +98,15 @@ for(i in 1:pcod2020dat$nit){
     select(iyr, it, gear, wt, timing)
 }
 
-# Annual mean weight data: a matrix of pcod2020dat$nmeanwtobs x 4
+# Annual mean weight data: a list with pcod2020dat$nmeanwt elements,
+#   each is a matrix of 1:pcod2020dat$nmeanwtobs[i] x 5
 # Timing should match survey (usually 0)
 # If no data, just skip the row for that year
-pcod2020dat$meanwtdata  <- pcod2020dat$meanwtdata %>%
-  as.data.frame() %>%
-  select(year, meanwt, gear, timing)
+for(i in 1:pcod2020dat$nmeanwt){
+  pcod2020dat$meanwtdata[[i]] <- pcod2020dat$meanwtdata[[i]] %>%
+    as.data.frame() %>%
+    select(iyr, it, gear, timing)
+}
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Parameter controls

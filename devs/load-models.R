@@ -491,17 +491,22 @@ read.data.file <- function(file = NULL,
     colnames(tmp$waa) <- c("year","gear","area","group","sex",tmp$sage:tmp$nage)
    }
 
-   # Annual Mean Weight data
-    # Catch data
+    # Annual Mean Weight data
+    # MAY 30, 2024. RF CHANGED THIS TO A LIST TO BE CONSISTENT WITH ISCAM
     tmp$nmeanwt <- as.numeric(dat[ind <- ind + 1])
     tmp$nmeanwtobs <- as.numeric(dat[ind <- ind + 1])
     if(tmp$nmeanwtobs >0){
-	    tmp$meanwtdata  <- matrix(NA, nrow = sum(tmp$nmeanwtobs), ncol = 7)
-	    for(row in 1:sum(tmp$nmeanwtobs)){
-	      tmp$meanwtdata[row,] <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
-	    }
-	    colnames(tmp$meanwtdata) <- c("year","meanwt","gear","area","group","sex","timing")
-   }
+      for(index in 1:tmp$nmeanwt){
+        nrows <- tmp$nmeanwtobs[index]
+        ncols <- 7
+        tmp$meanwtdata[[index]] <- matrix(NA, nrow = nrows, ncol = ncols)
+        for(row in 1:nrows){
+          tmp$meanwtdata[[index]][row,] <- as.numeric(strsplit(dat[ind <- ind + 1],"[[:blank:]]+")[[1]])
+        }
+        colnames(tmp$meanwtdata[[index]]) <- c("iyr","it","gear","area","group","sex","timing")
+      }
+    }
+
   tmp$eof <- as.numeric(dat[ind <- ind + 1])
 
   return(tmp)
