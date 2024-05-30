@@ -614,6 +614,19 @@ model <- function(par){
   # Purpose: This function calculates the mean weight of the catch for each year, gear by dividing the total
   #          biomass by the total numbers
 
+  # Set up lists for obs and predicted annual mean weights
+  # these are ragged arrays in iscam
+  annual_mean_weight     <- list() # residuals
+  obs_annual_mean_weight <- list() # predicted indices
+
+  #loop over series to create list
+  for(kk in 1:nmeanwt){
+    annual_mean_weight[[kk]]     <- vector(length=nmeanwtobs[kk])
+    obs_annual_mean_weight[[kk]] <- vector(length=nmeanwtobs[kk])
+    annual_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
+    obs_annual_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
+  }
+
   # loop through series with empirical annual mean weight data
   for(kk in 1:nmeanwt){
 
@@ -622,23 +635,24 @@ model <- function(par){
     Vn[1:nmeanwtobs[kk]] <- Vb[1:nmeanwtobs[kk]] <- 0
 
     # Loop through observations
-    for(ii in 1:nmeanwtobs[kk])	{
+    for(ii in 1:nmeanwtobs[kk]){
 
-      i    = meanwtdata(kk)(ii)(1);  # year
-      k    = meanwtdata(kk)(ii)(3);  # gear
-      di   = d3_mean_wt_data(kk)(ii)(7);  # timing
+      iyear    <- meanwtdata[[kk]][ii,1]  # actual year - not used
+      i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index - need this to match meanwt to obs
+      k    <- meanwtdata[[kk]][ii,3]  # gear
+      di   <- meanwtdata[[kk]][ii,4]  # timing
 
-        ws  = mfexp( -Z_dd(ig)(i)*di );   //accounts for survey timing
-        wN  = numbers(ig)(i)*ws;
-        wB  = biomass(ig)(i)*ws;
-        Vn(ii) += wN;  //adds sexes
-        Vb(ii) += wB;//TODO: need to replace d3wtavg for something else
+      ws  = exp(-Zt[i]*di)   # Total mortality that accounts for timing
+      wN  = numbers[i]*ws
+      wB  = biomass[i]*ws
+      Vn[ii] <- wN
+      Vb[ii] <- wB
 
-
-      annual_mean_weight(kk)(ii) = Vb(ii)/Vn(ii);
-      obs_annual_mean_weight(kk)(ii)	= d3_mean_wt_data(kk)(ii)(2);	  //fill a matrix with observed annual mean weights - makes objective function calcs easier
-    }	// end of ii loop
-  } // end of kk loop
+      # RF Checked against rep file
+      annual_mean_weight[[kk]][ii] <- Vb[ii]/Vn[ii]
+      obs_annual_mean_weight[[kk]][ii] <-  meanwtdata[[kk]][ii,2]	  # fill a list of vectors with observed annual mean weights
+    }	# end ii loop
+  } # end kk loop
 
   # End calcAnnualMeanWeight_deldiff
 #|---------------------------------------------------------------------|
