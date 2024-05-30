@@ -342,7 +342,6 @@ model <- function(par){
     annual_mean_wt[1] <- biomass[1]/numbers[1]
 
     #  Initialise log recruits
-    # This does not match log of rt from rep file but I think iscam reports value from S-R function
     log_rt[1] <- log_avgrec+log_rec_devs[1] # this is just the same as log(tmp_nAge[1])
   }
   if(ctl$misc[5]==1){
