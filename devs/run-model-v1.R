@@ -40,7 +40,6 @@
 # 1. Translation of iscam to RTMB:
 #  - CHECK all estimated parameters are included in pars
 #  - CHECK length of log_rec_devs and log_init_rec_devs
-#  - CHECK length of log_rt vector and make sure we are filling it correctly!
 #  - CHECK all test calcs. Catches are a little bit off. Could be rounding in iscam rep and par files
 #  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
 #  - Probably don't need all the counters
@@ -76,8 +75,8 @@ library(tidyverse)
 library(RTMB)
 
 # FOR TESTING
-source("devs/load-models.R")
-pcod2020rep<-read.report.file("data-raw/iscam.rep")
+# source("devs/load-models.R")
+# pcod2020rep<-read.report.file("data-raw/iscam.rep")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls
@@ -270,7 +269,7 @@ model <- function(par){
   biomass <- vector(length=nyrs+1)
   sbt <- vector(length=nyrs+1) # can eliminate this eventually. It's the same as biomass in the dd model
   # FIXME: I think this should just be from syr:(nyr-sage)
-  log_rt <- vector(length=nyrs-sage) # log recruits
+  log_rt <- vector(length=nyrs) # estimated log recruits
   annual_mean_wt <- vector(length=nyrs)
   # Add recruitment for projection year ... assume it is average
   rnplus=exp(log_avgrec)
@@ -288,7 +287,7 @@ model <- function(par){
 
   # Parameters of Stock-Recruit relationship
   # Maximum juvenile survival rate (same for BH and Ricker)
-  alpha.sr <- (CR*ro)/bo # NOTE: *Steve called this so*. RF thinks this is confusing notation because the o implies unfished, whereas this is max juv survival rate when the biomass is close to zero
+  alpha.sr <- CR*(ro/bo) # NOTE: *Steve called this so*. RF thinks this is confusing notation because the o implies unfished, whereas this is max juv survival rate when the biomass is close to zero
 
   # Beta parameter (density-dependence in juvenile survival)
   if(ctl$misc[2]==1){
@@ -547,9 +546,65 @@ model <- function(par){
   # End calcSurveyObservations_deldiff
 #|---------------------------------------------------------------------|
 
-
 #|---------------------------------------------------------------------|
   # 6. calcStockRecruitment_deldiff()
+  # Purpose:
+  # This function is used to derive the underlying stock-recruitment
+  # relationship that is ultimately used in determining MSY-based reference
+  # points.  The objective of this function is to determine the appropriate
+  # Ro, Bo and steepness values of either the Beverton-Holt or Ricker  Stock-
+  #   Recruitment Model:
+  #  Beverton-Holt Model
+  #  Rt=k*Ro*St/(Bo+(k-1)*St)*exp(delta-0.5*tau*tau) \f$
+  #
+  #   Ricker Model
+  #  Rt=so*St*exp(-beta*St)*exp(delta-0.5*tau*tau) \f$
+
+  # Set up vectors
+  #rt     <- vector(length=nyrs-sage)  # estimated recruits from calcNumbersBiomass_deldiff()
+  #delta  <- vector(length=nyrs-sage)  # residuals between estimated R and R from S-R curve (process err)
+  tmp_rt <- vector(length=nyrs) # recruits derived from stock-recruit model
+  tmp_rt[1:nyrs] <- 0
+
+  # get the process error term from the errors in variables parameters
+  # [For the P. cod assessment, rho and varphi are set to give tau=0.8 and obs error=0.2]
+  tau <- sqrt(1-rho)*varphi
+
+  # counter
+  iicount <- 0
+
+  for(i in 1:nyrs){
+    iicount <- iicount+1
+
+    if(ctl$misc[2]==1){
+      # Beverton-Holt recruitment
+      if(iicount <= kage){
+        tmp_rt[i] =  alpha.sr*sbt[1]/(1.+beta.sr*sbt[1])
+      }else{
+        tmp_rt[i] = alpha.sr*sbt[i-kage]/(1.+beta.sr*sbt[i-kage])
+      }
+    }
+    if(ctl$misc[2]==2){
+      # Ricker recruitment
+      if(iicount <= kage){
+        tmp_rt[i] =  alpha.sr*sbt[1]*exp(-beta.sr*sbt[1])
+      }else{
+        tmp_rt[i] = alpha.sr*sbt[i-kage]*exp(-beta.sr*sbt[i-kage])
+      }
+    }
+    if(!ctl$misc[2] %in% 1:2){
+      stop("Recruitment model must be 1 (Beverton-Holt) or 2 (Ricker). Set in ctl$misc[2]")
+    }
+
+  } # end year loop i
+
+  # estimated recruits from calcNumbersBiomass_deldiff()
+  # RF Checked against rep file
+  rt <- exp(log_rt[(sage+1):nyrs])
+
+  # Calculate delta: process errors (deviations from S-R function)
+  # RF: ADD A NOTE WHY BIAS CORRECTION ADDED HERE
+  delta <- log(rt)-log(tmp_rt[(sage+1):nyrs])+0.5*tau*tau # RF Checked against rep file
 
   # End calcStockRecruitment_deldiff
 #|---------------------------------------------------------------------|
