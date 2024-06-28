@@ -119,7 +119,7 @@ d3_wt_avg <- wa # just to be consistent with rep file
 # Get settings for priors
 # Leading parameters
 num_params <- ctl$num.params
-prior_settings_params <- ctl$params
+theta_control <- ctl$params
 prior_settings_q <- ctl$surv.q
 
 # Tiny number to stop logs breaking in some places
@@ -132,14 +132,14 @@ TINY <- 1.e-08
 par <- list()
 # Begin by using initial values specified in pcod2020ctl
 # Leading parameters
-par$log_ro <- pcod2020ctl$params[1,1] # log unfished recruitment (syr)
-par$h <- pcod2020ctl$params[2,1] # steepness
-par$log_m <- pcod2020ctl$params[3,1] # log natural mortality
+par$log_ro <- theta_control[1,1] # log unfished recruitment (syr)
+par$h <- theta_control[2,1] # steepness
+par$log_m <- theta_control[3,1] # log natural mortality
 # In the current version of the P cod model, these are set the same as ro so do not estimate
-#   par$log_avgrec <- pcod2020ctl$params[4,1] # log average recruitment (syr+1 to nyr)
-#   par$log_recinit <- pcod2020ctl$params[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
-par$rho <- pcod2020ctl$params[6,1] # Errors in Variables: fraction of the total variance associated with observation error
-par$kappa <- pcod2020ctl$params[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
+#   par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
+#   par$log_recinit <- ptheta_control[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
+par$rho <- theta_control[6,1] # Errors in Variables: fraction of the total variance associated with observation error
+par$kappa <- theta_control[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
 # TODO: Check these are dimensioned and initialized correctly
 par$log_ft_pars <- rep(0,nyrs) # estimated log fishing mortalities (total across fleets)
 par$init_log_rec_devs <- rep(0,(dat$nage-dat$sage + 1)) # vector(length=dat$nage - dat$sage + 1) # I think this is length nage-sage+1 (i.e., length 2:9)
@@ -167,13 +167,19 @@ model <- function(par){
 
 #|---------------------------------------------------------------------|
   # 1. initParameters
-  ro        <- exp(par$log_ro)
-  steepness <- par$h
-  m         <- exp(par$log_m)
-  rho       <- par$rho
-  varphi    <- sqrt(1.0/par$log_kappa)
-  sig       <- sqrt(rho)*varphi  # elem_prod(sqrt(rho) , varphi)
-  tau       <- sqrt(1.0-rho)*varphi # elem_prod(sqrt(1.0-rho) , varphi)
+  theta <- c(exp(par$log_ro),
+             par$h,
+             exp(par$log_m),
+             par$rho,
+             par$kappa)
+
+  ro        <- theta[1]
+  steepness <- theta[2]
+  m         <- theta[3]
+  rho       <- theta[4]
+  varphi    <- sqrt(1.0/theta[5])
+  sig       <- sqrt(rho)*varphi
+  tau       <- sqrt(1.0-rho)*varphi
 
   # Fixed parameters
   # A decision was made in 2018 to fix these two parameters to be the same
@@ -619,15 +625,18 @@ model <- function(par){
 
   # Set up lists for obs and predicted annual mean weights
   # these are ragged arrays in iscam
-  annual_mean_weight     <- list() # residuals
-  obs_annual_mean_weight <- list() # predicted indices
+  annual_mean_weight     <- list() # observed
+  obs_annual_mean_weight <- list() # predicted
+  epsilon_mean_weight <- list() # residuals
 
   #loop over series to create list
   for(kk in 1:nmeanwt){
     annual_mean_weight[[kk]]     <- vector(length=nmeanwtobs[kk])
     obs_annual_mean_weight[[kk]] <- vector(length=nmeanwtobs[kk])
+    epsilon_mean_weight[[kk]]    <- vector(length=nmeanwtobs[kk])
     annual_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
     obs_annual_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
+    epsilon_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
   }
 
   # loop through series with empirical annual mean weight data
@@ -654,6 +663,8 @@ model <- function(par){
       # RF Checked against rep file
       annual_mean_weight[[kk]][ii] <- Vb[ii]/Vn[ii]
       obs_annual_mean_weight[[kk]][ii] <-  meanwtdata[[kk]][ii,2]	  # fill a list of vectors with observed annual mean weights
+      #  residual
+      epsilon_mean_weight[[kk]][ii] <-  log(annual_mean_weight[[kk]][ii]) - log(obs_annual_mean_weight[[kk]][ii])
     }	# end ii loop
   } # end kk loop
 
@@ -683,17 +694,39 @@ model <- function(par){
       it_wt <- dat$indices[[k]][ii,4]
       tmp_mean <- mean(it_wt)
       it_wt <- it_wt/tmp_mean # Normalise. This happens on L466 of devs/iscam.tpl
-      sig_it[ii] <- sig/it_wt[kk,ii] # divide global sig by individual weights (which are inverted, so divide)
+      sig_it[ii] <- sig/it_wt # divide global sig by individual weights (which are inverted, so divide)
 
       # update likelihood
       jnll <- jnll - dnorm(epsilon[[kk]][ii], 0.0, sig_it[ii])
     }
   }
 
-  # Likelihood for mean weight
-
-
   # Likelihood for recruitment
+  for(ii in 1:length(rt)){
+    jnll <- jnll - dnorm(delta[ii], 0.0, tau)
+  }
+
+  # Likelihood for mean weight
+  # We are entering the likelihood in log space here - do we need a Jacobian transformation?
+  for(kk in 1:nmeanwt){
+    for(ii in 1:nmeanwtobs[kk]){
+        jnll <- jnll - dnorm(epsilon_mean_weight[[kk]][ii], 0.0, sig_w)
+    }
+  }
+
+ #==============================================================================================
+ # ~PRIORS~
+ #==============================================================================================
+
+ for(i in 1:ctl$num.params){
+  ptype <- theta_control[i,5]
+
+
+
+
+
+ }
+
 
 
 

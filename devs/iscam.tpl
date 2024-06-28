@@ -4087,7 +4087,7 @@ FUNCTION calcObjectiveFunction
 	qvec.initialize();
 	for(k=1;k<=nits;k++)
 	{
-		if(q_prior(k) == 1 )
+		if(q_prior(k) == 1)
 		{
 			qvec(k) = dnorm( log(q(k)), mu_log_q(k), sd_log_q(k) );
 		}
