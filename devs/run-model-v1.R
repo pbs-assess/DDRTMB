@@ -721,8 +721,26 @@ model <- function(par){
  for(i in 1:ctl$num.params){
   ptype <- theta_control[i,5]
 
+  # Uniform
+  if(ptype==0){
 
+  }
+  # Normal
+  if(ptype==1){
 
+  }
+  # Lognormal
+  if(ptype==2){
+
+  }
+  # Beta
+  if(ptype==3){
+
+  }
+  # Gamma
+  if(ptype==4){
+
+  }
 
 
  }
