@@ -16,10 +16,10 @@
 
 # Package name: DDRTMB
 
-# Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station)
+# Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station, Nanaimo, Canada)
 
 # Date created:  May 15, 2024
-# Last Modified: May 27, 2024
+# Last Modified: June 28, 2024
 
 # Notes:
 # - The iscam input files are already loaded into the package:
@@ -51,17 +51,19 @@
 
 # 2. Potential model changes:
 #  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
-#  - Transform normal space parameters to log
+#  - Transform normal space parameters to log?
 #  - Need for Jacobian transformations?
-#  - Look at bias correction (see Thorson and Kristensen paper)
+#  - Look at bias correction (see Thorson and Kristensen paper - but not needed for bayesian)
 #  - Look at alternate settings for Errors in Variables (e.g., weights additive instead of multiplicative)
 #  - Look at state-space implementation
 #  - Add time-varying M
 #  - Think about how to make this a multi-species, multi-area model? (MICE)
 #  - Some of the architecture is already in iscam
+#  - consider a stan version
+#  - consider a delay differential model in continuous time (see CJW correspondence)
 
 # 3. Graphic outputs and diagnostics
-#  - Work with Sean, Nick, Catarina, others, ... for standardized set of visualizations of outputs and diagnostics
+#  - Coordinate with Sean, Nick, Catarina, others, ... for standardized set of visualizations of outputs and diagnostics
 
 # Document and build package (these are also buttons in Rstudio)
 #    this will incorporate new functions saved in the R and data folders
@@ -85,7 +87,7 @@ library(RTMB)
 # 1. Data inputs and controls
 # DATA_SECTION
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Input lists (run filter-inputs.R first)
+# Input lists (*run filter-inputs.R first*)
 dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
 ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
@@ -112,7 +114,7 @@ colnames(year_lookup) <- c("year", "year_index")
 # Get length and weight at age for first year (for initializing population at non-equilibrium, ctl$misc[5]==0)
 la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
 wa <- dat$lwscal*la^dat$lwpow
-d3_wt_avg <- wa #just to be consistent with rep file
+d3_wt_avg <- wa # just to be consistent with rep file
 
 # Get settings for priors
 # Leading parameters
@@ -129,7 +131,6 @@ TINY <- 1.e-08
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 par <- list()
 # Begin by using initial values specified in pcod2020ctl
-# Check all estimated pars are here
 # Leading parameters
 par$log_ro <- pcod2020ctl$params[1,1] # log unfished recruitment (syr)
 par$h <- pcod2020ctl$params[2,1] # steepness
@@ -146,11 +147,11 @@ par$log_rec_devs <- rep(0,nyrs) # vector(length=nyrs)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Model
-# Eventually move functions to separate R scripts
+# Eventually define some components as functions and move to separate R scripts
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 model <- function(par){
 
-  getAll(par,dat, pfc)
+  getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
   jnll <- 0 # initialize joint neg log likelihood
   pll  <- 0 # initialize priors component of neg log likelihood
 
@@ -174,10 +175,13 @@ model <- function(par){
   sig       <- sqrt(rho)*varphi  # elem_prod(sqrt(rho) , varphi)
   tau       <- sqrt(1.0-rho)*varphi # elem_prod(sqrt(1.0-rho) , varphi)
 
+  # Fixed parameters
   # A decision was made in 2018 to fix these two parameters to be the same
   #   as log_ro (P. Starr). May revisit this later
   log_avgrec <- par$log_ro
   log_recinit <- par$log_ro # RF: I don't think it makes sense to use this one
+  sig_c <- ctl$misc[4] # sd in catch likelihood
+  sig_w <- ctl$weight.sig # sd in mean weight likelihood (called weight_sig in iscam)
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
@@ -507,9 +511,9 @@ model <- function(par){
       }
     } #end of ii loop
 
-    it 	= t(indices[[kk]])[2,1:nitnobs[kk]] # index
-    wt 	= t(indices[[kk]])[4,1:nitnobs[kk]] # index weight
-    wt 	= wt/sum(wt) # normalized weight (sum to 1)
+    it 	<- t(indices[[kk]])[2,1:nitnobs[kk]] # index
+    wt 	<- t(indices[[kk]])[4,1:nitnobs[kk]] # index weight
+    wt 	<- wt/sum(wt) # normalized weight (sum to 1) # Q: here the weights are normalized by the sum but in the likelihood, iscam normalises it_wt by the mean (in the data section)
 
     # get mle q (same as for ASM, from Walters&Ludwig 1993 https://doi.org/10.1139/f94-07)
     zt 	= log(it) - log(V[1:nitnobs[kk]])
@@ -659,9 +663,42 @@ model <- function(par){
 #|---------------------------------------------------------------------|
 # calcObjectiveFunction();
 
+  # Likelihood for catch
+  for(ii in 1:nctobs){
+    jnll <- jnll - dnorm(eta[ii], 0.0, sig_c)
+  }
+
+  # Likelihood for relative abundance indices
+  # loop over surveys
+  for(kk in 1:nit){
+    sig_it <- rep(0,nitnobs[kk]) # vector for weights for each obs in survey k
+
+    # Loop over observations in the survey
+    for(ii in 1:nitnobs[kk])
+    {
+      # Get the weightings. Note that iscam normalizes it_wt in the datasection
+      # by dividing by the mean. But above, where q is calculated, the weights (called wt)
+      # are normalized by dividing by sum
+      # for now, follow iscam
+      it_wt <- dat$indices[[k]][ii,4]
+      tmp_mean <- mean(it_wt)
+      it_wt <- it_wt/tmp_mean # Normalise. This happens on L466 of devs/iscam.tpl
+      sig_it[ii] <- sig/it_wt[kk,ii] # divide global sig by individual weights (which are inverted, so divide)
+
+      # update likelihood
+      jnll <- jnll - dnorm(epsilon[[kk]][ii], 0.0, sig_it[ii])
+    }
+  }
+
+  # Likelihood for mean weight
 
 
- jnll <- jnll + pll
+  # Likelihood for recruitment
+
+
+
+
+ jnll <- jnll - pll
  # End calcObjectiveFunction
 #|---------------------------------------------------------------------|
 

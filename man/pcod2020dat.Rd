@@ -64,7 +64,7 @@ Type:
 \item \code{year} = Year, omits missing years
 \item \code{meanwt} = Mean weight value (kg)
 \item \code{gear} = gear index from ngear
-\item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero. Set same as for survey.}
+\item \code{timing} = the fraction of total mortality that has occurred prior to survey. Usually zero. }
 }
 }
 }
