@@ -119,8 +119,8 @@ d3_wt_avg <- wa # just to be consistent with rep file
 # Get settings for priors
 # Leading parameters
 num_params <- ctl$num.params
-prior_settings_q <- ctl$surv.q
-theta_control <- ctl$params %>%  as.data.frame()
+theta_control <- ctl$params %>%  as.data.frame() # settings for initialization and priors
+q_control <- t(ctl$surv.q) %>%  as.data.frame() # settings for q priors (transposed from ctl file)
 
 # Tiny number to stop logs breaking in some places
 TINY <- 1.e-08
@@ -152,8 +152,9 @@ par$log_rec_devs <- rep(0,nyrs) # vector(length=nyrs)
 model <- function(par){
 
   getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
-  jnll <- 0 # initialize joint neg log likelihood
-  pll  <- 0 # initialize priors component of neg log likelihood
+  jnll <- 0. # initialize joint neg log likelihood
+  pll  <- 0. # initialize priors component of neg log likelihood
+  pen  <- 0. # initialize penalties component of neg log likelihood
 
   # Pseudocode from iscam
   # 1. initParameters()
@@ -459,7 +460,7 @@ model <- function(par){
   # 5. calcSurveyObservations_deldiff()
   # Purpose: This function calculates predicted survey observations for each year
 
-  # Needed to determin if q is random walk
+  # Needed to determine if q is random walk
   q_prior <- prior_settings_q[1,]
 
   # Set up vector for mle qs (per Walters&Ludwig 1993 https://doi.org/10.1139/f94-07)
@@ -717,7 +718,8 @@ model <- function(par){
  #==============================================================================================
  # ~PRIORS~
  #==============================================================================================
- for(i in 1:ctl$num.params){
+ # Leading parameters
+  for(i in 1:ctl$num.params){
   ptype <- theta_control$prior[i] # prior type
   if(theta_control$phz[i] >= 1){
       # Uniform
@@ -747,11 +749,22 @@ model <- function(par){
   } # end if
 }# end i
 
+# Catchability coefficients q
+for(k in 1:nit)
+  {
+    if(q_control$priortype[k] == 1)
+    {
+      qtmp <- dnorm(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
+      pll <- pll + qtmp
+    }
+  }
+
+  #==============================================================================================
+  # ~PENALTIES~
+  #==============================================================================================
 
 
-
-
- jnll <- jnll - pll
+ jnll <- jnll + pll
  # End calcObjectiveFunction
 #|---------------------------------------------------------------------|
 
