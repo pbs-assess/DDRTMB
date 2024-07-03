@@ -19,7 +19,7 @@
 # Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station, Nanaimo, Canada)
 
 # Date created:  May 15, 2024
-# Last Modified: June 28, 2024
+# Last Modified: July 3, 2024
 
 # Notes:
 # - The iscam input files are already loaded into the package:
@@ -119,8 +119,8 @@ d3_wt_avg <- wa # just to be consistent with rep file
 # Get settings for priors
 # Leading parameters
 num_params <- ctl$num.params
-theta_control <- ctl$params
 prior_settings_q <- ctl$surv.q
+theta_control <- ctl$params %>%  as.data.frame()
 
 # Tiny number to stop logs breaking in some places
 TINY <- 1.e-08
@@ -718,31 +718,34 @@ model <- function(par){
  # ~PRIORS~
  #==============================================================================================
  for(i in 1:ctl$num.params){
-  ptype <- theta_control[i,5]
+  ptype <- theta_control$prior[i] # prior type
+  if(theta_control$phz[i] >= 1){
+      # Uniform
+      if(ptype==0){
+        #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i]) # Note, iscam used the bounds not p1 and p2
+        # For testing use the same as iscam
+        ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
 
-  # Uniform
-  if(ptype==0){
-
-  }
-  # Normal
-  if(ptype==1){
-
-  }
-  # Lognormal
-  if(ptype==2){
-
-  }
-  # Beta
-  if(ptype==3){
-
-  }
-  # Gamma
-  if(ptype==4){
-
-  }
-
-
- }
+        }
+      # Normal
+      if(ptype==1){
+        ptmp <- dnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
+      }
+      # Lognormal
+      if(ptype==2){
+        ptmp <- dlnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
+      }
+      # Beta
+      if(ptype==3){
+        ptmp <- dbeta((theta[i]-theta$lb)/(theta$ub-theta$lb), theta_control$p1[i],theta_control$p2[i])
+      }
+      # Gamma
+      if(ptype==4){
+        ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i]);
+      }
+      pll <- pll + ptmp
+  } # end if
+}# end i
 
 
 
