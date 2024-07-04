@@ -720,14 +720,15 @@ model <- function(par){
  # ~PRIORS~
  #==============================================================================================
  # Leading parameters
+  # !The uniform is returning a negative value!
   for(i in 1:ctl$num.params){
     ptype <- theta_control$prior[i] # prior type
 
     if(theta_control$phz[i] >= 1){
         # Uniform
         if(ptype==0){
-          #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i]) # Note, iscam used the bounds not p1 and p2
-          # For testing use the same as iscam
+          #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
+          # For testing use the same as iscam. Why is the uniform set up like this?
           ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
          }
         # Normal
@@ -794,7 +795,7 @@ for(k in 1:nit){
   s   <- mean(log_rec_devs)
   pen <- pen + 1.e5*s*s
   s   <- mean(init_log_rec_devs)
-  pen <- 1.e5*s*s
+  pen <- pen + 1.e5*s*s
 
  # joint likelihood
  # Need to take negatives here. ADMB already outputs the components as negatives
