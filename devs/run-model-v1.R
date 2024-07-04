@@ -808,7 +808,7 @@ for(k in 1:nit){
   jnll # return joint neg log likelihood
 }
 
-model(pars)
+model(par)
 
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified
 ## from TMB help: map = List defining how to optionally collect and fix parameters
@@ -817,7 +817,7 @@ model(pars)
 
 # from babysam
 #obj <- MakeADFun(f, par, random=c("logN", "logF", "missing"), map=list(logsdF=as.factor(rep(0,length(par$logsdF)))), silent=FALSE)
-obj <- MakeADFun(f, pars, silent=FALSE)
+obj <- MakeADFun(model, par, silent=FALSE)
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
 opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
 opt$objective
