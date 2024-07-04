@@ -67,6 +67,7 @@ dnormR
 
 # I think this is what we do in R
 n <- 100
+std <- 2
 residual <- rnorm(n,0,1)
 SS <- sum(residual^2)
-tmp <- n*(0.5*log(2.*pi)+log(std))+0.5*SS/(std*std)
+tmp <- n*(0.5*log(2.*pi)+log(std))+0.5*SS/(std*std) # this is a large positive number - shouldn't it be negative?

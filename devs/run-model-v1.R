@@ -673,43 +673,46 @@ model <- function(par){
 #|---------------------------------------------------------------------|
 # calcObjectiveFunction();
 
+  # We're going to add up the components as in iscam
+  # but we need to take the negative at the end, as ADMB density functions
+  # are written to return neg
+
   # Likelihood for catch
   for(ii in 1:nctobs){
-    jnll <- jnll - dnorm(eta[ii], 0.0, sig_c)
+    jnll <- jnll + dnorm(eta[ii], 0.0, sig_c)
   }
 
   # Likelihood for relative abundance indices
   # loop over surveys
   for(kk in 1:nit){
+    it_wt <- dat$indices[[kk]][,4]
+    tmp_mean <- mean(it_wt)
     sig_it <- rep(0,nitnobs[kk]) # vector for weights for each obs in survey k
 
     # Loop over observations in the survey
-    for(ii in 1:nitnobs[kk])
-    {
+    for(ii in 1:nitnobs[kk]){
       # Get the weightings. Note that iscam normalizes it_wt in the datasection
       # by dividing by the mean. But above, where q is calculated, the weights (called wt)
       # are normalized by dividing by sum
       # for now, follow iscam
-      it_wt <- dat$indices[[k]][ii,4]
-      tmp_mean <- mean(it_wt)
-      it_wt <- it_wt/tmp_mean # Normalise. This happens on L466 of devs/iscam.tpl
-      sig_it[ii] <- sig/it_wt # divide global sig by individual weights (which are inverted, so divide)
+      it_wt_norm <- it_wt[ii]/tmp_mean # Normalise. This happens on L466 of devs/iscam.tpl
+      sig_it[ii] <- sig/it_wt_norm # divide global sig by individual weights (which are inverted, so divide)
 
       # update likelihood
-      jnll <- jnll - dnorm(epsilon[[kk]][ii], 0.0, sig_it[ii])
-    }
+      jnll <- jnll + dnorm(epsilon[[kk]][ii], 0.0, sig_it[ii])
+    } # end for
   }
 
   # Likelihood for recruitment
   for(ii in 1:length(rt)){
-    jnll <- jnll - dnorm(delta[ii], 0.0, tau)
+    jnll <- jnll + dnorm(delta[ii], 0.0, tau)
   }
 
   # Likelihood for mean weight
   # We are entering the likelihood in log space here - do we need a Jacobian transformation?
   for(kk in 1:nmeanwt){
     for(ii in 1:nmeanwtobs[kk]){
-        jnll <- jnll - dnorm(epsilon_mean_weight[[kk]][ii], 0.0, sig_w)
+        jnll <- jnll + dnorm(epsilon_mean_weight[[kk]][ii], 0.0, sig_w)
     }
   }
 
@@ -718,33 +721,33 @@ model <- function(par){
  #==============================================================================================
  # Leading parameters
   for(i in 1:ctl$num.params){
-  ptype <- theta_control$prior[i] # prior type
-  if(theta_control$phz[i] >= 1){
-      # Uniform
-      if(ptype==0){
-        #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i]) # Note, iscam used the bounds not p1 and p2
-        # For testing use the same as iscam
-        ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
+    ptype <- theta_control$prior[i] # prior type
+    if(theta_control$phz[i] >= 1){
+        # Uniform
+        if(ptype==0){
+          #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i]) # Note, iscam used the bounds not p1 and p2
+          # For testing use the same as iscam
+          ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
 
+          }
+        # Normal
+        if(ptype==1){
+          ptmp <- dnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
         }
-      # Normal
-      if(ptype==1){
-        ptmp <- dnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
-      }
-      # Lognormal
-      if(ptype==2){
-        ptmp <- dlnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
-      }
-      # Beta
-      if(ptype==3){
-        ptmp <- dbeta((theta[i]-theta$lb)/(theta$ub-theta$lb), theta_control$p1[i],theta_control$p2[i])
-      }
-      # Gamma
-      if(ptype==4){
-        ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i]);
-      }
-      pll <- pll + ptmp
-  } # end if
+        # Lognormal
+        if(ptype==2){
+          ptmp <- dlnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
+        }
+        # Beta
+        if(ptype==3){
+          ptmp <- dbeta((theta[i]-theta_control$lb)/(theta_control$ub-theta_control$lb), theta_control$p1[i],theta_control$p2[i])
+        }
+        # Gamma
+        if(ptype==4){
+          ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i]);
+        }
+        pll <- pll + ptmp
+    } # end if
 }# end i
 
 # Catchability coefficients q
@@ -793,7 +796,8 @@ for(k in 1:nit){
   s   <- mean(init_log_rec_devs)
   pen <- 1.e5*s*s
 
- # joint likelihood (check how distributions are coded in ADMB, they output the nll)
+ # joint likelihood
+ # Need to take negatives here. ADMB already outputs the components as negatives
  jnll <- -jnll - pll - pen
 
  # End calcObjectiveFunction
