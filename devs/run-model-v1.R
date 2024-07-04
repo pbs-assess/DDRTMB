@@ -722,14 +722,14 @@ model <- function(par){
  # Leading parameters
   for(i in 1:ctl$num.params){
     ptype <- theta_control$prior[i] # prior type
+
     if(theta_control$phz[i] >= 1){
         # Uniform
         if(ptype==0){
           #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i]) # Note, iscam used the bounds not p1 and p2
           # For testing use the same as iscam
           ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
-
-          }
+         }
         # Normal
         if(ptype==1){
           ptmp <- dnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
@@ -740,7 +740,7 @@ model <- function(par){
         }
         # Beta
         if(ptype==3){
-          ptmp <- dbeta((theta[i]-theta_control$lb)/(theta_control$ub-theta_control$lb), theta_control$p1[i],theta_control$p2[i])
+          ptmp <- dbeta((theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i]), theta_control$p1[i],theta_control$p2[i])
         }
         # Gamma
         if(ptype==4){
