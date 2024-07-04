@@ -89,7 +89,7 @@ library(RTMB)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Input lists (*run filter-inputs.R first*)
 dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
-ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions
+ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
 nyrs <- dat$nyr-dat$syr+1
 yrs <-  dat$syr:dat$nyr
@@ -152,9 +152,9 @@ par$log_rec_devs <- rep(0,nyrs) # vector(length=nyrs)
 model <- function(par){
 
   getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
-  jnll <- 0. # initialize joint neg log likelihood
-  pll  <- 0. # initialize priors component of neg log likelihood
-  pen  <- 0. # initialize penalties component of neg log likelihood
+  jnll <- 0. # initialize joint neg log likelihood (nlvec in iscam)
+  pll  <- 0. # initialize priors component of neg log likelihood (priors and qvec in iscam)
+  pen  <- 0. # initialize penalties component of neg log likelihood (pvec in iscam)
 
   # Pseudocode from iscam
   # 1. initParameters()
@@ -410,7 +410,6 @@ model <- function(par){
   # End calcNumbersBiomass_deldiff
 #|---------------------------------------------------------------------|
 
-
 #|---------------------------------------------------------------------|
   # 4. calcFisheryObservations_deldiff()
   # Purpose: This function calculates commercial catches for each year and gear
@@ -455,13 +454,12 @@ model <- function(par){
   # End calcFisheryObservations_deldiff
 #|---------------------------------------------------------------------|
 
-
 #|---------------------------------------------------------------------|
   # 5. calcSurveyObservations_deldiff()
   # Purpose: This function calculates predicted survey observations for each year
 
   # Needed to determine if q is random walk
-  q_prior <- prior_settings_q[1,]
+  q_prior <- q_control$priortype
 
   # Set up vector for mle qs (per Walters&Ludwig 1993 https://doi.org/10.1139/f94-07)
   q <- vector(length=nit) # vector of q for each survey
@@ -750,21 +748,54 @@ model <- function(par){
 }# end i
 
 # Catchability coefficients q
-for(k in 1:nit)
-  {
-    if(q_control$priortype[k] == 1)
-    {
-      qtmp <- dnorm(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
-      pll <- pll + qtmp
-    }
+for(k in 1:nit){
+  if(q_control$priortype[k] == 1){
+    qtmp <- dnorm(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
+    pll <- pll + qtmp
   }
+}
 
   #==============================================================================================
   # ~PENALTIES~
+  # ---------------------------------------------------------------------------------|
+  #  LIKELIHOOD PENALTIES TO REGULARIZE SOLUTION
+  # ---------------------------------------------------------------------------------|
+  #  pvec(1)  -> penalty on mean fishing mortality rate.
+  #  pvec(2)  -> penalty on recruitment deviations.
+  #  pvec(3)  -> penalty on initial recruitment vector.
+  #  pvec(4)  -> constraint to ensure sum(log_rec_dev) = 0
+  #  pvec(5)  -> constraint to ensure sum(init_log_rec_dev) = 0
   #==============================================================================================
 
+  # fishing mortality
+  log_fbar = mean(log_ft_pars)
+  pen <- pen + dnorm(log_fbar,log(ctl$misc[7]),ctl$misc[7]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
- jnll <- jnll + pll
+  # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
+  bigsd <- 2. # possibly put this in the data
+  # iscam had pvec(4) += dnorm(log_rec_devs,2.0), with 2 the std
+
+  # implement the version of dnorm in ADMB used for residuals
+  # (see https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L259C1-L275C2)
+  nrec <- length(log_rec_devs)
+  SS <- sum(log_rec_devs^2)
+  tmp <- nrec*(0.5*log(2.*pi)+log(bigsd))+0.5*SS/(bigsd*bigsd)
+  pen <- pen + tmp
+
+  nrec <- length(init_log_rec_devs)
+  SS <- sum(init_log_rec_devs^2)
+  tmp <- nrec*(0.5*log(2.*pi)+log(bigsd))+0.5*SS/(bigsd*bigsd)
+  pen <- pen + tmp
+
+  #constrain so that sum of log_rec_dev = 0
+  s   <- mean(log_rec_devs)
+  pen <- pen + 1.e5*s*s
+  s   <- mean(init_log_rec_devs)
+  pen <- 1.e5*s*s
+
+ # joint likelihood (check how distributions are coded in ADMB, they output the nll)
+ jnll <- -jnll - pll - pen
+
  # End calcObjectiveFunction
 #|---------------------------------------------------------------------|
 
