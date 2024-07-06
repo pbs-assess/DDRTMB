@@ -678,34 +678,63 @@ model <- function(par){
   # are written to return neg
 
   # Likelihood for catch
-  for(ii in 1:nctobs){
-    jnll <- jnll + dnorm(eta[ii], 0.0, sig_c)
+  # Emulate what admb is doing when given a vector of residuals
+  # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L259
+  # dnorm with a vector of residuals and constant standard deviation
+  admb_dnorm_vector_const <- function(resid, std){
+    n <- length(resid)
+    SS <- sum(resid^2) # in ADMB: norm2(x-mu);
+    negloglike <- n*(0.5*log(2.*pi)+log(std))+0.5*SS/(std*std)
+    negloglike
   }
 
+  # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L311
+  # dnorm with a vector of residuals and vector of standard deviations (both size=n)
+  admb_dnorm_vector_vector <- function(resid, std){
+    n <- length(resid)
+    if(length(std)!=n) stop("Residuals and st devs are different lengths.")
+    var <- std^2
+    SS <- resid^2
+    negloglike <- 0.5*n*log(2.*pi)+sum(log(std))+sum((SS/(2.*var)))
+    negloglike
+  }
+
+  tmp <- admb_dnorm_vector_const(eta, sig_c) # -134.716 Matches rep file
+  jnll <- jnll - tmp
+
   # Likelihood for relative abundance indices
+  # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
+  # then weights by a global mean
+  # We can just make a vector since we just need it for the mean
+  it_wt <- dat$indices[[kk]][,4]
+  for(kk in 2:nit){
+    tmp <- dat$indices[[kk]][,4]
+    it_wt <- c(it_wt, tmp)
+  }
+  # global mean of it_wts
+  tmp_mean <- mean(it_wt) #devs/iscam.tpl L463
+
   # loop over surveys
   for(kk in 1:nit){
-    it_wt <- dat$indices[[kk]][,4]
-    tmp_mean <- mean(it_wt)
-    sig_it <- rep(0,nitnobs[kk]) # vector for weights for each obs in survey k
+    # normalise the weights
+    # Note that iscam normalizes it_wt in the data section
+    # by dividing by the mean. But above, where q is calculated, the weights (called wt)
+    # are normalized by dividing by sum
+    it_wt <- dat$indices[[kk]][,4]/tmp_mean #devs/iscam.tpl L466
+    # vector for weights for each obs in survey k
+    sig_it <- sig/it_wt
 
-    # Loop over observations in the survey
-    for(ii in 1:nitnobs[kk]){
-      # Get the weightings. Note that iscam normalizes it_wt in the datasection
-      # by dividing by the mean. But above, where q is calculated, the weights (called wt)
-      # are normalized by dividing by sum
-      # for now, follow iscam
-      it_wt_norm <- it_wt[ii]/tmp_mean # Normalise. This happens on L466 of devs/iscam.tpl
-      sig_it[ii] <- sig/it_wt_norm # divide global sig by individual weights (which are inverted, so divide)
-
-      # update likelihood
-      jnll <- jnll + dnorm(epsilon[[kk]][ii], 0.0, sig_it[ii])
-    } # end for
+    tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
+    print(kk)
+    print(tmp) # slightly off but the right magnitude
   }
 
   # Likelihood for recruitment
   for(ii in 1:length(rt)){
     jnll <- jnll + dnorm(delta[ii], 0.0, tau)
+    print("recruitment")
+    print(ii)
+    print(dnorm(delta[ii], 0.0, tau))
   }
 
   # Likelihood for mean weight
@@ -713,6 +742,9 @@ model <- function(par){
   for(kk in 1:nmeanwt){
     for(ii in 1:nmeanwtobs[kk]){
         jnll <- jnll + dnorm(epsilon_mean_weight[[kk]][ii], 0.0, sig_w)
+        print("mean wt")
+        print(ii)
+        print(dnorm(epsilon_mean_weight[[kk]][ii], 0.0, sig_w))
     }
   }
 
@@ -799,14 +831,12 @@ for(k in 1:nit){
 
  # joint likelihood
  # Need to take negatives here. ADMB already outputs the components as negatives
- jnll <- -jnll - pll - pen
+ jnll <- -jnll #- pll #- pen
 
  # End calcObjectiveFunction
 #|---------------------------------------------------------------------|
-
-
   jnll # return joint neg log likelihood
-}
+} # end model
 
 model(par)
 
@@ -815,10 +845,10 @@ model(par)
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
 ## Might be good for q or selectivity for example when you want all the same value for a given age
 
-# from babysam
-#obj <- MakeADFun(f, par, random=c("logN", "logF", "missing"), map=list(logsdF=as.factor(rep(0,length(par$logsdF)))), silent=FALSE)
-obj <- MakeADFun(model, par, silent=FALSE)
-# The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
-opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
-opt$objective
+# # from babysam
+# #obj <- MakeADFun(f, par, random=c("logN", "logF", "missing"), map=list(logsdF=as.factor(rep(0,length(par$logsdF)))), silent=FALSE)
+# obj <- MakeADFun(model, par, silent=FALSE)
+# # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
+# opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
+# opt$objective
 
