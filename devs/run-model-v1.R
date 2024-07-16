@@ -680,14 +680,14 @@ model <- function(par){
   # are written to return neg
 
   # Likelihood for catch
-  tmp <- admb_dnorm_vector_const(eta, sig_c) # -134.716 Matches rep file
+  tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches rep file
   jnll <- jnll - tmp
 
   # Likelihood for relative abundance indices
   # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
   # then weights by a global mean
   # We can just make a vector since we just need it for the mean
-  it_wt <- dat$indices[[kk]][,4]
+  it_wt <- dat$indices[[1]][,4]
   for(kk in 2:nit){
     tmp <- dat$indices[[kk]][,4]
     it_wt <- c(it_wt, tmp)
@@ -695,7 +695,7 @@ model <- function(par){
   # global mean of it_wts
   tmp_mean <- mean(it_wt) #devs/iscam.tpl L463
 
-  # loop over surveys
+  # Now loop over surveys to weight the indices and get the likelihood component
   for(kk in 1:nit){
     # normalise the weights
     # Note that iscam normalizes it_wt in the data section
@@ -706,8 +706,8 @@ model <- function(par){
     sig_it <- sig/it_wt
 
     tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
-    print(kk)
-    print(tmp) # slightly off but the right magnitude
+    # print(kk)
+    # print(tmp) # Yes. Matches the components of nlvec_dd in rep file
   }
 
   # Likelihood for recruitment
