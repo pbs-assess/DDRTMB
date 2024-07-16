@@ -76,6 +76,8 @@ library(here)
 library(tidyverse)
 library(RTMB)
 
+source(here("R/likelihood_funcs.R"))
+
 # FOR TESTING
 # source("devs/load-models.R")
 # pcod2020rep<-read.report.file("data-raw/iscam.rep")
@@ -678,27 +680,6 @@ model <- function(par){
   # are written to return neg
 
   # Likelihood for catch
-  # Emulate what admb is doing when given a vector of residuals
-  # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L259
-  # dnorm with a vector of residuals and constant standard deviation
-  admb_dnorm_vector_const <- function(resid, std){
-    n <- length(resid)
-    SS <- sum(resid^2) # in ADMB: norm2(x-mu);
-    negloglike <- n*(0.5*log(2.*pi)+log(std))+0.5*SS/(std*std)
-    negloglike
-  }
-
-  # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L311
-  # dnorm with a vector of residuals and vector of standard deviations (both size=n)
-  admb_dnorm_vector_vector <- function(resid, std){
-    n <- length(resid)
-    if(length(std)!=n) stop("Residuals and st devs are different lengths.")
-    var <- std^2
-    SS <- resid^2
-    negloglike <- 0.5*n*log(2.*pi)+sum(log(std))+sum((SS/(2.*var)))
-    negloglike
-  }
-
   tmp <- admb_dnorm_vector_const(eta, sig_c) # -134.716 Matches rep file
   jnll <- jnll - tmp
 
