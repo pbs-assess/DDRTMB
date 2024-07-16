@@ -803,7 +803,6 @@ for(k in 1:nit){
   pvec <- pvec + 1.e5*s*s
 
  # joint likelihood
- # Need to take negatives here. ADMB already outputs the components as negatives
  objfun <- nlvec_dd + priors + qvec + pvec
 
  # End calcObjectiveFunction
@@ -811,6 +810,8 @@ for(k in 1:nit){
   objfun # return joint neg log likelihood
 } # end model
 
+# Test obj function: iscam has 195.806
+# Current test: 255.0687
 model(par)
 
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified

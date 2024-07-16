@@ -5,7 +5,7 @@
 
 # Emulate what admb is doing when given a vector of residuals
 
-
+# TODO: update documentation for these
 
 # ~~~ dnorm (statslib/dnorm.cpp) ~~~
 # dnorm with a constant estimate, constant mean and constant standard deviation
