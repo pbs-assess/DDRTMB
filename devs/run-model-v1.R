@@ -154,9 +154,10 @@ par$log_rec_devs <- rep(0,nyrs) # vector(length=nyrs)
 model <- function(par){
 
   getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
-  jnll <- 0. # initialize joint neg log likelihood (nlvec in iscam)
-  pll  <- 0. # initialize priors component of neg log likelihood (priors and qvec in iscam)
-  pen  <- 0. # initialize penalties component of neg log likelihood (pvec in iscam)
+  nlvec_dd <- 0. # initialize joint neg log likelihood (nlvec_dd in iscam)
+  priors  <- 0. # initialize priors component of neg log likelihood (priors in iscam)
+  qvec <- 0. # initialize q priors component of neg log likelihood (qvec in iscam)
+  pvec  <- 0. # initialize penalties component of neg log likelihood (pvec in iscam)
 
   # Pseudocode from iscam
   # 1. initParameters()
@@ -675,13 +676,16 @@ model <- function(par){
 #|---------------------------------------------------------------------|
 # calcObjectiveFunction();
 
-  # We're going to add up the components as in iscam
-  # but we need to take the negative at the end, as ADMB density functions
-  # are written to return neg
+  # !!Distributions that match those in ADMB are
+  #   provided in the file R\likelihood_funcs.R!! (sourced above)
+
+  #==============================================================================================
+  # ~Data and recruitment~ (nlvec_dd)
+  #==============================================================================================
 
   # Likelihood for catch
   tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
-  jnll <- jnll - tmp
+  nlvec_dd <- nlvec_dd - tmp
 
   # Likelihood for relative abundance indices
   # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
@@ -708,23 +712,23 @@ model <- function(par){
     tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
     # print(kk)
     # print(tmp) # Yes. Matches nlvec_dd in rep file
-    jnll <- jnll - tmp
+    nlvec_dd <- nlvec_dd - tmp
   }
 
   # Likelihood for recruitment
     tmp <- admb_dnorm_vector_const(delta, tau)
-    jnll <- jnll - tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
+    nlvec_dd <- nlvec_dd - tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
 
 
   # Likelihood for mean weight
   # We are entering the likelihood in log space here - do we need a Jacobian transformation?
   for(kk in 1:nmeanwt){
     tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
-    jnll <- jnll - tmp # 3.407 Yes. Matches nlvec_dd in rep file.
+    nlvec_dd <- nlvec_dd - tmp # 3.407 Yes. Matches nlvec_dd in rep file.
   }
 
  #==============================================================================================
- # ~PRIORS~
+ # ~PRIORS~ (priors)
  #==============================================================================================
  # Leading parameters
   # !The uniform is returning a negative value!
@@ -740,21 +744,21 @@ model <- function(par){
          }
         # Normal
         if(ptype==1){
-          ptmp <- dnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
+          ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
         }
         # Lognormal
         if(ptype==2){
-          ptmp <- dlnorm(theta[i],theta_control$p1[i],theta_control$p2[i])
+          ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
         }
         # Beta
         if(ptype==3){
-          ptmp <- dbeta((theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i]), theta_control$p1[i],theta_control$p2[i])
+          ptmp <- admb_dbeta_const_const((theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i]), theta_control$p1[i],theta_control$p2[i])
         }
         # Gamma
         if(ptype==4){
-          ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i]);
+          ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
         }
-        pll <- pll + ptmp
+        priors <- priors + ptmp
     } # end if
 }# end i
 
@@ -762,12 +766,12 @@ model <- function(par){
 for(k in 1:nit){
   if(q_control$priortype[k] == 1){
     qtmp <- dnorm(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
-    pll <- pll + qtmp
+    qvec <- qvec + qtmp
   }
 }
 
   #==============================================================================================
-  # ~PENALTIES~
+  # ~PENALTIES~ pvec
   # ---------------------------------------------------------------------------------|
   #  LIKELIHOOD PENALTIES TO REGULARIZE SOLUTION
   # ---------------------------------------------------------------------------------|
@@ -780,7 +784,7 @@ for(k in 1:nit){
 
   # fishing mortality
   log_fbar = mean(log_ft_pars)
-  pen <- pen + dnorm(log_fbar,log(ctl$misc[7]),ctl$misc[7]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  pvec <- pvec + dnorm(log_fbar,log(ctl$misc[7]),ctl$misc[7]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
   bigsd <- 2. # possibly put this in the data
@@ -791,26 +795,26 @@ for(k in 1:nit){
   nrec <- length(log_rec_devs)
   SS <- sum(log_rec_devs^2)
   tmp <- nrec*(0.5*log(2.*pi)+log(bigsd))+0.5*SS/(bigsd*bigsd)
-  pen <- pen + tmp
+  pvec <- pvec + tmp
 
   nrec <- length(init_log_rec_devs)
   SS <- sum(init_log_rec_devs^2)
   tmp <- nrec*(0.5*log(2.*pi)+log(bigsd))+0.5*SS/(bigsd*bigsd)
-  pen <- pen + tmp
+  pvec <- pvec + tmp
 
   #constrain so that sum of log_rec_dev = 0
   s   <- mean(log_rec_devs)
-  pen <- pen + 1.e5*s*s
+  pvec <- pvec + 1.e5*s*s
   s   <- mean(init_log_rec_devs)
-  pen <- pen + 1.e5*s*s
+  pvec <- pvec + 1.e5*s*s
 
  # joint likelihood
  # Need to take negatives here. ADMB already outputs the components as negatives
- jnll <- -jnll #- pll #- pen
+ nlvec_dd <- -nlvec_dd #- priors #- pvec
 
  # End calcObjectiveFunction
 #|---------------------------------------------------------------------|
-  jnll # return joint neg log likelihood
+  nlvec_dd # return joint neg log likelihood
 } # end model
 
 model(par)

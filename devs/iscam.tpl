@@ -4183,13 +4183,14 @@ FUNCTION calcObjectiveFunction
 					objfun += sum(pvec);
 					objfun += sum(qvec);
 
-					/*
-					LOG<<"nlvec_dd  "<<'\n'<<nlvec_dd<<'\n';
-					LOG<<"priors  "<<priors<<'\n';
-					LOG<<"pvec  "<<pvec<<'\n';
-					LOG<<"qvec  "<<qvec<<'\n';
-					LOG<<"objfun  "<<objfun<<'\n';
-					 */
+					if(verbose)
+	                               {
+						LOG<<"nlvec_dd  "<<'\n'<<nlvec_dd<<'\n';
+						LOG<<"priors  "<<priors<<'\n';
+						LOG<<"pvec  "<<pvec<<'\n';
+						LOG<<"qvec  "<<qvec<<'\n';
+						LOG<<"objfun  "<<objfun<<'\n';
+					}
 				break;
 				}
 	nf++;
@@ -6174,7 +6175,7 @@ GLOBALS_SECTION
   #include <string.h>
   #include <unistd.h>
   #include <fcntl.h>
-  #include "C:/admb/build/bin/admb/contrib/statslib/statsLib.h" //added July 2024. Hardwired for robyn's computer so that makefiles workj
+  #include "C:/admb/build/bin/admb/contrib/statslib/statsLib.h" //added July 2024. Hardwired for robyn's computer so that makefiles work
   #include "../../include/baranov.h"
   #include "../../include/gdbprintlib.h"
   #include "../../include/LogisticNormal.h"
