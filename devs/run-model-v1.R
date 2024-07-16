@@ -680,7 +680,7 @@ model <- function(par){
   # are written to return neg
 
   # Likelihood for catch
-  tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches rep file
+  tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
   jnll <- jnll - tmp
 
   # Likelihood for relative abundance indices
@@ -707,26 +707,20 @@ model <- function(par){
 
     tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
     # print(kk)
-    # print(tmp) # Yes. Matches the components of nlvec_dd in rep file
+    # print(tmp) # Yes. Matches nlvec_dd in rep file
+    jnll <- jnll - tmp
   }
 
   # Likelihood for recruitment
-  for(ii in 1:length(rt)){
-    jnll <- jnll + dnorm(delta[ii], 0.0, tau)
-    print("recruitment")
-    print(ii)
-    print(dnorm(delta[ii], 0.0, tau))
-  }
+    tmp <- admb_dnorm_vector_const(delta, tau)
+    jnll <- jnll - tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
+
 
   # Likelihood for mean weight
   # We are entering the likelihood in log space here - do we need a Jacobian transformation?
   for(kk in 1:nmeanwt){
-    for(ii in 1:nmeanwtobs[kk]){
-        jnll <- jnll + dnorm(epsilon_mean_weight[[kk]][ii], 0.0, sig_w)
-        print("mean wt")
-        print(ii)
-        print(dnorm(epsilon_mean_weight[[kk]][ii], 0.0, sig_w))
-    }
+    tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
+    jnll <- jnll - tmp # 3.407 Yes. Matches nlvec_dd in rep file.
   }
 
  #==============================================================================================
