@@ -4185,11 +4185,11 @@ FUNCTION calcObjectiveFunction
 
 					if(verbose)
 	                               {
-						LOG<<"nlvec_dd  "<<'\n'<<nlvec_dd<<'\n';
-						LOG<<"priors  "<<priors<<'\n';
-						LOG<<"pvec  "<<pvec<<'\n';
-						LOG<<"qvec  "<<qvec<<'\n';
-						LOG<<"objfun  "<<objfun<<'\n';
+					LOG<<"nlvec_dd  "<<'\n'<<nlvec_dd<<'\n';
+					LOG<<"priors  "<<priors<<'\n';
+					LOG<<"pvec  "<<pvec<<'\n';
+					LOG<<"qvec  "<<qvec<<'\n';
+					LOG<<"objfun  "<<objfun<<'\n';
 					}
 				break;
 				}
@@ -6175,7 +6175,7 @@ GLOBALS_SECTION
   #include <string.h>
   #include <unistd.h>
   #include <fcntl.h>
-  #include "C:/admb/build/bin/admb/contrib/statslib/statsLib.h" //added July 2024. Hardwired for robyn's computer so that makefiles work
+  #include "C:/admb/build/bin/admb/contrib/statslib/statsLib.h" //added July 2024. Hardwired for robyn's computer so that makefiles workj
   #include "../../include/baranov.h"
   #include "../../include/gdbprintlib.h"
   #include "../../include/LogisticNormal.h"

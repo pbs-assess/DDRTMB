@@ -158,6 +158,7 @@ model <- function(par){
   priors  <- 0. # initialize priors component of neg log likelihood (priors in iscam)
   qvec <- 0. # initialize q priors component of neg log likelihood (qvec in iscam)
   pvec  <- 0. # initialize penalties component of neg log likelihood (pvec in iscam)
+  objfun <- 0. # objective function to be minimized
 
   # Pseudocode from iscam
   # 1. initParameters()
@@ -685,7 +686,7 @@ model <- function(par){
 
   # Likelihood for catch
   tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
-  nlvec_dd <- nlvec_dd - tmp
+  nlvec_dd <- nlvec_dd + tmp
 
   # Likelihood for relative abundance indices
   # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
@@ -712,19 +713,19 @@ model <- function(par){
     tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
     # print(kk)
     # print(tmp) # Yes. Matches nlvec_dd in rep file
-    nlvec_dd <- nlvec_dd - tmp
+    nlvec_dd <- nlvec_dd + tmp
   }
 
   # Likelihood for recruitment
     tmp <- admb_dnorm_vector_const(delta, tau)
-    nlvec_dd <- nlvec_dd - tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
+    nlvec_dd <- nlvec_dd + tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
 
 
   # Likelihood for mean weight
   # We are entering the likelihood in log space here - do we need a Jacobian transformation?
   for(kk in 1:nmeanwt){
     tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
-    nlvec_dd <- nlvec_dd - tmp # 3.407 Yes. Matches nlvec_dd in rep file.
+    nlvec_dd <- nlvec_dd + tmp # 3.407 Yes. Matches nlvec_dd in rep file.
   }
 
  #==============================================================================================
@@ -765,7 +766,7 @@ model <- function(par){
 # Catchability coefficients q
 for(k in 1:nit){
   if(q_control$priortype[k] == 1){
-    qtmp <- dnorm(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
+    qtmp <- admb_dnorm_const_const(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
     qvec <- qvec + qtmp
   }
 }
@@ -784,25 +785,18 @@ for(k in 1:nit){
 
   # fishing mortality
   log_fbar = mean(log_ft_pars)
-  pvec <- pvec + dnorm(log_fbar,log(ctl$misc[7]),ctl$misc[7]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  pvec <- pvec + admb_dnorm_const_const(log_fbar,log(ctl$misc[7]),ctl$misc[9]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
   bigsd <- 2. # possibly put this in the data
-  # iscam had pvec(4) += dnorm(log_rec_devs,2.0), with 2 the std
 
-  # implement the version of dnorm in ADMB used for residuals
-  # (see https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L259C1-L275C2)
-  nrec <- length(log_rec_devs)
-  SS <- sum(log_rec_devs^2)
-  tmp <- nrec*(0.5*log(2.*pi)+log(bigsd))+0.5*SS/(bigsd*bigsd)
+  tmp <- admb_dnorm_vector_const(log_rec_devs, bigsd)
   pvec <- pvec + tmp
 
-  nrec <- length(init_log_rec_devs)
-  SS <- sum(init_log_rec_devs^2)
-  tmp <- nrec*(0.5*log(2.*pi)+log(bigsd))+0.5*SS/(bigsd*bigsd)
+  tmp <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
   pvec <- pvec + tmp
 
-  #constrain so that sum of log_rec_dev = 0
+  #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
   s   <- mean(log_rec_devs)
   pvec <- pvec + 1.e5*s*s
   s   <- mean(init_log_rec_devs)
@@ -810,11 +804,11 @@ for(k in 1:nit){
 
  # joint likelihood
  # Need to take negatives here. ADMB already outputs the components as negatives
- nlvec_dd <- -nlvec_dd #- priors #- pvec
+ objfun <- nlvec_dd + priors + qvec + pvec
 
  # End calcObjectiveFunction
 #|---------------------------------------------------------------------|
-  nlvec_dd # return joint neg log likelihood
+  objfun # return joint neg log likelihood
 } # end model
 
 model(par)
