@@ -4970,6 +4970,9 @@ REPORT_SECTION
 	REPORT(objfun);
 	if(!delaydiff) REPORT(nlvec);
 	if(delaydiff) REPORT(nlvec_dd);
+	REPORT(priors);
+	REPORT(qvec);
+	REPORT(pvec);
 	REPORT(ro);
 	dvector rbar=value(exp(log_avgrec));
 	REPORT(rbar);
