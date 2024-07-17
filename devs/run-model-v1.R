@@ -761,6 +761,8 @@ model <- function(par){
         }
         priors <- priors + ptmp
     } # end if
+    print(i)
+    print(priors)
 }# end i
 
 # Catchability coefficients q
@@ -784,8 +786,9 @@ for(k in 1:nit){
   #==============================================================================================
 
   # fishing mortality
-  log_fbar = mean(log_ft_pars)
-  pvec <- pvec + admb_dnorm_const_const(log_fbar,log(ctl$misc[7]),ctl$misc[9]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  log_fbar <- mean(log_ft_pars)
+  tmp <- admb_dnorm_const_const(log_fbar,log(ctl$misc[7]),ctl$misc[9]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  pvec <- pvec + tmp
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
   bigsd <- 2. # possibly put this in the data
