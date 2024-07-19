@@ -10,7 +10,7 @@
 # ~~~ dnorm (statslib/dnorm.cpp) ~~~
 # dnorm with a constant estimate, constant mean and constant standard deviation
 # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L46
-admb_dnorm_const_const <- function(x,mu, std){
+admb_dnorm_const_const <- function(x,mu,std){
   negloglike <- 0.5*log(2.*pi)+log(std)+(0.5*(x-mu)^2)/(std*std)
   negloglike
 }

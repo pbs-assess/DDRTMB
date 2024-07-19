@@ -116,7 +116,7 @@ colnames(year_lookup) <- c("year", "year_index")
 # Get length and weight at age for first year (for initializing population at non-equilibrium, ctl$misc[5]==0)
 la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
 wa <- dat$lwscal*la^dat$lwpow
-d3_wt_avg <- wa # just to be consistent with rep file
+d3_wt_avg <- wa # just to be consistent with iscam rep file
 
 # Get settings for priors
 # Leading parameters
@@ -138,14 +138,22 @@ par$log_ro <- theta_control[1,1] # log unfished recruitment (syr)
 par$h <- theta_control[2,1] # steepness
 par$log_m <- theta_control[3,1] # log natural mortality
 # In the current version of the P cod model, these are set the same as ro so do not estimate
-#   par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
-#   par$log_recinit <- ptheta_control[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
+#par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
+#par$log_recinit <- ptheta_control[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
+
+# Variance parameters are fixed for P cod so should not be in par
 par$rho <- theta_control[6,1] # Errors in Variables: fraction of the total variance associated with observation error
 par$kappa <- theta_control[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
 # TODO: Check these are dimensioned and initialized correctly
-par$log_ft_pars <- rep(0,nyrs) # estimated log fishing mortalities (total across fleets)
-par$init_log_rec_devs <- rep(0,(dat$nage-dat$sage + 1)) # vector(length=dat$nage - dat$sage + 1) # I think this is length nage-sage+1 (i.e., length 2:9)
-par$log_rec_devs <- rep(0,nyrs) # vector(length=nyrs)
+par$log_ft_pars <- numeric(nyrs) # estimated log fishing mortalities (total across fleets)
+par$init_log_rec_devs <- numeric(length=(dat$nage-dat$sage + 1)) # I think this is length nage-sage+1 (i.e., length 2:9)
+par$log_rec_devs <- numeric(nyrs)
+
+# Add fixed means and variances from ctl$misc. Works better if they are parameters (get fixed in MakeADFun)
+# This might not solve the problem
+par$stdct_pen <- ctl$misc[4]
+par$meanft_pen <- ctl$misc[7]
+par$sdft_pen <- ctl$misc[9]
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Model
@@ -153,12 +161,9 @@ par$log_rec_devs <- rep(0,nyrs) # vector(length=nyrs)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 model <- function(par){
 
+  `[<-` <- RTMB::ADoverload("[<-") # Need this to avoid problem of some variables being reassigned from ADvariable
+
   getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
-  nlvec_dd <- 0. # initialize joint neg log likelihood (nlvec_dd in iscam)
-  priors  <- 0. # initialize priors component of neg log likelihood (priors in iscam)
-  qvec <- 0. # initialize q priors component of neg log likelihood (qvec in iscam)
-  pvec  <- 0. # initialize penalties component of neg log likelihood (pvec in iscam)
-  objfun <- 0. # objective function to be minimized
 
   # Pseudocode from iscam
   # 1. initParameters()
@@ -171,43 +176,54 @@ model <- function(par){
   # 8. calcObjectiveFunction()
 
 #|---------------------------------------------------------------------|
-  # 1. initParameters
-  theta <- c(exp(par$log_ro),
+   theta <- c(exp(par$log_ro),
              par$h,
              exp(par$log_m),
              par$rho,
              par$kappa)
 
+  nlvec_dd <- numeric(1) # initialize joint neg log likelihood (nlvec_dd in iscam)
+  priors   <- numeric(length(theta)) # initialize priors component of neg log likelihood (priors in iscam)
+  qvec     <- numeric(1) # initialize q priors component of neg log likelihood (qvec in iscam)
+  pvec     <- numeric(5) # initialize penalties component of neg log likelihood (pvec in iscam)
+  #objfun   <- numeric(1) # objective function to be minimized
+
+  # 1. initParameters
   ro        <- theta[1]
   steepness <- theta[2]
   m         <- theta[3]
   rho       <- theta[4]
-  varphi    <- sqrt(1.0/theta[5])
-  sig       <- sqrt(rho)*varphi
-  tau       <- sqrt(1.0-rho)*varphi
+  kappa     <- theta[5]
 
   # Fixed parameters
+  # Variances fixed for P cod - figure out how to fix them properly
+  varphi    <- sqrt(1.0/kappa)
+  sig       <- sqrt(rho)*varphi # 0.2 for P cod
+  tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
+
   # A decision was made in 2018 to fix these two parameters to be the same
   #   as log_ro (P. Starr). May revisit this later
-  log_avgrec <- par$log_ro
-  log_recinit <- par$log_ro # RF: I don't think it makes sense to use this one
-  sig_c <- ctl$misc[4] # sd in catch likelihood
+  log_avgrec <- log(ro)
+  log_recinit <- log(ro)
+  sig_c <- par$stdct_pen # sd in catch likelihood
   sig_w <- ctl$weight.sig # sd in mean weight likelihood (called weight_sig in iscam)
+  mean_f <- par$meanft_pen # mean f used in penalty function (fixed)
+  sig_f <- par$sdft_pen # sd f used in penalty function (fixed)
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
   # DELETE THIS ONCE MODEL EQUATIONS ARE TESTED
-  ro        <- 3376.55
-  steepness <- 0.809901
-  m         <- 0.306306
-  rho       <- 0.058824
-  varphi    <- 0.824621
-  log_avgrec <- log(ro)
-  log_recinit <- log(ro)
-  # from iscam.par file
-  log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
-  init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
-  log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
+   # ro        <- 3376.55
+   # steepness <- 0.809901
+   # m         <- 0.306306
+
+  # log_avgrec <- log(ro)
+  # log_recinit <- log(ro)
+
+  # # from iscam.par file
+  #log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
+  #init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
+  #log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Get the Goodyear Compensation Ratio
@@ -242,7 +258,7 @@ model <- function(par){
   # Set up F objects
   # In the one fleet case for the delay-diff model, these are the same.
   ft <- matrix(0, nrow=ngear, ncol=nyrs) # a matrix of fishing mortality for each gear and year
-  Ft <- rep(0,nyrs) # a vector of total F for each year (in the ASM this would account for selectivity but for delay-diff, selectivity is knife-edged)
+  Ft <- numeric(nyrs) # a vector of total F for each year (in the ASM this would account for selectivity but for delay-diff, selectivity is knife-edged)
 
   # Work down catch obs matrix to associate Fs with catch for each gear
   # The catch matrix in the data file has 4 columns:
@@ -265,9 +281,9 @@ model <- function(par){
   surv <- exp(-Zt) # fished survival rate
 
   # End calcTotalMortality_deldiff
-#|---------------------------------------------------------------------|
+# #|---------------------------------------------------------------------|
 
-#|---------------------------------------------------------------------|
+# #|---------------------------------------------------------------------|
   # 3. calcNumbersBiomass_deldiff();
   # Purpose: This function calculates  total biomass and total numbers
   # according to the delay difference model equations from Hilborn and Walters.
@@ -280,12 +296,12 @@ model <- function(par){
   # From SJDM, also used by Sinclair in 2005 p cod assessment
 
   # Initialize numbers and biomass
-  numbers <- vector(length=nyrs+1)
-  biomass <- vector(length=nyrs+1)
-  sbt <- vector(length=nyrs+1) # can eliminate this eventually. It's the same as biomass in the dd model
+  numbers <- numeric(length=nyrs+1)
+  biomass <- numeric(length=nyrs+1)
+  sbt <- numeric(length=nyrs+1) # can eliminate this eventually. It's the same as biomass in the dd model
   # FIXME: I think this should just be from syr:(nyr-sage)
-  log_rt <- vector(length=nyrs) # estimated log recruits
-  annual_mean_wt <- vector(length=nyrs)
+  log_rt <- numeric(length=nyrs) # estimated log recruits
+  annual_mean_wt <- numeric(length=nyrs)
   # Add recruitment for projection year ... assume it is average
   rnplus=exp(log_avgrec)
 
@@ -318,20 +334,21 @@ model <- function(par){
   # 0. Unfished and not at equilibrium
   # 1. Unfished equilibrium
   # 2. Fished and at equilibrium with Ft in first year
+  tmp_nAge <- numeric(length(sage:nage)) # Numbers at age in first year
   if(ctl$misc[5]==0){
     # Unfished and not at equilibrium - initialize with age structure as in ASM
     # Set up a vector of n-at-age for the first year (length sage:nage) with devs
     # Decay exp(log_recinit + init_log_rec_devs[j-1]) by exp(-M) to fill n-at-age in first year
-    tmp_nAge <- vector(length=length(sage:nage)) # Numbers at age in first year
 
     # First age is exp(log_avgrec + log_rec_devs[1]) because this is recruits in year 1
-    tmp_nAge[1] <- exp(log_avgrec + log_rec_devs[1])
+     tmp_nAge[1] <- exp(log_avgrec + log_rec_devs[1])
 
-    # Now fill in the other numbers at age for year 1
-    for(j in 2:length(tmp_nAge)){
-      tmp_nAge[j] <- exp(log_recinit + init_log_rec_devs[j-1]) * exp(-Mt[1]*(j-1))
-    }
-    tmp_nAge[j] <- tmp_nAge[j]/(1 - exp(-Mt[1])) # plus group
+     # Now fill in the other numbers at age for year 1
+
+     for(j in 2:length(tmp_nAge)){
+       tmp_nAge[j] <- exp(log_recinit + init_log_rec_devs[j-1]) * exp(-Mt[1]*(j-1))
+     }
+     tmp_nAge[j] <- (exp(log_recinit + init_log_rec_devs[j-1]) * exp(-Mt[1]*(j-1)))/(1 - exp(-Mt[1])) # plus group
 
     ## TEST (see iscam calcNumbersAtAge function) - make sure tr is the same as log(tmp_nAge)
     ## DELETE THIS IN LATER VERSIONS
@@ -359,12 +376,12 @@ model <- function(par){
     #  Initialise log recruits
     log_rt[1] <- log_avgrec+log_rec_devs[1] # this is just the same as log(tmp_nAge[1])
   }
-  if(ctl$misc[5]==1){
-    # Unfished equilibrium - **not tested for P. cod**
-    numbers[1] <- no
-    biomass[1] <- bo
-    annual_mean_wt[1] <- biomass[1]/numbers[1]
-    log_rt[1] <- log(ro) # Shouldn't this be plus log_rec_devs[1]???
+   if(ctl$misc[5]==1){
+     # Unfished equilibrium - **not tested for P. cod**
+     numbers[1] <- no
+     biomass[1] <- bo
+     annual_mean_wt[1] <- biomass[1]/numbers[1]
+     log_rt[1] <- log(ro) # Shouldn't this be plus log_rec_devs[1]???
   }
   if(ctl$misc[5]==2){
     # Fished at equilibrium with Ft in first year **not tested for P. cod**
@@ -399,22 +416,21 @@ model <- function(par){
     log_rt[i] <- log_avgrec +log_rec_devs[i]
 
     # Update biomass and numbers
-    biomass[i] <- surv[i-1]*(rho.g*biomass[i-1]+alpha.g*numbers[i-1])+
-								wk*exp(log_rt[i]) # eq. 9.2.5 in HW
+    biomass[i] <- surv[i-1]*(rho.g*biomass[i-1]+alpha.g*numbers[i-1]) +wk*exp(log_rt[i]) # eq. 9.2.5 in HW
 		numbers[i] <- surv[i-1]*numbers[i-1]+exp(log_rt[i])
-		annual_mean_wt[i] <- biomass[i]/numbers[i]		# calculate predicted weight in dynamics - possible option to fit to it
-		sbt[i] <- biomass[i]
+ 		annual_mean_wt[i] <- biomass[i]/numbers[i]		# calculate predicted weight in dynamics - possible option to fit to it
+ 		sbt[i] <- biomass[i]
   }
 
   # RF confirmed numbers, biomass and mean wt calculations with rep file
   biomass[nyrs+1]  <- (surv[nyrs]*(rho.g*biomass[nyrs]+alpha.g*numbers[nyrs]) + wk*rnplus)
-	numbers[nyrs+1]  <- surv[nyrs]*numbers[nyrs]+rnplus
+ 	numbers[nyrs+1]  <- surv[nyrs]*numbers[nyrs]+rnplus
   sbt[nyrs+1]      <- biomass[nyrs+1] # set spawning biomass to biomass
 
   # End calcNumbersBiomass_deldiff
-#|---------------------------------------------------------------------|
+ #|---------------------------------------------------------------------|
 
-#|---------------------------------------------------------------------|
+ #|---------------------------------------------------------------------|
   # 4. calcFisheryObservations_deldiff()
   # Purpose: This function calculates commercial catches for each year and gear
   # The catch matrix in the data file has 4 columns:
@@ -423,8 +439,8 @@ model <- function(par){
 
   # Set up predicted catch by gear and year
   # like log_ft_pars, this is one long vector of all catches from all gears
-  ct <- vector(length=nctobs) # predicted catch
-  eta <- vector(length=nctobs) # catch residuals
+  ct <- numeric(length=nctobs) # predicted catch
+  eta <- numeric(length=nctobs) # catch residuals
 
   for(ii in 1:nctobs){
     # Set up counters
@@ -466,7 +482,7 @@ model <- function(par){
   q_prior <- q_control$priortype
 
   # Set up vector for mle qs (per Walters&Ludwig 1993 https://doi.org/10.1139/f94-07)
-  q <- vector(length=nit) # vector of q for each survey
+  q <- numeric(length=nit) # vector of q for each survey
 
   # set up lists for storing residuals and predicted indices
   # these are ragged arrays in iscam
@@ -476,9 +492,9 @@ model <- function(par){
 
   #loop over surveys to create list
   for(kk in 1:nit){
-    epsilon[[kk]] <- vector(length=nitnobs[kk])
-    it_hat[[kk]]  <- vector(length=nitnobs[kk])
-    qt[[kk]]  <- vector(length=nitnobs[kk])
+    epsilon[[kk]] <- numeric(length=nitnobs[kk])
+    it_hat[[kk]]  <- numeric(length=nitnobs[kk])
+    qt[[kk]]  <- numeric(length=nitnobs[kk])
     epsilon[[kk]][1:nitnobs[kk]] <- 0.
     it_hat[[kk]][1:nitnobs[kk]] <- 0.
     qt[[kk]][1:nitnobs[kk]] <- 0.
@@ -487,7 +503,7 @@ model <- function(par){
   # Now loop through gears and index obs to predict survey obs
   for(kk in 1:nit){
     # Vulnerable numbers
-    V <- vector(length=nitnobs[kk])
+    V <- numeric(length=nitnobs[kk])
     V[1:nitnobs[kk]] <- 0.
 
     # not sure why we need these
@@ -573,9 +589,10 @@ model <- function(par){
   #  Rt=so*St*exp(-beta*St)*exp(delta-0.5*tau*tau) \f$
 
   # Set up vectors
-  #rt     <- vector(length=nyrs-sage)  # estimated recruits from calcNumbersBiomass_deldiff()
-  #delta  <- vector(length=nyrs-sage)  # residuals between estimated R and R from S-R curve (process err)
-  tmp_rt <- vector(length=nyrs) # recruits derived from stock-recruit model
+  # Don't need to declare first two
+  #rt     <- numeric(length=nyrs-sage)  # estimated recruits from calcNumbersBiomass_deldiff()
+  #delta  <- numeric(length=nyrs-sage)  # residuals between estimated R and R from S-R curve (process err)
+  tmp_rt <- numeric(length=nyrs) # recruits derived from stock-recruit model
   tmp_rt[1:nyrs] <- 0
 
   # get the process error term from the errors in variables parameters
@@ -634,9 +651,9 @@ model <- function(par){
 
   #loop over series to create list
   for(kk in 1:nmeanwt){
-    annual_mean_weight[[kk]]     <- vector(length=nmeanwtobs[kk])
-    obs_annual_mean_weight[[kk]] <- vector(length=nmeanwtobs[kk])
-    epsilon_mean_weight[[kk]]    <- vector(length=nmeanwtobs[kk])
+    annual_mean_weight[[kk]]     <- numeric(length=nmeanwtobs[kk])
+    obs_annual_mean_weight[[kk]] <- numeric(length=nmeanwtobs[kk])
+    epsilon_mean_weight[[kk]]    <- numeric(length=nmeanwtobs[kk])
     annual_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
     obs_annual_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
     epsilon_mean_weight[[kk]][1:nmeanwtobs[kk]] <- 0.
@@ -645,8 +662,8 @@ model <- function(par){
   # loop through series with empirical annual mean weight data
   for(kk in 1:nmeanwt){
 
-    Vn <- vector(length = nmeanwtobs[kk])	      # Vulnerable numbers to gear
-    Vb <- vector(length = nmeanwtobs[kk])	      # Vulnerable biomass to gear
+    Vn <- numeric(length = nmeanwtobs[kk])	      # Vulnerable numbers to gear
+    Vb <- numeric(length = nmeanwtobs[kk])	      # Vulnerable biomass to gear
     Vn[1:nmeanwtobs[kk]] <- Vb[1:nmeanwtobs[kk]] <- 0
 
     # Loop through observations
@@ -685,8 +702,13 @@ model <- function(par){
   #==============================================================================================
 
   # Likelihood for catch
-  tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
-  nlvec_dd <- nlvec_dd + tmp
+   tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
+   nlvec_dd <- nlvec_dd + tmp
+
+  # for(i in 1:length(eta)){
+  #   tmp <- dnorm(eta[i],0,sig_c)
+  #   nlvec_dd <- nlvec_dd + tmp
+  # }
 
   # Likelihood for relative abundance indices
   # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
@@ -732,100 +754,100 @@ model <- function(par){
  # ~PRIORS~ (priors)
  #==============================================================================================
  # Leading parameters
-  # !The uniform is returning a negative value!
-  for(i in 1:ctl$num.params){
-    ptype <- theta_control$prior[i] # prior type
-
-    if(theta_control$phz[i] >= 1){
-        # Uniform
-        if(ptype==0){
-          #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
-          # For testing use the same as iscam. Why is the uniform set up like this?
-          ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
-         }
-        # Normal
-        if(ptype==1){
-          ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
-        }
-        # Lognormal
-        if(ptype==2){
-          ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
-        }
-        # Beta
-        if(ptype==3){
-          ptmp <- admb_dbeta_const_const((theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i]), theta_control$p1[i],theta_control$p2[i])
-        }
-        # Gamma
-        if(ptype==4){
-          ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
-        }
-        priors <- priors + ptmp
-    } # end if
-    print(i)
-    print(priors)
-}# end i
-
-# Catchability coefficients q
-for(k in 1:nit){
-  if(q_control$priortype[k] == 1){
-    qtmp <- admb_dnorm_const_const(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
-    qvec <- qvec + qtmp
-  }
-}
-
-  #==============================================================================================
-  # ~PENALTIES~ pvec
-  # ---------------------------------------------------------------------------------|
-  #  LIKELIHOOD PENALTIES TO REGULARIZE SOLUTION
-  # ---------------------------------------------------------------------------------|
-  #  pvec(1)  -> penalty on mean fishing mortality rate.
-  #  pvec(2)  -> penalty on recruitment deviations.
-  #  pvec(3)  -> penalty on initial recruitment vector.
-  #  pvec(4)  -> constraint to ensure sum(log_rec_dev) = 0
-  #  pvec(5)  -> constraint to ensure sum(init_log_rec_dev) = 0
-  #==============================================================================================
-
-  # fishing mortality
-  log_fbar <- mean(log_ft_pars)
-  tmp <- admb_dnorm_const_const(log_fbar,log(ctl$misc[7]),ctl$misc[9]) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
-  pvec <- pvec + tmp
+ # !The uniform is returning a negative value!
+  #   for(i in 1:length(theta)){
+  #     ptype <- theta_control$prior[i] # prior type
+  #
+  #     if(theta_control$phz[i] >= 1){
+  #         # Uniform
+  #         if(ptype==0){
+  #           #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
+  #           # For testing use the same as iscam. Why is the uniform set up like this?
+  #           ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
+  #          }
+  #         # Normal
+  #         if(ptype==1){
+  #           ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+  #         }
+  #         # Lognormal
+  #         if(ptype==2){
+  #           ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+  #         }
+  #         # Beta
+  #         if(ptype==3){
+  #           ptmp <- admb_dbeta_const_const((theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i]), theta_control$p1[i],theta_control$p2[i])
+  #         }
+  #         # Gamma
+  #         if(ptype==4){
+  #           ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
+  #         }
+  #         priors <- priors + ptmp
+  #     } # end if
+  #     print(i)
+  #     print(priors)
+  # }# end i
+  #
+  # # Catchability coefficients q
+  # for(k in 1:nit){
+  #   if(q_control$priortype[k] == 1){
+  #     qtmp <- admb_dnorm_const_const(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
+  #     qvec <- qvec + qtmp
+  #   }
+  # }
+  #
+  # #==============================================================================================
+  # # ~PENALTIES~ pvec
+  # # ---------------------------------------------------------------------------------|
+  # #  LIKELIHOOD PENALTIES TO REGULARIZE SOLUTION
+  # # ---------------------------------------------------------------------------------|
+  # #  pvec(1)  -> penalty on mean fishing mortality rate.
+  # #  pvec(2)  -> penalty on recruitment deviations.
+  # #  pvec(3)  -> penalty on initial recruitment vector.
+  # #  pvec(4)  -> constraint to ensure sum(log_rec_dev) = 0
+  # #  pvec(5)  -> constraint to ensure sum(init_log_rec_dev) = 0
+  # #==============================================================================================
+  #
+   # Fishing mortality
+  pvec[1] <- admb_dnorm_const_const(mean(log_ft_pars),log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
-  bigsd <- 2. # possibly put this in the data
+  #bigsd <- 2. # possibly put this in the data
+  #
+  # #tmp <- admb_dnorm_vector_const(log_rec_devs, bigsd)
+  #pvec[2] <- admb_dnorm_vector_const(log_rec_devs, bigsd)
+  #
+  # #tmp <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
+  #pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
 
-  tmp <- admb_dnorm_vector_const(log_rec_devs, bigsd)
-  pvec <- pvec + tmp
-
-  tmp <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
-  pvec <- pvec + tmp
-
-  #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
-  s   <- mean(log_rec_devs)
-  pvec <- pvec + 1.e5*s*s
-  s   <- mean(init_log_rec_devs)
-  pvec <- pvec + 1.e5*s*s
+  # #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
+  # #s   <- mean(log_rec_devs)
+  # pvec <- pvec + 1.e5*mean(log_rec_devs)*mean(log_rec_devs)
+  # #s   <- mean(init_log_rec_devs)
+  # pvec <- pvec + 1.e5*mean(init_log_rec_devs)*mean(init_log_rec_devs)
 
  # joint likelihood
- objfun <- nlvec_dd + priors + qvec + pvec
+ objfun <- nlvec_dd + sum(pvec) #+ priors + qvec
 
  # End calcObjectiveFunction
-#|---------------------------------------------------------------------|
+ #|---------------------------------------------------------------------|
   objfun # return joint neg log likelihood
 } # end model
 
 # Test obj function: iscam has 195.806
 # Current test: 255.0687
-model(par)
+#model(par)
 
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified
 ## from TMB help: map = List defining how to optionally collect and fix parameters
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
-## Might be good for q or selectivity for example when you want all the same value for a given age
+# Fixing M, rho and kappa
+obj <- MakeADFun(model, par, silent=FALSE,
+                 map=list(log_m=factor(NA), rho=factor(NA), kappa=factor(NA),
+                          stdct_pen=factor(NA),meanft_pen=factor(NA),sdft_pen=factor(NA)))
+# The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
+opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
+opt$objective
 
-# # from babysam
-# #obj <- MakeADFun(f, par, random=c("logN", "logF", "missing"), map=list(logsdF=as.factor(rep(0,length(par$logsdF)))), silent=FALSE)
-# obj <- MakeADFun(model, par, silent=FALSE)
-# # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
-# opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
-# opt$objective
-
+summary(sdreport(obj))
+pl <- as.list(sdreport(obj),"Est")
+plsd <- as.list(sdreport(obj),"Std")

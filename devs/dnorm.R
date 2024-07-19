@@ -25,8 +25,8 @@
 #
 
 # Test
-mu <- 0.5 # prior mean
-std <- 0.1 # prior sd
+mu <- 0.2 # prior mean
+std <- 2 # prior sd
 x <- 0.4 # estimate
 
 # first ADMB version
