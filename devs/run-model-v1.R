@@ -135,7 +135,7 @@ par <- list()
 # Begin by using initial values specified in pcod2020ctl
 # Leading parameters
 par$log_ro <- theta_control[1,1] # log unfished recruitment (syr)
-par$h <- 0.8 #theta_control[2,1] # steepness
+par$h <- theta_control[2,1] # steepness
 par$log_m <- theta_control[3,1] #-1.18317 # (rep file estimate) theta_control[3,1] # log natural mortality
 # In the current version of the P cod model, these are set the same as ro so do not estimate
 #par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
@@ -818,7 +818,7 @@ model <- function(par){
   meanidev <- sum(init_log_rec_devs)/nidev # this was s in iscam
   pvec[5] <- 1.e5*meanidev*meanidev
 
- # joint likelihood
+ # joint likelihood, priors and penalties
  objfun <- nlvec_dd_ct +
            nlvec_dd_it +
            nlvec_dd_rt +
@@ -829,7 +829,28 @@ model <- function(par){
 
  # End calcObjectiveFunction
  #|---------------------------------------------------------------------|
-  objfun # return joint neg log likelihood
+
+ # REPORT_SECTION
+ # Just start with a few things
+ # Components of the objective function
+ ADREPORT(nlvec_dd_ct)
+ ADREPORT(nlvec_dd_it)
+ ADREPORT(nlvec_dd_rt)
+ ADREPORT(nlvec_dd_wt)
+ ADREPORT(priors)
+ ADREPORT(qvec)
+ ADREPORT(pvec)
+ # Biomass, numbers, recruits and q
+ ADREPORT(biomass)
+ ADREPORT(numbers)
+ ADREPORT(rt)
+ # Predicted Catch, Indices and Annual Mean Weight
+ ADREPORT(ct)
+ ADREPORT(it_hat)
+ ADREPORT(annual_mean_weight)
+
+ # RETURN OBJECTIVE FUNCTION VALUE
+ objfun # return joint neg log likelihood
 } # end model
 
 # Test obj function: iscam has 195.806
