@@ -149,12 +149,6 @@ par$log_ft_pars <- numeric(nyrs) # estimated log fishing mortalities (total acro
 par$init_log_rec_devs <- numeric(length=(dat$nage-dat$sage + 1)) # I think this is length nage-sage+1 (i.e., length 2:9)
 par$log_rec_devs <- numeric(nyrs)
 
-# Add fixed means and variances from ctl$misc. Works better if they are parameters (get fixed in MakeADFun)
-# This might not solve the problem
-par$stdct_pen <- ctl$misc[4]
-par$meanft_pen <- ctl$misc[7]
-par$sdft_pen <- ctl$misc[9]
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Model
 # Eventually define some components as functions and move to separate R scripts
@@ -182,9 +176,12 @@ model <- function(par){
              par$rho,
              par$kappa)
 
-  nlvec_dd <- numeric(1) # initialize joint neg log likelihood (nlvec_dd in iscam)
+  nlvec_dd_ct <- numeric(1) # initialize joint neg log likelihood for catch data (nlvec_dd[[1]] in iscam)
+  nlvec_dd_it <- numeric(nit) # initialize joint neg log likelihood for survey data (nlvec_dd[[2]] in iscam)
+  nlvec_dd_rt <- numeric(1) # initialize joint neg log likelihood for recruitment (nlvec_dd[[3]] in iscam)
+  nlvec_dd_wt <- numeric(nmeanwt) # initialize joint neg log likelihood for mean weight (nlvec_dd[[4]] in iscam)
   priors   <- numeric(length(theta)) # initialize priors component of neg log likelihood (priors in iscam)
-  qvec     <- numeric(1) # initialize q priors component of neg log likelihood (qvec in iscam)
+  qvec     <- numeric(nit) # initialize q priors component of neg log likelihood (qvec in iscam)
   pvec     <- numeric(5) # initialize penalties component of neg log likelihood (pvec in iscam)
   #objfun   <- numeric(1) # objective function to be minimized
 
@@ -205,10 +202,10 @@ model <- function(par){
   #   as log_ro (P. Starr). May revisit this later
   log_avgrec <- log(ro)
   log_recinit <- log(ro)
-  sig_c <- par$stdct_pen # sd in catch likelihood
+  sig_c <- ctl$misc[4] # sd in catch likelihood
   sig_w <- ctl$weight.sig # sd in mean weight likelihood (called weight_sig in iscam)
-  mean_f <- par$meanft_pen # mean f used in penalty function (fixed)
-  sig_f <- par$sdft_pen # sd f used in penalty function (fixed)
+  mean_f <- ctl$misc[7] # mean f constraint for penalty function
+  sig_f <- ctl$misc[9] # sd constraint for penalty function
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
@@ -270,7 +267,7 @@ model <- function(par){
       i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index
       k <- catch[ii,2] # gear
 
-      ftmp    <- exp(log_ft_pars[ii]) # log_ft_pars has length nctobs
+      ftmp    <- exp(par$log_ft_pars[ii]) # log_ft_pars has length nctobs
       # ft is a matrix with ngear rows and nyr columns
       ft[k,i] <- ftmp # fishing mortality for gear k in year i (in ASM this is modified by selectivity)
       Ft[i]   <- Ft[i] + ftmp # Total fishing mortality in year i
@@ -703,12 +700,7 @@ model <- function(par){
 
   # Likelihood for catch
    tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
-   nlvec_dd <- nlvec_dd + tmp
-
-  # for(i in 1:length(eta)){
-  #   tmp <- dnorm(eta[i],0,sig_c)
-  #   nlvec_dd <- nlvec_dd + tmp
-  # }
+   nlvec_dd_ct <- tmp
 
   # Likelihood for relative abundance indices
   # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
@@ -735,19 +727,18 @@ model <- function(par){
     tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
     # print(kk)
     # print(tmp) # Yes. Matches nlvec_dd in rep file
-    nlvec_dd <- nlvec_dd + tmp
+    nlvec_dd_it <- tmp
   }
 
   # Likelihood for recruitment
     tmp <- admb_dnorm_vector_const(delta, tau)
-    nlvec_dd <- nlvec_dd + tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
-
+    nlvec_dd_rt <- tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
 
   # Likelihood for mean weight
   # We are entering the likelihood in log space here - do we need a Jacobian transformation?
-  for(kk in 1:nmeanwt){
+    for(kk in 1:nmeanwt){
     tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
-    nlvec_dd <- nlvec_dd + tmp # 3.407 Yes. Matches nlvec_dd in rep file.
+    nlvec_dd_wt <- tmp # 3.407 Yes. Matches nlvec_dd in rep file.
   }
 
  #==============================================================================================
@@ -755,46 +746,46 @@ model <- function(par){
  #==============================================================================================
  # Leading parameters
  # !The uniform is returning a negative value!
-  #   for(i in 1:length(theta)){
-  #     ptype <- theta_control$prior[i] # prior type
-  #
-  #     if(theta_control$phz[i] >= 1){
-  #         # Uniform
-  #         if(ptype==0){
-  #           #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
-  #           # For testing use the same as iscam. Why is the uniform set up like this?
-  #           ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
-  #          }
-  #         # Normal
-  #         if(ptype==1){
-  #           ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
-  #         }
-  #         # Lognormal
-  #         if(ptype==2){
-  #           ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
-  #         }
-  #         # Beta
-  #         if(ptype==3){
-  #           ptmp <- admb_dbeta_const_const((theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i]), theta_control$p1[i],theta_control$p2[i])
-  #         }
-  #         # Gamma
-  #         if(ptype==4){
-  #           ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
-  #         }
-  #         priors <- priors + ptmp
-  #     } # end if
-  #     print(i)
-  #     print(priors)
-  # }# end i
-  #
-  # # Catchability coefficients q
-  # for(k in 1:nit){
-  #   if(q_control$priortype[k] == 1){
-  #     qtmp <- admb_dnorm_const_const(log(q[k]), q_control$priormeanlog[k], q_control$priorsd[k])
-  #     qvec <- qvec + qtmp
-  #   }
-  # }
-  #
+    for(i in 1:length(theta)){
+       ptype <- theta_control$prior[i] # prior type
+
+       if(theta_control$phz[i]>=1){
+          # Uniform
+          if(ptype==0){
+             #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
+             # For testing use the same as iscam. Why is the uniform set up like this?
+             ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
+           }
+          # Normal
+          if(ptype==1){
+            ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+          }
+          # Lognormal
+          if(ptype==2){
+            ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+          }
+          # Beta
+          if(ptype==3){
+            # Constrain between 0.2 and 1
+             trans <- (theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i])
+             ptmp <- admb_dbeta_const_const(trans, theta_control$p1[i],theta_control$p2[i])
+          }
+          # Gamma
+           if(ptype==4){
+             ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
+           }
+          priors[i] <- ptmp
+       } # end if
+      }# end i
+
+  # Catchability coefficients q
+  for(kk in 1:nit){
+    if(q_control$priortype[kk] == 1){
+      qtmp <- admb_dnorm_const_const(log(q[kk]), q_control$priormeanlog[kk], q_control$priorsd[kk])
+      qvec[kk] <- qtmp
+    }
+  }
+
   # #==============================================================================================
   # # ~PENALTIES~ pvec
   # # ---------------------------------------------------------------------------------|
@@ -808,25 +799,33 @@ model <- function(par){
   # #==============================================================================================
   #
    # Fishing mortality
-  pvec[1] <- admb_dnorm_const_const(mean(log_ft_pars),log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  nft <- length(par$log_ft_pars)
+  mean_log_ft_pars <- sum(par$log_ft_pars)/nft # getting the mean manually prevents lost class attribute error
+  pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) #dnorm(mean(log_ft_pars),log(par$meanft_pen),par$sdft_pen, log=T)# # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
-  #bigsd <- 2. # possibly put this in the data
-  #
-  # #tmp <- admb_dnorm_vector_const(log_rec_devs, bigsd)
-  #pvec[2] <- admb_dnorm_vector_const(log_rec_devs, bigsd)
-  #
-  # #tmp <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
-  #pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
+  bigsd <- 2. # possibly put this in the data
 
-  # #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
-  # #s   <- mean(log_rec_devs)
-  # pvec <- pvec + 1.e5*mean(log_rec_devs)*mean(log_rec_devs)
-  # #s   <- mean(init_log_rec_devs)
-  # pvec <- pvec + 1.e5*mean(init_log_rec_devs)*mean(init_log_rec_devs)
+  pvec[2] <- admb_dnorm_vector_const(log_rec_devs, bigsd)
+  pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
+
+  #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
+  ndev <- length(log_rec_devs) # getting the mean manually prevents lost class attribute error
+  meandev <- sum(log_rec_devs)/ndev # this was s in iscam
+  pvec[4] <- 1.e5*meandev*meandev #mean(log_rec_devs)*mean(log_rec_devs)
+
+  nidev <- length(init_log_rec_devs) # getting the mean manually prevents lost class attribute error
+  meanidev <- sum(init_log_rec_devs)/nidev # this was s in iscam
+  pvec[5] <- 1.e5*meanidev*meanidev
 
  # joint likelihood
- objfun <- nlvec_dd + sum(pvec) #+ priors + qvec
+ objfun <- nlvec_dd_ct +
+           nlvec_dd_it +
+           nlvec_dd_rt +
+           nlvec_dd_wt +
+           sum(priors) +
+           sum(qvec) +
+           sum(pvec)
 
  # End calcObjectiveFunction
  #|---------------------------------------------------------------------|
@@ -842,8 +841,7 @@ model <- function(par){
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
 # Fixing M, rho and kappa
 obj <- MakeADFun(model, par, silent=FALSE,
-                 map=list(log_m=factor(NA), rho=factor(NA), kappa=factor(NA),
-                          stdct_pen=factor(NA),meanft_pen=factor(NA),sdft_pen=factor(NA)))
+                 map=list(log_m=factor(NA), rho=factor(NA), kappa=factor(NA)))
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
 opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
 opt$objective

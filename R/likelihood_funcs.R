@@ -47,15 +47,10 @@ admb_dlnorm_const_const <- function(x,mu,std){
 # dbeta with a constant estimate, constant mean and constant standard deviation
 # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dbeta.cpp#L37
 admb_dbeta_const_const <- function(x,a,b){
-  if(x<=0 || x>=1.0)
-  {
-    stop("x is <=0 or >=1.0 in dbeta function\n")
-  }
-
   if( a<=0 || b <=0 )
-  {
-    stop("a or b is <= 0 in dbeta function\n")
-  }
+   {
+     stop("a or b is <= 0 in dbeta function\n")
+   }
 
   negloglike <-  -1.* lgamma(a+b)+(lgamma(a)+lgamma(b))-(a-1.)*log(x)-(b-1.)*log(1.-x)
   negloglike
