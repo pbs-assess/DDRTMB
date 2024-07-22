@@ -876,10 +876,14 @@ summary(sdreport(obj))
 # Estimated parameters
 pl <- as.list(sdreport(obj),"Est")
 plsd <- as.list(sdreport(obj),"Std")
-pl
+#pl
 # Derived quantities (from ADREPORT)
 plr <- as.list(sdreport(obj),"Est", report=TRUE)
 plrsd <- as.list(sdreport(obj),"Std", report=TRUE)
-plr
+#plr
 
 # Write out results for plotting
+write_csv(as.data.frame(pl[[1:5]]), here("outputs","ParameterEstimates.csv"))
+write_csv(plsd, here("outputs","ParameterSDs.csv"))
+write_csv(plr, here("outputs","DerivedEstimates.csv"))
+write_csv(plrsd, here("outputs","DerivedSDs.csv"))
