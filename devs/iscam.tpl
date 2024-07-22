@@ -4956,7 +4956,7 @@ REPORT_SECTION
 	if(verbose){
     LOG<<"Start of Report Section...\n";
   }
-	report<<"ObjectiveFunction\n"<<objfun<<'\n';
+  report<<"ObjectiveFunction\n"<<objfun<<'\n';
   report<<"FuncEvals\n"<<nf<<'\n';
   report<<"NumParams\n"<<npar<<'\n';
   report<<"MaxGrad\n"<<objective_function_value::gmax<<'\n';

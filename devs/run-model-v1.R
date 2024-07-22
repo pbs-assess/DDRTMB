@@ -883,7 +883,7 @@ plrsd <- as.list(sdreport(obj),"Std", report=TRUE)
 #plr
 
 # Write out results for plotting
-write_csv(as.data.frame(pl[[1:5]]), here("outputs","ParameterEstimates.csv"))
-write_csv(plsd, here("outputs","ParameterSDs.csv"))
-write_csv(plr, here("outputs","DerivedEstimates.csv"))
-write_csv(plrsd, here("outputs","DerivedSDs.csv"))
+saveRDS(pl, here("outputs","ParameterEstimates.rda"))
+saveRDS(plsd, here("outputs","ParameterSDs.rda"))
+saveRDS(plr, here("outputs","DerivedEstimates.rda"))
+saveRDS(plrsd, here("outputs","DerivedSDs.rda"))
