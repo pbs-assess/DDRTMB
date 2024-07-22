@@ -135,8 +135,8 @@ par <- list()
 # Begin by using initial values specified in pcod2020ctl
 # Leading parameters
 par$log_ro <- theta_control[1,1] # log unfished recruitment (syr)
-par$h <- theta_control[2,1] # steepness
-par$log_m <- theta_control[3,1] # log natural mortality
+par$h <- 0.8 #theta_control[2,1] # steepness
+par$log_m <- theta_control[3,1] #-1.18317 # (rep file estimate) theta_control[3,1] # log natural mortality
 # In the current version of the P cod model, these are set the same as ro so do not estimate
 #par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
 #par$log_recinit <- ptheta_control[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
@@ -839,9 +839,9 @@ model <- function(par){
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified
 ## from TMB help: map = List defining how to optionally collect and fix parameters
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
-# Fixing M, rho and kappa
+# Fixing rho and kappa  log_m=factor(NA) h=factor(NA),
 obj <- MakeADFun(model, par, silent=FALSE,
-                 map=list(log_m=factor(NA), rho=factor(NA), kappa=factor(NA)))
+               map=list(rho=factor(NA), kappa=factor(NA)))
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
 opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
 opt$objective
@@ -849,3 +849,6 @@ opt$objective
 summary(sdreport(obj))
 pl <- as.list(sdreport(obj),"Est")
 plsd <- as.list(sdreport(obj),"Std")
+pl
+
+
