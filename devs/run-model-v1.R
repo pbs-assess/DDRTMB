@@ -135,7 +135,7 @@ par <- list()
 # Begin by using initial values specified in pcod2020ctl
 # Leading parameters
 par$log_ro <- theta_control[1,1] # log unfished recruitment (syr)
-par$h <- theta_control[2,1] # steepness
+par$h <- 0.8 # theta_control[2,1] # steepness
 par$log_m <- theta_control[3,1] #-1.18317 # (rep file estimate) theta_control[3,1] # log natural mortality
 # In the current version of the P cod model, these are set the same as ro so do not estimate
 #par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
@@ -840,14 +840,19 @@ model <- function(par){
  ADREPORT(priors)
  ADREPORT(qvec)
  ADREPORT(pvec)
- # Biomass, numbers, recruits and q
+ # # Biomass, numbers, recruits and q
  ADREPORT(biomass)
  ADREPORT(numbers)
  ADREPORT(rt)
- # Predicted Catch, Indices and Annual Mean Weight
+ # # Predicted Catch, Indices and Annual Mean Weight
  ADREPORT(ct)
- ADREPORT(it_hat)
- ADREPORT(annual_mean_weight)
+ # figure out how to report these lists without creating errors
+ ADREPORT(it_hat[[1]])
+ ADREPORT(it_hat[[2]])
+ ADREPORT(it_hat[[3]])
+ ADREPORT(it_hat[[4]])
+ ADREPORT(it_hat[[5]])
+ ADREPORT(annual_mean_weight[[1]])
 
  # RETURN OBJECTIVE FUNCTION VALUE
  objfun # return joint neg log likelihood
@@ -868,8 +873,13 @@ opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000
 opt$objective
 
 summary(sdreport(obj))
+# Estimated parameters
 pl <- as.list(sdreport(obj),"Est")
 plsd <- as.list(sdreport(obj),"Std")
 pl
+# Derived quantities (from ADREPORT)
+plr <- as.list(sdreport(obj),"Est", report=TRUE)
+plrsd <- as.list(sdreport(obj),"Std", report=TRUE)
+plr
 
-
+# Write out results for plotting
