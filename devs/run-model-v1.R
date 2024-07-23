@@ -19,7 +19,7 @@
 # Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station, Nanaimo, Canada)
 
 # Date created:  May 15, 2024
-# Last Modified: July 3, 2024
+# Last Modified: July 23, 2024
 
 # Notes:
 # - The iscam input files are already loaded into the package:
@@ -844,6 +844,7 @@ model <- function(par){
  ADREPORT(biomass)
  ADREPORT(numbers)
  ADREPORT(rt)
+ ADREPORT(delta)
  # # Predicted Catch, Indices and Annual Mean Weight
  ADREPORT(ct)
  # figure out how to report these lists without creating errors
