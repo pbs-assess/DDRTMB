@@ -833,6 +833,11 @@ model <- function(par){
  # REPORT_SECTION
  # Just start with a few things
  # Components of the objective function
+ # Need to find a dynamic way of reporting it_hat and annual_mean_weight
+ # Can't ADREPORT lists or use loops
+ # Hardwire for now
+ it_hat_all <- c(it_hat[[1]],it_hat[[2]],it_hat[[3]],it_hat[[4]],it_hat[[5]])
+
  ADREPORT(nlvec_dd_ct)
  ADREPORT(nlvec_dd_it)
  ADREPORT(nlvec_dd_rt)
@@ -848,11 +853,7 @@ model <- function(par){
  # # Predicted Catch, Indices and Annual Mean Weight
  ADREPORT(ct)
  # figure out how to report these lists without creating errors
- ADREPORT(it_hat[[1]])
- ADREPORT(it_hat[[2]])
- ADREPORT(it_hat[[3]])
- ADREPORT(it_hat[[4]])
- ADREPORT(it_hat[[5]])
+ ADREPORT(it_hat_all)
  ADREPORT(annual_mean_weight[[1]])
 
  # RETURN OBJECTIVE FUNCTION VALUE
