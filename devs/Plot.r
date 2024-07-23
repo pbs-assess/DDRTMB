@@ -27,6 +27,7 @@ plsd <- readRDS(here("outputs","ParameterSDs.rda"))
 plr <- readRDS(here("outputs","DerivedEstimates.rda"))
 plrsd <- readRDS(here("outputs","DerivedSDs.rda"))
 pcod2020rep <- read.report.file("data-raw/iscam.rep")
+pcod2020par <- read.par.file("data-raw/iscam.par")
 
 yrs <-  dat$syr:dat$nyr
 pyrs <- dat$syr:(dat$nyr+1) # includes projection year
@@ -76,5 +77,12 @@ lines(pyrs, plr$biomass+2*plrsd$biomass, lwd=3, col=rtmbcol, lty="dotted")
 lines(pyrs, pcod2020rep$biomass, lwd=3, col=iscamcol)
 legend("topright", legend=c("RTMB", "iscam MPD"), lwd=3, col=c(rtmbcol, iscamcol) ,bty="n")
 
-# Rec devs
+# Log rec devs
+maxY <- max(c(pcod2020par$log_rec_devs,(pl$log_rec_devs+2*plsd$log_rec_devs)))
+minY <- min(c(pcod2020par$log_rec_devs,(pl$log_rec_devs-2*plsd$log_rec_devs)))
+plot(yrs, pl$log_rec_devs, pch=19, cex=1.2, col=rtmbcol, ylim=c(minY,maxY), xlab="Years", ylab="log recruit devs")
+abline(h=0, lty=2, lwd=0.5)
+arrows(x0=yrs, y0=(pl$log_rec_devs-2*plsd$log_rec_devs), x1 = yrs, y1=(pl$log_rec_devs+2*plsd$log_rec_devs), code = 0, col=rtmbcol)
+points(yrs, pcod2020par$log_rec_devs, pch=1, col=iscamcol)
+legend("topright", legend=c("RTMB", "iscam MPD"), pch=c(19,1), col=c(rtmbcol, iscamcol) ,bty="n")
 
