@@ -845,12 +845,12 @@ model <- function(par){
  ADREPORT(priors)
  ADREPORT(qvec)
  ADREPORT(pvec)
- # # Biomass, numbers, recruits and q
+ # Biomass, numbers, recruits and q
  ADREPORT(biomass)
  ADREPORT(numbers)
  ADREPORT(rt)
  ADREPORT(delta)
- # # Predicted Catch, Indices and Annual Mean Weight
+ # Predicted Catch, Indices and Annual Mean Weight
  ADREPORT(ct)
  # figure out how to report these lists without creating errors
  ADREPORT(it_hat_all)
@@ -882,10 +882,13 @@ plsd <- as.list(sdreport(obj),"Std")
 # Derived quantities (from ADREPORT)
 plr <- as.list(sdreport(obj),"Est", report=TRUE)
 plrsd <- as.list(sdreport(obj),"Std", report=TRUE)
-#plr
 
 # Write out results for plotting
 saveRDS(pl, here("outputs","ParameterEstimates.rda"))
 saveRDS(plsd, here("outputs","ParameterSDs.rda"))
 saveRDS(plr, here("outputs","DerivedEstimates.rda"))
 saveRDS(plrsd, here("outputs","DerivedSDs.rda"))
+
+# Plot comparisons
+source(here("devs","plot.r"))
+
