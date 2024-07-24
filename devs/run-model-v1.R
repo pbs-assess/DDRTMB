@@ -831,6 +831,7 @@ model <- function(par){
  # Can't ADREPORT lists or use loops
  # Hardwire for now
  it_hat_all <- c(it_hat[[1]],it_hat[[2]],it_hat[[3]],it_hat[[4]],it_hat[[5]])
+ annual_mean_weight_all <- annual_mean_weight[[1]]
 
  ADREPORT(nlvec_dd_ct)
  ADREPORT(nlvec_dd_it)
@@ -849,7 +850,7 @@ model <- function(par){
  ADREPORT(ct)
  # figure out how to report these lists without creating errors
  ADREPORT(it_hat_all)
- ADREPORT(annual_mean_weight[[1]])
+ ADREPORT(annual_mean_weight_all)
 
  # RETURN OBJECTIVE FUNCTION VALUE
  objfun # return joint neg log likelihood
