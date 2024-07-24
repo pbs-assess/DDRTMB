@@ -850,6 +850,7 @@ model <- function(par){
  ADREPORT(numbers)
  ADREPORT(rt)
  ADREPORT(delta)
+ ADREPORT(q)
  # Predicted Catch, Indices and Annual Mean Weight
  ADREPORT(ct)
  # figure out how to report these lists without creating errors
@@ -874,7 +875,8 @@ obj <- MakeADFun(model, par, silent=FALSE,
 opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
 opt$objective
 
-summary(sdreport(obj))
+#summary(sdreport(obj))
+
 # Estimated parameters
 pl <- as.list(sdreport(obj),"Est")
 plsd <- as.list(sdreport(obj),"Std")

@@ -141,6 +141,7 @@ png(here("outputs","figs","FtCompare.png"), width=8, height=6, units="in", res=3
 dev.off()
 
 # Parameters
+# Leading
 png(here("outputs","figs","LeadingParamsCompare.png"), width=8, height=6, units="in", res=300)
   Pars <- matrix(nrow=2, ncol=5)
   Pars[1,] <- c(pl$log_ro, pl$h, pl$log_m, pl$rho, pl$kappa)
@@ -154,7 +155,21 @@ png(here("outputs","figs","LeadingParamshmCompare.png"), width=8, height=6, unit
   Pars <- matrix(nrow=2, ncol=2)
   Pars[1,] <- c(pl$h, exp(pl$log_m))
   Pars[2,] <- c(pcod2020par$theta2, exp(pcod2020par$theta3))
-  colnames(Pars) <- c("h", "m")
+  colnames(Pars) <- c("h", "M")
   barplot(Pars, beside=T, col=c(rtmbcol, iscamcol), ylim=c(0,max(Pars)))
+  legend("topright", legend=c("RTMB", "iscam MPD"), pch=15, col=c(rtmbcol, iscamcol) ,bty="n")
+dev.off()
+
+# Catchability, q
+qcolnames <- "q1"
+for(i in 2:dat$nit){
+  qcolnames <- c(qcolnames, paste0("q",i))
+}
+png(here("outputs","figs","qCompare.png"), width=8, height=6, units="in", res=300)
+  Pars <- matrix(nrow=2, ncol=dat$nit)
+  Pars[1,] <- c(plr$q)
+  Pars[2,] <- c(pcod2020rep$q)
+  colnames(Pars) <- qcolnames
+  barplot(Pars, beside=T, col=c(rtmbcol, iscamcol), ylim=c(0,1.2*max(Pars)))
   legend("topright", legend=c("RTMB", "iscam MPD"), pch=15, col=c(rtmbcol, iscamcol) ,bty="n")
 dev.off()
