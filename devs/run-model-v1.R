@@ -28,26 +28,20 @@
 #      including prior descriptions and misc settings)
 #   3. pcod2020pfc (controls for projections and decision tables)
 #
-# - The input files include some inputs for the iscam age structured model
-#       that are not used in the delay-difference implementation. The input
-#       files will eventually be customised
 # - Iscam uses an errors-in-variables approach to partition observation error,
 #       with multiplicative weighting of each index observation using annual CVs
 # - Want to change this to additive weightings (as per SS3), then also explore
-#       state space options. But first try to reproduce the iscam results!
+#       state space options. But first try to reproduce the iscam results.
 
 # TODO (move these to Issues on gitHub repo):
 # 1. Translation of iscam to RTMB:
-#  - CHECK all estimated parameters are included in pars
-#  - CHECK length of log_rec_devs and log_init_rec_devs
-#  - CHECK all test calcs. Catches are a little bit off. Could be rounding in iscam rep and par files
+#  - CHECK all test calcs. Catches are a little bit off. Probably due to rounding of ft in iscam rep and par files
 #  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
 #  - Probably don't need all the counters
 #  - Check that pars list is complete
 #  - Move some of model sections into separate functions
-#  - Implement MCMC
-#  - Check predicted rt against rep file
-#  - Check source of fished equilibrium equation and check code (in calcNumbersBiomass_deldiff)
+#  - Implement MCMC - tmbstan
+#  - Check source of fished equilibrium equation and check code - or remove it (in calcNumbersBiomass_deldiff)
 
 # 2. Potential model changes:
 #  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
@@ -59,7 +53,7 @@
 #  - Add time-varying M
 #  - Think about how to make this a multi-species, multi-area model? (MICE)
 #  - Some of the architecture is already in iscam
-#  - consider a stan version
+#  - consider a stan version if this doesn't work well
 #  - consider a delay differential model in continuous time (see CJW correspondence)
 
 # 3. Graphic outputs and diagnostics
@@ -874,8 +868,6 @@ obj <- MakeADFun(model, par, silent=FALSE,
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
 opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
 opt$objective
-
-#summary(sdreport(obj))
 
 # Estimated parameters
 pl <- as.list(sdreport(obj),"Est")
