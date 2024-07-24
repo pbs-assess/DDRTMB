@@ -68,8 +68,8 @@ for(i in 1:dat$nit){
   legend("topright", legend=c("Data", "RTMB", "iscam MPD"), lwd=3, col=c(datcol, rtmbcol, iscamcol) ,bty="n")
 }
 
-par(mfrow=(c(1,1)))
 # Biomass
+par(mfrow=(c(1,1)))
 maxY <- max(c(pcod2020rep$biomass,(plr$biomass+2*plrsd$biomass)))
 plot(pyrs, plr$biomass, type="l", lwd=3, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Biomass (t)")
 lines(pyrs, plr$biomass-2*plrsd$biomass, lwd=3, col=rtmbcol, lty="dotted")
@@ -85,4 +85,18 @@ abline(h=0, lty=2, lwd=0.5)
 arrows(x0=yrs, y0=(pl$log_rec_devs-2*plsd$log_rec_devs), x1 = yrs, y1=(pl$log_rec_devs+2*plsd$log_rec_devs), code = 0, col=rtmbcol)
 points(yrs, pcod2020par$log_rec_devs, pch=1, col=iscamcol)
 legend("topright", legend=c("RTMB", "iscam MPD"), pch=c(19,1), col=c(rtmbcol, iscamcol) ,bty="n")
+
+# Init log rec devs
+# NOTE: RTMB ESTIMATING AN EXTRA YEAR OF INIT_LOG_REC_DEVS
+inityrs <- (yrs[1]-length(pcod2020par$init_log_rec_devs)):(yrs[1]-1)
+maxY <- max(c(pcod2020par$init_log_rec_devs,(pl$init_log_rec_devs+2*plsd$init_log_rec_devs)))
+minY <- min(c(pcod2020par$init_log_rec_devs,(pl$init_log_rec_devs-2*plsd$init_log_rec_devs)))
+plot(inityrs, pl$init_log_rec_devs, pch=19, cex=1.2, col=rtmbcol, ylim=c(minY,maxY), xlab="Years", ylab="Init log recruit devs")
+abline(h=0, lty=2, lwd=0.5)
+arrows(x0=inityrs, y0=(pl$init_log_rec_devs-2*plsd$init_log_rec_devs), x1 = inityrs, y1=(pl$init_log_rec_devs+2*plsd$init_log_rec_devs), code = 0, col=rtmbcol)
+points(inityrs, pcod2020par$init_log_rec_devs, pch=1, col=iscamcol)
+legend("topright", legend=c("RTMB", "iscam MPD"), pch=c(19,1), col=c(rtmbcol, iscamcol) ,bty="n")
+
+
+# Parameters
 
