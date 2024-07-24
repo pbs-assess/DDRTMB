@@ -146,7 +146,7 @@ par$rho <- theta_control[6,1] # Errors in Variables: fraction of the total varia
 par$kappa <- theta_control[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
 # TODO: Check these are dimensioned and initialized correctly
 par$log_ft_pars <- numeric(nyrs) # estimated log fishing mortalities (total across fleets)
-par$init_log_rec_devs <- numeric(length=(dat$nage-dat$sage + 1)) # I think this is length nage-sage+1 (i.e., length 2:9)
+par$init_log_rec_devs <- numeric(length=length((dat$sage+1):dat$nage)) # I think this is length nage-sage+1 (i.e., length 2:9)
 par$log_rec_devs <- numeric(nyrs)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

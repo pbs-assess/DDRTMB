@@ -15,17 +15,21 @@ library(here)
 source("devs/load-models.R")
 
 # Settings
+# Colours for data, iscam and RTMB
 datcol <- 1
 iscamcol <- "red"
 rtmbcol <- "darkblue"
 
-# 1. Read in output files from RTMB and iscam
+# 1. Read in input files and output files from RTMB and iscam
+# inputs
 dat <- pcod2020dat
 ctl <- pcod2020ctl
+# RTMB outputs
 pl <- readRDS(here("outputs","ParameterEstimates.rda"))
 plsd <- readRDS(here("outputs","ParameterSDs.rda"))
 plr <- readRDS(here("outputs","DerivedEstimates.rda"))
 plrsd <- readRDS(here("outputs","DerivedSDs.rda"))
+# iscam outputs
 pcod2020rep <- read.report.file("data-raw/iscam.rep")
 pcod2020par <- read.par.file("data-raw/iscam.par")
 
