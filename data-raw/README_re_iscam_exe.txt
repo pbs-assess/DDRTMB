@@ -22,6 +22,7 @@ The new exe was built in C:\GitHub\gfiscam-wsl2-copy on Robyn's local computer.
 4. The new exe appears in C:\GitHub\gfiscam-wsl2-copy\build\dist\bin
 5. This can then be copied into C:\GitHub\DDRTMB\devs\0_1a_5ABCD_BASE_2020 and run using the batch file.
 6. Then put the new rep and par file into data-raw.
+NOTE there is a hardwired path to statsLib.h in GLOBALS_SECTION
 
 Note also that Robyn had to build ADMB from source. ADMB_HOME now points to C:GitHub\admb\build\admb.
 To build ADMB from source if ADMB updates: 
