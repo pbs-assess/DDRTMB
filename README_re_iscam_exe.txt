@@ -13,3 +13,4 @@ So there is a new rep file (for which all mpd values match the old exe), which a
 This was built in C:\GitHub\gfiscam-wsl2-copy. Open a command window in the root directory then 'make clean' then 'make dist'. 
 The new exe appears in C:\GitHub\gfiscam-wsl2-copy/build/dist/bin
 This can then be copied into C:\GitHub\DDRTMB\devs\0_1a_5ABCD_BASE_2020 and run.
+Then put the new rep file into data-raw (with a new file name) and make sure to update the path in devs/plots.r
