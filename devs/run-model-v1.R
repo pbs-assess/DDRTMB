@@ -3,15 +3,21 @@
 #   the 2018 Pacific Cod stock assessment for Haida Gwaii/Queen Charlotte
 #   Sound stock in Pacific Canada (Area 5ABCD) [published in 2020]
 
-# **For this first version, this is a ONE group, ONE area, ONE sex model
-# Therefore, we can strip out a lot of the indexing in the iscam inputs**
+# **For this first version, this is a ONE group, ONE area, ONE sex model**
 # M is fixed, not time-varying - adapt later for tvm
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# IMPORTANT: BEFORE RUNNING THIS CODE, PLEASE SOURCE devs/filter-inputs.R
-
+# IMPORTANT: BEFORE RUNNING THIS CODE THE FIRST TIME, PLEASE SOURCE devs/filter-inputs.R
 # This will load the raw 2020 5ABCD Pacific Cod inputs into the package
 # Need to do this while package is in development
+#
+# **Just once, you will need to make a folder called outputs in the root DDRTMB folder**
+#
+# TO RUN:
+# 1. Run lines below until the end of # 2. Parameters (currently L151)
+# 2. Run the model function (currently L157)
+# 3. Run the remainder of the code (currently starting at L910)
+# 4. Look at outputs and figures in the outputs folder
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Package name: DDRTMB
