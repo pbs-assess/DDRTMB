@@ -73,7 +73,7 @@ library(RTMB)
 source(here("R/likelihood_funcs.R"))
 
 # Set test mode for testing model with MPD estimates from pcod2020 test file
-test <- T
+test <- FALSE
 
 # FOR TESTING
 # source("devs/load-models.R")
@@ -174,6 +174,7 @@ model <- function(par){
              par$rho,
              par$kappa)
 
+  # Initialize objective function components at 0
   nlvec_dd_ct <- numeric(1) # initialize joint neg log likelihood for catch data (nlvec_dd[[1]] in iscam)
   nlvec_dd_it <- numeric(nit) # initialize joint neg log likelihood for survey data (nlvec_dd[[2]] in iscam)
   nlvec_dd_rt <- numeric(1) # initialize joint neg log likelihood for recruitment (nlvec_dd[[3]] in iscam)
@@ -190,6 +191,7 @@ model <- function(par){
   rho       <- theta[4]
   kap       <- theta[5] #kappa in par file. Call it kap here bc kappa is an R function
 
+  # don't really need to do this bc getAll function puts the pars into global space
   log_ft_pars <- par$log_ft_pars
   init_log_rec_devs <- par$init_log_rec_devs
   log_rec_devs <- par$log_rec_devs
@@ -210,34 +212,34 @@ model <- function(par){
   sig_f <- ctl$misc[9] # sd constraint for penalty function
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
-  if(test==T){
-    # DELETE THIS ONCE MODEL EQUATIONS ARE TESTED
-     ro        <- 3376.55
-     steepness <- 0.809901
-     m         <- 0.306306
-     rho       <- 0.058824
-     kap       <- 1.470588
-     log_avgrec <- log(ro)
-     log_recinit <- log(ro)
-
-     # reverse engineer the logs for ro and m, used in the priors calcs
-     theta <- c(log(ro),
-                steepness,
-                log(m),
-                rho,
-                kap)
-
-    # from iscam.par file
-    log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
-    init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
-    log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
-
-    # Variances fixed for P cod
-    varphi    <- sqrt(1.0/kap)
-    sig       <- sqrt(rho)*varphi # 0.2 for P cod
-    tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
-   }
+  # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
+  # if(test==T){
+  #   # DELETE THIS ONCE MODEL EQUATIONS ARE TESTED
+  #    ro        <- 3376.55
+  #    steepness <- 0.809901
+  #    m         <- 0.306306
+  #    rho       <- 0.058824
+  #    kap       <- 1.470588
+  #    log_avgrec <- log(ro)
+  #    log_recinit <- log(ro)
+  #
+  #    # reverse engineer the logs for ro and m, used in the priors calcs
+  #    theta <- c(log(ro),
+  #               steepness,
+  #               log(m),
+  #               rho,
+  #               kap)
+  #
+  #   # from iscam.par file
+  #   log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
+  #   init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
+  #   log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
+  #
+  #   # Variances fixed for P cod
+  #   varphi    <- sqrt(1.0/kap)
+  #   sig       <- sqrt(rho)*varphi # 0.2 for P cod
+  #   tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
+  #  } # end if test
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Get the Goodyear Compensation Ratio
 
@@ -828,7 +830,6 @@ model <- function(par){
   pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
 
   #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
-  # THESE TWO DO NOT MATCH ISCAM
   ndev <- length(log_rec_devs) # getting the mean manually prevents lost class attribute error
   meandev <- sum(log_rec_devs)/ndev # this was s in iscam
   pvec[4] <- 1.e5*meandev*meandev #mean(log_rec_devs)*mean(log_rec_devs)
@@ -846,19 +847,19 @@ model <- function(par){
            sum(qvec) +
            sum(pvec)
 
- if(test==T){
-   # just for testing likelihood coded correctly. Delete after testing
-   objfunlist <- list()
-   objfunlist$objfun <- objfun
-   objfunlist$nlvec_dd_ct <- nlvec_dd_ct
-   objfunlist$nlvec_dd_it <- nlvec_dd_it
-   objfunlist$nlvec_dd_rt <- nlvec_dd_rt
-   objfunlist$nlvec_dd_wt <- nlvec_dd_wt
-   objfunlist$priors <- priors
-   objfunlist$qvec <- qvec
-   objfunlist$pvec <- pvec
-   print(objfunlist)
- }
+ # if(test==T){
+ #   # just for testing likelihood coded correctly. Delete after testing
+ #   objfunlist <- list()
+ #   objfunlist$objfun <- objfun
+ #   objfunlist$nlvec_dd_ct <- nlvec_dd_ct
+ #   objfunlist$nlvec_dd_it <- nlvec_dd_it
+ #   objfunlist$nlvec_dd_rt <- nlvec_dd_rt
+ #   objfunlist$nlvec_dd_wt <- nlvec_dd_wt
+ #   objfunlist$priors <- priors
+ #   objfunlist$qvec <- qvec
+ #   objfunlist$pvec <- pvec
+ #   print(objfunlist)
+ # } # end if test
  # End calcObjectiveFunction
  #|---------------------------------------------------------------------|
 
@@ -895,6 +896,7 @@ model <- function(par){
 
 # Test obj function: iscam has 195.806
 # Current test with pars fixed from iscam.rep: 195.806  :-)
+# Current RTMB value: 195.806  :-) :-) :-)
 #model(par)
 
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified

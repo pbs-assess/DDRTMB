@@ -86,8 +86,8 @@ iscamindex <- pcod2020rep$annual_mean_weight
 rtmbindex <- plr$annual_mean_weight_all
 png(here("outputs","figs","MeanWeightCompare.png"), width=8, height=6, units="in", res=300)
   maxY <- max(c((obsindex+2*iwt*obsindex),iscamindex,rtmbindex))
-  plot(iyrs,iscamindex, col=iscamcol, lwd=3, lty=2,type="l", ylim=c(0,maxY), xlab="Years", ylab="Annual mean weight (kg)")
-  lines(iyrs,rtmbindex, col=rtmbcol, lwd=3)
+  plot(iyrs,iscamindex, col=iscamcol, lwd=3,type="l", ylim=c(0,maxY), xlab="Years", ylab="Annual mean weight (kg)")
+  lines(iyrs,rtmbindex, col=rtmbcol, lwd=3, lty=2)
   points(iyrs, obsindex, type="p", pch=19, cex=1.2, col=datcol)
   arrows(x0=iyrs, y0=obsindex-2*iwt*obsindex, x1 = iyrs, y1=obsindex+2*iwt*obsindex, code = 0)
   legend("topright", legend=c("Data", "RTMB", "iscam MPD"), lwd=3, col=c(datcol, rtmbcol, iscamcol) ,bty="n")
