@@ -1,7 +1,7 @@
 # This is a development script for a delay-difference model in rtmb
 # The first draft attempts to reproduce the iscam delay difference model from
-#   the 2018 Pacific Cod stock assessment for Haida Gwaii/Queen Charlotte
-#   Sound stock in Pacific Canada (Area 5ABCD) [published in 2020]
+#   the 2020 Pacific Cod stock assessment for Haida Gwaii/Queen Charlotte
+#   Sound stock in Pacific Canada (Area 5ABCD) [published in 2021]
 
 # **For this first version, this is a ONE group, ONE area, ONE sex model**
 # M is fixed, not time-varying - adapt later for tvm
@@ -11,12 +11,10 @@
 # This will load the raw 2020 5ABCD Pacific Cod inputs into the package
 # Need to do this while package is in development
 #
-# **Just once, you will need to make a folder called outputs in the root DDRTMB folder**
-#
 # TO RUN:
-# 1. Run lines below until the end of # 2. Parameters (currently L151)
-# 2. Run the model function (currently L157)
-# 3. Run the remainder of the code (currently starting at L910)
+# 1. Run lines below until the end of # 2. Parameters (currently L147)
+# 2. Run the model function (currently L153)
+# 3. Run the remainder of the code (currently starting at L906)
 # 4. Look at outputs and figures in the outputs folder
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -25,7 +23,7 @@
 # Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station, Nanaimo, Canada)
 
 # Date created:  May 15, 2024
-# Last Modified: July 23, 2024
+# Last Modified: July 25, 2024
 
 # Notes:
 # - The iscam input files are already loaded into the package:
@@ -36,24 +34,19 @@
 #
 # - Iscam uses an errors-in-variables approach to partition observation error,
 #       with multiplicative weighting of each index observation using annual CVs
-# - Want to change this to additive weightings (as per SS3), then also explore
+# - Possibly want to change this to additive weightings (as per SS3), then also explore
 #       state space options. But first try to reproduce the iscam results.
 
 # TODO (move these to Issues on gitHub repo):
 # 1. Translation of iscam to RTMB:
-#  - CHECK all test calcs. Catches are a little bit off. Probably due to rounding of ft in iscam rep and par files
-#  - Can probably relax requirement of setting nmeanwt to 1 when no mean weight data
-#  - Probably don't need all the counters
-#  - Check that pars list is complete
 #  - Move some of model sections into separate functions
 #  - Implement MCMC - tmbstan
 #  - Check source of fished equilibrium equation and check code - or remove it (in calcNumbersBiomass_deldiff)
 
 # 2. Potential model changes:
 #  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
-#  - Transform normal space parameters to log?
 #  - Need for Jacobian transformations?
-#  - Look at bias correction (see Thorson and Kristensen paper - but not needed for bayesian)
+#  - Look at bias correction (see Thorson and Kristensen paper - but not needed for Bayesian)
 #  - Look at alternate settings for Errors in Variables (e.g., weights additive instead of multiplicative)
 #  - Look at state-space implementation
 #  - Add time-varying M
@@ -103,7 +96,7 @@ ages <-  dat$sage:dat$nage
 # get the number of and index for commercial (fishery) fleets
 nfleet <- 0 # number of fishing fleets (not surveys)
 for(i in 1:dat$ngear){
-  nfleet <- ifelse(dat$alloc[i]>0, nfleet+1, nfleet)
+  nfleet <- ifelse(dat$alloc[i]>0, nfleet+1, nfleet) # not sure if this is needed
 }
 
 # Index to identfy which gears are fishing fleets
@@ -151,6 +144,7 @@ par$kappa <- theta_control[7,1] # Errors in Variables: total precision (inverse 
 par$log_ft_pars <- numeric(nyrs) # estimated log fishing mortalities (total across fleets)
 par$init_log_rec_devs <- numeric(length=length((dat$sage+1):dat$nage)) # I think this is length nage-sage+1 (i.e., length 2:9)
 par$log_rec_devs <- numeric(nyrs)
+par
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Model

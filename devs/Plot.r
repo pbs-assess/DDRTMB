@@ -21,6 +21,9 @@ datcol <- 1
 iscamcol <- "red"
 rtmbcol <- "darkblue"
 
+if(!file.exists(here("outputs"))) dir.create(here("outputs"), recursive = TRUE)
+if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recursive = TRUE)
+
 # 1. Read in input files and output files from RTMB and iscam
 # inputs
 dat <- pcod2020dat
