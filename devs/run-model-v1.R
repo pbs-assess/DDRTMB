@@ -168,9 +168,9 @@ model <- function(par){
 
 #|---------------------------------------------------------------------|
   # probably don't need to use par$ anywhere in model bc of the getAll function above
-  theta <- c(exp(par$log_ro),
+  theta <- c(par$log_ro,
              par$h,
-             exp(par$log_m),
+             par$log_m,
              par$rho,
              par$kappa)
 
@@ -184,9 +184,9 @@ model <- function(par){
   objfun   <- numeric(1) # objective function to be minimized
 
   # 1. initParameters
-  ro        <- theta[1]
+  ro        <- exp(theta[1])
   steepness <- theta[2]
-  m         <- theta[3]
+  m         <- exp(theta[3])
   rho       <- theta[4]
   kap       <- theta[5] #kappa in par file. Call it kap here bc kappa is an R function
 
@@ -221,9 +221,10 @@ model <- function(par){
      log_avgrec <- log(ro)
      log_recinit <- log(ro)
 
-     theta <- c(ro,
+     # reverse engineer the logs for ro and m, used in the priors calcs
+     theta <- c(log(ro),
                 steepness,
-                m,
+                log(m),
                 rho,
                 kap)
 
@@ -806,6 +807,8 @@ model <- function(par){
   # # ---------------------------------------------------------------------------------|
   # #  LIKELIHOOD PENALTIES TO REGULARIZE SOLUTION
   # # ---------------------------------------------------------------------------------|
+  # #  NOTE: iscam includes another element pvec(2) for m deviations and
+  # # also has an empty spot in pvec(3)
   # #  pvec(1)  -> penalty on mean fishing mortality rate.
   # #  pvec(2)  -> penalty on recruitment deviations.
   # #  pvec(3)  -> penalty on initial recruitment vector.
@@ -825,6 +828,7 @@ model <- function(par){
   pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
 
   #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
+  # THESE TWO DO NOT MATCH ISCAM
   ndev <- length(log_rec_devs) # getting the mean manually prevents lost class attribute error
   meandev <- sum(log_rec_devs)/ndev # this was s in iscam
   pvec[4] <- 1.e5*meandev*meandev #mean(log_rec_devs)*mean(log_rec_devs)
@@ -890,7 +894,7 @@ model <- function(par){
 } # end model
 
 # Test obj function: iscam has 195.806
-# Current test: 255.0687
+# Current test with pars fixed from iscam.rep: 195.806  :-)
 #model(par)
 
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified
