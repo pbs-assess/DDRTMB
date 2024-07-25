@@ -1,6 +1,5 @@
 # Testing stan. Code from Sean Anderson.
 library(rstan)
-library(tmbstan)
 scode <- "
 parameters {
   array[2] real y;
@@ -14,5 +13,6 @@ fit1 <- stan(model_code = scode, iter = 10, verbose = FALSE)
 print(fit1)
 
 # tmbstan
+library(tmbstan)
 TMB::runExample("simple")
 fit <- tmbstan(obj, chains=1)

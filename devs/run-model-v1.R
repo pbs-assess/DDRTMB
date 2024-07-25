@@ -930,19 +930,19 @@ source(here("devs","plot.r"))
 # Try running MCMC
 library(tmbstan)
 fitmcmc <- tmbstan(obj, chains=1,
-                   iter=5000)
+                   iter=5000,
+                   init=list(opt$par),
+                   lower=c(1.,0.2,-2.3,
+                           rep(-5,length(par$log_ft_pars)),
+                           rep(-5, length(par$log_rec_devs)),
+                           rep(-5, length(par$init_log_rec_devs))),
+                   upper=c(12.,1.,0.,
+                           rep(5,length(par$log_ft_pars)),
+                           rep(5, length(par$log_rec_devs)),
+                           rep(5, length(par$init_log_rec_devs))))
 
 mc <- extract(fitmcmc2, pars=names(obj$par),
               inc_warmup=TRUE, permuted=FALSE)
 
-# ,
-# init=list(opt$par),
-# lower=c(1.,0.2,-2.3,
-#         rep(-5,length(par$log_ft_pars)),
-#         rep(-5, length(par$log_rec_devs)),
-#         rep(-5, length(par$init_log_rec_devs))),
-# upper=c(12.,1.,0.,
-#         rep(5,length(par$log_ft_pars)),
-#         rep(5, length(par$log_rec_devs)),
-#         rep(5, length(par$init_log_rec_devs)))
+
 
