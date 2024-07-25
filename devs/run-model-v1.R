@@ -72,6 +72,9 @@ library(RTMB)
 
 source(here("R/likelihood_funcs.R"))
 
+# Set test mode for testing model with MPD estimates from pcod2020 test file
+test <- T
+
 # FOR TESTING
 # source("devs/load-models.R")
 # pcod2020rep<-read.report.file("data-raw/iscam.rep")
@@ -129,7 +132,7 @@ par <- list()
 # Begin by using initial values specified in pcod2020ctl
 # Leading parameters
 par$log_ro <- theta_control[1,1] # log unfished recruitment (syr)
-par$h <- 0.8 # theta_control[2,1] # steepness
+par$h <- theta_control[2,1] # steepness
 par$log_m <- theta_control[3,1] #-1.18317 # (rep file estimate) theta_control[3,1] # log natural mortality
 # In the current version of the P cod model, these are set the same as ro so do not estimate
 #par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
@@ -164,7 +167,7 @@ model <- function(par){
   # 8. calcObjectiveFunction()
 
 #|---------------------------------------------------------------------|
-   theta <- c(exp(par$log_ro),
+  theta <- c(exp(par$log_ro),
              par$h,
              exp(par$log_m),
              par$rho,
@@ -184,11 +187,11 @@ model <- function(par){
   steepness <- theta[2]
   m         <- theta[3]
   rho       <- theta[4]
-  kappa     <- theta[5]
+  kap       <- theta[5] #kappa in par file. Call it kap here bc kappa is an R function
 
   # Fixed parameters
   # Variances fixed for P cod - figure out how to fix them properly
-  varphi    <- sqrt(1.0/kappa)
+  varphi    <- sqrt(1.0/kap)
   sig       <- sqrt(rho)*varphi # 0.2 for P cod
   tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
 
@@ -202,25 +205,33 @@ model <- function(par){
   sig_f <- ctl$misc[9] # sd constraint for penalty function
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
-  # DELETE THIS ONCE MODEL EQUATIONS ARE TESTED
-   ro        <- 3376.55
-   steepness <- 0.809901
-   m         <- 0.306306
-   log_avgrec <- log(ro)
-   log_recinit <- log(ro)
+    # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
+  if(test==T){
+    # DELETE THIS ONCE MODEL EQUATIONS ARE TESTED
+     ro        <- 3376.55
+     steepness <- 0.809901
+     m         <- 0.306306
+     rho       <- 0.058824
+     kap       <- 1.470588
+     log_avgrec <- log(ro)
+     log_recinit <- log(ro)
 
-   theta <- c(ro,
-              steepness,
-              m,
-              rho,
-              kappa)
+     theta <- c(ro,
+                steepness,
+                m,
+                rho,
+                kap)
 
-  # from iscam.par file
-  log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
-  init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
-  log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
+    # from iscam.par file
+    log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
+    init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
+    log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
 
+    # Variances fixed for P cod
+    varphi    <- sqrt(1.0/kap)
+    sig       <- sqrt(rho)*varphi # 0.2 for P cod
+    tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
+   }
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Get the Goodyear Compensation Ratio
 
@@ -443,20 +454,20 @@ model <- function(par){
     iyear <- catch[ii,1] # actual year
     i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index
     k <- catch[ii,2] # gear
-    m <- catch[ii,3] # type: 1=catch in weight; 2=catch in numbers
+    mm <- catch[ii,3] # type: 1=catch in weight; 2=catch in numbers
     d_ct <- catch[ii,4] # observed catch
 
     # Baranov catch equation
-    if(m==1) {
+    if(mm==1) {
       # catch in weight
       ct[ii] = (ft[k,i]/(Mt[i] + ft[k,i]))*(1-exp(-Mt[i]-ft[k,i]))*biomass[i]
 
     }
-    if(m==2){
+    if(mm==2){
       # catch in numbers
       ct[ii] = (ft[k,i]/(Mt[i] + ft[k,i]))*(1-exp(-Mt[i]-ft[k,i]))*numbers[i]
     }
-    if(!m %in% 1:2){
+    if(!mm %in% 1:2){
       stop("Catch type must be 1 (weight) or 2 (numbers). Set in column 3 of dat$catch")
     }
 
@@ -726,7 +737,7 @@ model <- function(par){
     tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
     # print(kk)
     # print(tmp) # Yes. Matches nlvec_dd in rep file
-    nlvec_dd_it <- tmp
+    nlvec_dd_it[kk] <- tmp
   }
 
   # Likelihood for recruitment
@@ -735,7 +746,7 @@ model <- function(par){
 
   # Likelihood for mean weight
   # We are entering the likelihood in log space here - do we need a Jacobian transformation?
-    for(kk in 1:nmeanwt){
+  for(kk in 1:nmeanwt){
     tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
     nlvec_dd_wt <- tmp # 3.407 Yes. Matches nlvec_dd in rep file.
   }
@@ -826,15 +837,16 @@ model <- function(par){
            sum(qvec) +
            sum(pvec)
 
- # just for testing likelihood coded correctly. Delete after testing
- objfunlist <- list()
- objfunlist$objfun <- objfun
- objfunlist$nlvec_dd <- c(nlvec_dd_ct,nlvec_dd_it,nlvec_dd_rt,nlvec_dd_wt)
- objfunlist$priors <- priors
- objfunlist$qvec <- qvec
- objfunlist$pvec <- pvec
- print(objfunlist)
-
+ if(test==T){
+   # just for testing likelihood coded correctly. Delete after testing
+   objfunlist <- list()
+   objfunlist$objfun <- objfun
+   objfunlist$nlvec_dd <- c(nlvec_dd_ct,nlvec_dd_it,nlvec_dd_rt,nlvec_dd_wt)
+   objfunlist$priors <- priors
+   objfunlist$qvec <- qvec
+   objfunlist$pvec <- pvec
+   print(objfunlist)
+ }
  # End calcObjectiveFunction
  #|---------------------------------------------------------------------|
 
