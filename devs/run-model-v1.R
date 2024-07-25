@@ -167,6 +167,7 @@ model <- function(par){
   # 8. calcObjectiveFunction()
 
 #|---------------------------------------------------------------------|
+  # probably don't need to use par$ anywhere in model bc of the getAll function above
   theta <- c(exp(par$log_ro),
              par$h,
              exp(par$log_m),
@@ -180,7 +181,7 @@ model <- function(par){
   priors   <- numeric(length(theta)) # initialize priors component of neg log likelihood (priors in iscam)
   qvec     <- numeric(nit) # initialize q priors component of neg log likelihood (qvec in iscam)
   pvec     <- numeric(5) # initialize penalties component of neg log likelihood (pvec in iscam)
-  #objfun   <- numeric(1) # objective function to be minimized
+  objfun   <- numeric(1) # objective function to be minimized
 
   # 1. initParameters
   ro        <- theta[1]
@@ -189,8 +190,12 @@ model <- function(par){
   rho       <- theta[4]
   kap       <- theta[5] #kappa in par file. Call it kap here bc kappa is an R function
 
+  log_ft_pars <- par$log_ft_pars
+  init_log_rec_devs <- par$init_log_rec_devs
+  log_rec_devs <- par$log_rec_devs
+
   # Fixed parameters
-  # Variances fixed for P cod - figure out how to fix them properly
+  # Variances fixed for P cod
   varphi    <- sqrt(1.0/kap)
   sig       <- sqrt(rho)*varphi # 0.2 for P cod
   tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
@@ -277,7 +282,7 @@ model <- function(par){
       i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index
       k <- catch[ii,2] # gear
 
-      ftmp    <- exp(par$log_ft_pars[ii]) # log_ft_pars has length nctobs
+      ftmp    <- exp(log_ft_pars[ii]) # log_ft_pars has length nctobs
       # ft is a matrix with ngear rows and nyr columns
       ft[k,i] <- ftmp # fishing mortality for gear k in year i (in ASM this is modified by selectivity)
       Ft[i]   <- Ft[i] + ftmp # Total fishing mortality in year i
@@ -809,9 +814,9 @@ model <- function(par){
   # #==============================================================================================
   #
    # Fishing mortality
-  nft <- length(par$log_ft_pars)
-  mean_log_ft_pars <- sum(par$log_ft_pars)/nft # getting the mean manually prevents lost class attribute error
-  pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) #dnorm(mean(log_ft_pars),log(par$meanft_pen),par$sdft_pen, log=T)# # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  nft <- length(log_ft_pars)
+  mean_log_ft_pars <- sum(log_ft_pars)/nft # getting the mean manually prevents lost class attribute error
+  pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
   bigsd <- 2. # possibly put this in the data
@@ -830,7 +835,7 @@ model <- function(par){
 
  # joint likelihood, priors and penalties
  objfun <- nlvec_dd_ct +
-           nlvec_dd_it +
+           sum(nlvec_dd_it) +
            nlvec_dd_rt +
            nlvec_dd_wt +
            sum(priors) +
@@ -841,7 +846,10 @@ model <- function(par){
    # just for testing likelihood coded correctly. Delete after testing
    objfunlist <- list()
    objfunlist$objfun <- objfun
-   objfunlist$nlvec_dd <- c(nlvec_dd_ct,nlvec_dd_it,nlvec_dd_rt,nlvec_dd_wt)
+   objfunlist$nlvec_dd_ct <- nlvec_dd_ct
+   objfunlist$nlvec_dd_it <- nlvec_dd_it
+   objfunlist$nlvec_dd_rt <- nlvec_dd_rt
+   objfunlist$nlvec_dd_wt <- nlvec_dd_wt
    objfunlist$priors <- priors
    objfunlist$qvec <- qvec
    objfunlist$pvec <- pvec
