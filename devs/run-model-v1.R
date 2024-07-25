@@ -941,8 +941,13 @@ fitmcmc <- tmbstan(obj, chains=1,
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))))
 
-mc <- extract(fitmcmc2, pars=names(obj$par),
+mc <- extract(fitmcmc, pars=names(obj$par),
               inc_warmup=TRUE, permuted=FALSE)
 
 
-
+mc.df <- as.data.frame(mc[,1,])
+colnames(mc.df)
+mc.df$log_ro
+hist(mc.df$log_ro)
+hist(mc.df$h)
+hist(exp(mc.df$log_m))
