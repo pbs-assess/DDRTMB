@@ -60,6 +60,7 @@ library(RTMB)
 # eventually move to standard R statistical functions
 # Currently using facsimiles of the needed functions from ADMB statsLib.h
 source(here("R/likelihood_funcs.R"))
+
 # The model function is in a separate file
 # There is a bunch of stuff in the global space that it needs
 source(here("R/model.R"))
@@ -150,6 +151,7 @@ par
 ## from TMB help: map = List defining how to optionally collect and fix parameters
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
 # Fixing rho and kappa  log_m=factor(NA) h=factor(NA),
+# Note the model is in model.R and was sourced above
 obj <- MakeADFun(model, par, silent=FALSE,
                map=list(rho=factor(NA), kappa=factor(NA)))
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
@@ -175,7 +177,8 @@ saveRDS(plradsd, here("outputs","DerivedSDs.rda"))
 
 # Plot comparisons with iscam
 # Delete this for package
-source(here("devs","plot_iscam_compare.r"))
+source(here("devs","plot_iscam_compare_mpd.r"))
+source(here("devs","plot_rtmb_results_mpd.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 4. MCMCs - Posterior parameter estimates
@@ -228,7 +231,11 @@ saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 post <- as.matrix(mc[,1,]) # I think this is what I want
 #obj$report(post[1,-ncol(post)])
 obj$report(post[1,]) # the last column is the final year of rec devs so don't drop it
-post_biomass <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+
+posteriors <- list()
+posteriors$biomass <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+posteriors$recruits <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+
 for(i in 1:nrow(post)){
   r <- obj$report(post[i,])
   post_biomass[i,] <- r$biomass

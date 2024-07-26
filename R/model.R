@@ -760,7 +760,7 @@ model <- function(par){
   ADREPORT(q)
   # Predicted Catch, Indices and Annual Mean Weight
   ADREPORT(ct)
-  # figure out how to report these lists without creating errors
+  # Figure out how to report these lists without creating errors
   ADREPORT(it_hat_all)
   ADREPORT(annual_mean_weight_all)
 
