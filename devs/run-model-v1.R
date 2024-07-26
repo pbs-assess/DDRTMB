@@ -187,8 +187,12 @@ source(here("devs","plot_rtmb_results_mpd.r"))
 # See example code https://github.com/kaskr/tmbstan
 library(tmbstan)
 # SA suggested 1000 samples with 4 chains as a start
-fitmcmc <- tmbstan(obj, chains=2,
-                   iter=1000,
+# parallel causing errors - I'm not setting it up correctly
+# cores <- parallel::detectCores()-1
+# options(mc.cores = cores)
+Iter <- 2000
+fitmcmc <- tmbstan(obj, chains=1,
+                   iter=Iter,
                    init=list(opt$par),
                    lower=c(1.,0.2,-2.3,
                            rep(-5,length(par$log_ft_pars)),
@@ -199,8 +203,9 @@ fitmcmc <- tmbstan(obj, chains=2,
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))))
 
+# Remove burn in (warmup)
 mc <- extract(fitmcmc, pars=names(obj$par),
-              inc_warmup=TRUE, permuted=FALSE)
+              inc_warmup=FALSE, permuted=FALSE)
 
 ## Can also get ESS and Rhat from rstan::monitor
 # https://github.com/kaskr/tmbstan
@@ -208,6 +213,7 @@ mon <- monitor(mc)
 max(mon$Rhat)
 min(mon$Tail_ESS)
 
+# test plotting code - move to separate file
 mc.df <- as.data.frame(mc[,1,])
 hist(mc.df$log_ro)
 hist(mc.df$h)
@@ -228,20 +234,25 @@ saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 ## which returns a list. The last column is the log-posterior density (lp__)
 ## and needs to be dropped
 #post <- as.matrix(mc) # this just returns one massive column of the posterior samples
-post <- as.matrix(mc[,1,]) # I think this is what I want
-#obj$report(post[1,-ncol(post)])
-obj$report(post[1,]) # the last column is the final year of rec devs so don't drop it
+post <- as.matrix(mc[,1,])
+# Look at the first sample
+# obj$report(post[1,]) # the last column is the final year of rec devs so don't drop it
 
+# Make a list for putting posterior estimates of biomass, recruits and q
+# Note that parameters, rec devs and logf are already reported in the mc object
 posteriors <- list()
-posteriors$biomass <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
-posteriors$recruits <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+posteriors$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+posteriors$recruits <- matrix(NA, ncol=nyrs-dat$sage, nrow=nrow(post))
+posteriors$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
 
 for(i in 1:nrow(post)){
   r <- obj$report(post[i,])
-  post_biomass[i,] <- r$biomass
+  posteriors$biomass[i,] <- r$biomass
+  posteriors$recruits[i,] <- r$rt
+  posteriors$q[i,] <- r$q
 }
 
-
+saveRDS(posteriors, here("outputs","MCMCDerivedEstimates.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Diagnostics
