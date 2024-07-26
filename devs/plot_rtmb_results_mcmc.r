@@ -23,8 +23,18 @@ rtmbcol <- "darkblue"
 if(!file.exists(here("outputs"))) dir.create(here("outputs"), recursive = TRUE)
 if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recursive = TRUE)
 
-# 1. Read in input files and output files from RTMB and iscam
-# inputs
-dat <- pcod2020dat
-ctl <- pcod2020ctl
-# RTMB outputs
+# 1. Read in MCMC outputs
+mcmcpars <- readRDS(here("outputs","MCMCParameterEstimates.rda"))
+mcmcderived <- readRDS( here("outputs","MCMCDerivedEstimates.rda"))
+mcmcdiagnostics <- readRDS(here("outputs","MCMCDiagnostics.rda"))
+
+# Pairs and trace plots
+
+
+# Parameter histograms (without and with priors)
+
+
+# Biomass, recruits and fishing mortality time series
+
+
+
