@@ -1,7 +1,7 @@
-# Simple plots to compare MPD estimates of results
+# Simple plots to compare MPD estimates of results (iscam vs RTMB)
 # Robyn Forrest
 # Date created:  July 23, 2024
-# Last Modified: July 23, 2024
+# Last Modified: July 25, 2024
 #
 # FIRST run the model in run-model-v1.R
 # Load documentation and inputs
