@@ -20,7 +20,7 @@
 
 # Package name: DDRTMB
 
-# Authors: Robyn Forrest (RF) and Catarina Wor (CW) (Pacific Biological Station, Nanaimo, Canada)
+# Authors: Robyn Forrest (RF), Catarina Wor (CW), Sean Anderson (SA) (Pacific Biological Station, Nanaimo, Canada)
 
 # Date created:  May 15, 2024
 # Last Modified: July 25, 2024
@@ -866,19 +866,33 @@ model <- function(par){
  # REPORT_SECTION
  # Just start with a few things
  # Need to find a dynamic way of reporting it_hat and annual_mean_weight
+ # NOTE: ADREPORT keeps track of standard error. REPORT does not and is quicker.
  # Can't ADREPORT lists or use loops
  # Hardwire for now
  it_hat_all <- c(it_hat[[1]],it_hat[[2]],it_hat[[3]],it_hat[[4]],it_hat[[5]])
  annual_mean_weight_all <- annual_mean_weight[[1]]
 
- ADREPORT(nlvec_dd_ct)
- ADREPORT(nlvec_dd_it)
- ADREPORT(nlvec_dd_rt)
- ADREPORT(nlvec_dd_wt)
- ADREPORT(priors)
- ADREPORT(qvec)
- ADREPORT(pvec)
+ # Objective function components
+ REPORT(nlvec_dd_ct)
+ REPORT(nlvec_dd_it)
+ REPORT(nlvec_dd_rt)
+ REPORT(nlvec_dd_wt)
+ REPORT(priors)
+ REPORT(qvec)
+ REPORT(pvec)
  # Biomass, numbers, recruits and q
+ REPORT(biomass)
+ REPORT(numbers)
+ REPORT(rt)
+ REPORT(delta)
+ REPORT(q)
+ # Predicted Catch, Indices and Annual Mean Weight
+ REPORT(ct)
+ # figure out how to report these lists without creating errors
+ REPORT(it_hat_all)
+ REPORT(annual_mean_weight_all)
+
+ # ADREPORT, includes standard error
  ADREPORT(biomass)
  ADREPORT(numbers)
  ADREPORT(rt)
@@ -908,24 +922,18 @@ obj <- MakeADFun(model, par, silent=FALSE,
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
 opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000))
 opt$objective
-sdr <- summary(sdreport(obj))
+#sdr <- summary(sdreport(obj))
 
 # Estimated parameters
 pl <- as.list(sdreport(obj),"Est")
 plsd <- as.list(sdreport(obj),"Std")
-#pl
-# Derived quantities (from ADREPORT)
-plr <- as.list(sdreport(obj),"Est", report=TRUE)
-plrsd <- as.list(sdreport(obj),"Std", report=TRUE)
+# Derived quantities with standard errors (from ADREPORT)
+pladr <- as.list(sdreport(obj),"Est", report=TRUE)
+plradsd <- as.list(sdreport(obj),"Std", report=TRUE)
+# Derived quantities without standard errors (from REPORT)
+# get them out like this: obj$report()$X
+plr <- as.list(obj$report())
 
-# Write out results for plotting
-saveRDS(pl, here("outputs","ParameterEstimates.rda"))
-saveRDS(plsd, here("outputs","ParameterSDs.rda"))
-saveRDS(plr, here("outputs","DerivedEstimates.rda"))
-saveRDS(plrsd, here("outputs","DerivedSDs.rda"))
-
-# Plot comparisons
-source(here("devs","plot.r"))
 
 # Try running MCMC
 library(tmbstan)
@@ -951,3 +959,13 @@ mc.df$log_ro
 hist(mc.df$log_ro)
 hist(mc.df$h)
 hist(exp(mc.df$log_m))
+
+# Write out results for plotting
+saveRDS(pl, here("outputs","ParameterEstimates.rda"))
+saveRDS(plsd, here("outputs","ParameterSDs.rda"))
+saveRDS(plrad, here("outputs","DerivedEstimates.rda"))
+saveRDS(plradsd, here("outputs","DerivedSDs.rda"))
+saveRDS(mc, here("outputs","MCMCParameterEstimates.rda"))
+
+# Plot comparisons
+source(here("devs","plot.r"))

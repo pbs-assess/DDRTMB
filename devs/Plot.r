@@ -31,8 +31,8 @@ ctl <- pcod2020ctl
 # RTMB outputs
 pl <- readRDS(here("outputs","ParameterEstimates.rda"))
 plsd <- readRDS(here("outputs","ParameterSDs.rda"))
-plr <- readRDS(here("outputs","DerivedEstimates.rda"))
-plrsd <- readRDS(here("outputs","DerivedSDs.rda"))
+plrad <- readRDS(here("outputs","DerivedEstimates.rda"))
+plradsd <- readRDS(here("outputs","DerivedSDs.rda"))
 # iscam outputs
 pcod2020rep <- read.report.file("data-raw/iscam.rep")
 pcod2020par <- read.par.file("data-raw/iscam.par")
@@ -45,7 +45,7 @@ pyrs <- dat$syr:(dat$nyr+1) # includes projection year
 png(here("outputs","figs","CatchCompare.png"), width=8, height=6, units="in", res=300)
   maxY <- max(dat$catch$value)
   plot(yrs, pcod2020rep$ct, col=iscamcol, lwd=3,type="l", ylim=c(0,maxY), xlab="Years", ylab="Catch (t)")
-  lines(yrs, plr$ct, col=rtmbcol, lwd=3, lty=2)
+  lines(yrs, plrad$ct, col=rtmbcol, lwd=3, lty=2)
   points(yrs, dat$catch$value, type="p", pch=19, cex=1.2, col=datcol)
   arrows(x0=yrs, y0=dat$catch$value-0.05*dat$catch$value, x1 = yrs, y1=dat$catch$value+0.05*dat$catch$value, code = 0)
   legend("topright", legend=c("Data", "RTMB", "iscam MPD"), lwd=3, col=c(datcol, rtmbcol, iscamcol) ,bty="n")
@@ -64,11 +64,11 @@ png(here("outputs","figs","IndicesCompare.png"), width=8, height=6, units="in", 
     if(i==1){
       n1 <- 1
       n2 <- dat$nitnobs[i]
-      rtmbindex <- plr$it_hat_all[n1:n2]
+      rtmbindex <- plrad$it_hat_all[n1:n2]
     }else{
       n1 <- n2+1
       n2 <- n1+dat$nitnobs[i]-1
-      rtmbindex <- plr$it_hat_all[n1:n2]
+      rtmbindex <- plrad$it_hat_all[n1:n2]
     }
 
     maxY <- max(c((obsindex+2*iwt*obsindex),iscamindex,rtmbindex))
@@ -86,7 +86,7 @@ obsindex <- dat$meanwtdata[[1]]$it
 iwt <- ctl$weight.sig
 iyrs <- dat$meanwtdata[[1]]$iyr
 iscamindex <- pcod2020rep$annual_mean_weight
-rtmbindex <- plr$annual_mean_weight_all
+rtmbindex <- plrad$annual_mean_weight_all
 png(here("outputs","figs","MeanWeightCompare.png"), width=8, height=6, units="in", res=300)
   maxY <- max(c((obsindex+2*iwt*obsindex),iscamindex,rtmbindex))
   plot(iyrs,iscamindex, col=iscamcol, lwd=3,type="l", ylim=c(0,maxY), xlab="Years", ylab="Annual mean weight (kg)")
@@ -99,10 +99,10 @@ dev.off()
 # Biomass
 png(here("outputs","figs","BiomassCompare.png"), width=8, height=6, units="in", res=300)
   par(mfrow=(c(1,1)))
-  maxY <- max(c(pcod2020rep$biomass,(plr$biomass+2*plrsd$biomass)))
-  plot(pyrs, plr$biomass, type="l", lwd=3, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Biomass (t)")
-  lines(pyrs, plr$biomass-2*plrsd$biomass, lwd=1, col=rtmbcol, lty="dotted")
-  lines(pyrs, plr$biomass+2*plrsd$biomass, lwd=1, col=rtmbcol, lty="dotted")
+  maxY <- max(c(pcod2020rep$biomass,(plrad$biomass+2*plradsd$biomass)))
+  plot(pyrs, plrad$biomass, type="l", lwd=3, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Biomass (t)")
+  lines(pyrs, plrad$biomass-2*plradsd$biomass, lwd=1, col=rtmbcol, lty="dotted")
+  lines(pyrs, plrad$biomass+2*plradsd$biomass, lwd=1, col=rtmbcol, lty="dotted")
   lines(pyrs, pcod2020rep$biomass, lwd=3, lty=2, col=iscamcol)
   legend("topright", legend=c("RTMB", "iscam MPD"), lwd=3, col=c(rtmbcol, iscamcol) ,bty="n")
 dev.off()
@@ -133,9 +133,9 @@ dev.off()
 # Derived recruits
 png(here("outputs","figs","RecruitsCompare.png"), width=8, height=6, units="in", res=300)
   recyrs <- (dat$syr+dat$sage):dat$nyr
-  maxY <- max(c(pcod2020rep$rt,(plr$rt+2*plrsd$rt)))
-  plot(recyrs, plr$rt, pch=19, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Recruits")
-  arrows(x0=recyrs, y0=(plr$rt-2*plrsd$rt), x1 = recyrs, y1=(plr$rt+2*plrsd$rt), code = 0, col=rtmbcol)
+  maxY <- max(c(pcod2020rep$rt,(plrad$rt+2*plradsd$rt)))
+  plot(recyrs, plrad$rt, pch=19, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Recruits")
+  arrows(x0=recyrs, y0=(plrad$rt-2*plradsd$rt), x1 = recyrs, y1=(plrad$rt+2*plradsd$rt), code = 0, col=rtmbcol)
   points((recyrs+0.5), pcod2020rep$rt, pch=19, col=iscamcol)
   legend("topright", legend=c("RTMB", "iscam MPD"), pch=19, col=c(rtmbcol, iscamcol) ,bty="n")
 dev.off()
@@ -186,7 +186,7 @@ for(i in 2:dat$nit){
 }
 png(here("outputs","figs","qCompare.png"), width=8, height=6, units="in", res=300)
   Pars <- matrix(nrow=2, ncol=dat$nit)
-  Pars[1,] <- c(plr$q)
+  Pars[1,] <- c(plrad$q)
   Pars[2,] <- c(pcod2020rep$q)
   colnames(Pars) <- qcolnames
   barplot(Pars, beside=T, col=c(rtmbcol, iscamcol), ylim=c(0,1.2*max(Pars)))
