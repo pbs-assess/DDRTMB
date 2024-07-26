@@ -1,4 +1,7 @@
-make.priors.posts.plot <- function(model,
+# This code modified from the 2018 Pacific Cod Res Doc
+# https://github.com/pbs-assess/pacific-cod-2018/blob/master/R/figures-mcmc-diagnostics.R
+
+make.priors.posts.plot <- function(postpars,
                                    priors.only = TRUE){
   ## Make a plot of the priors used in the given model overlaid on the
   ##  posterior

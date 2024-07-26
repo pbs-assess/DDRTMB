@@ -215,9 +215,6 @@ min(mon$Tail_ESS)
 
 # test plotting code - move to separate file
 mc.df <- as.data.frame(mc[,1,])
-hist(mc.df$log_ro)
-hist(mc.df$h)
-hist(exp(mc.df$log_m))
 
 saveRDS(mc.df, here("outputs","MCMCParameterEstimates.rda"))
 saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
