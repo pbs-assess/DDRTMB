@@ -200,6 +200,7 @@ mc <- extract(fitmcmc, pars=names(obj$par),
               inc_warmup=TRUE, permuted=FALSE)
 
 ## Can also get ESS and Rhat from rstan::monitor
+# https://github.com/kaskr/tmbstan
 mon <- monitor(mc)
 max(mon$Rhat)
 min(mon$Tail_ESS)
@@ -217,6 +218,22 @@ saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Rerun model with posterior parameter estimates,
 # Extract REPORT objects
+
+# https://github.com/kaskr/tmbstan
+## What if you want a posterior for derived quantities in the report? Just
+## loop through each posterior sample (row) and call the report function
+## which returns a list. The last column is the log-posterior density (lp__)
+## and needs to be dropped
+#post <- as.matrix(mc) # this just returns one massive column of the posterior samples
+post <- as.matrix(mc[,1,]) # I think this is what I want
+#obj$report(post[1,-ncol(post)])
+obj$report(post[1,]) # the last column is the final year of rec devs so don't drop it
+post_biomass <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+for(i in 1:nrow(post)){
+  r <- obj$report(post[i,])
+  post_biomass[i,] <- r$biomass
+}
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

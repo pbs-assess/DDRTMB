@@ -738,6 +738,7 @@ model <- function(par){
   it_hat_all <- c(it_hat[[1]],it_hat[[2]],it_hat[[3]],it_hat[[4]],it_hat[[5]])
   annual_mean_weight_all <- annual_mean_weight[[1]]
 
+  # REPORTS (no std error - obj function components and the MCMC posteriors we want to see)
   # Objective function components
   REPORT(nlvec_dd_ct)
   REPORT(nlvec_dd_it)
@@ -746,17 +747,10 @@ model <- function(par){
   REPORT(priors)
   REPORT(qvec)
   REPORT(pvec)
-  # Biomass, numbers, recruits and q
+  # Biomass, recruits, q ... get R0, M, h, F and recdevs directly from tmbstan
   REPORT(biomass)
-  REPORT(numbers)
   REPORT(rt)
-  REPORT(delta)
   REPORT(q)
-  # Predicted Catch, Indices and Annual Mean Weight
-  REPORT(ct)
-  # figure out how to report these lists without creating errors
-  REPORT(it_hat_all)
-  REPORT(annual_mean_weight_all)
 
   # ADREPORT, includes standard error
   ADREPORT(biomass)
