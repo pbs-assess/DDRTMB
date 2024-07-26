@@ -6,18 +6,7 @@
 # **For this first version, this is a ONE group, ONE area, ONE sex model**
 # M is fixed, not time-varying - adapt later for tvm
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# IMPORTANT: BEFORE RUNNING THIS CODE THE FIRST TIME, PLEASE SOURCE devs/filter-inputs.R
-# This will load the raw 2020 5ABCD Pacific Cod inputs into the package
-# Need to do this while package is in development
-#
-# TO RUN:
-# 1. Run lines below until the end of # 2. Parameters (currently L147)
-# 3. Run the remainder of the code (currently starting at L906)
-# 4. Look at outputs and figures in the outputs folder
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Package name: DDRTMB
+# Package name: DDRTMB (not a package yet!)
 
 # Authors: Robyn Forrest (RF), Catarina Wor (CW), Sean Anderson (SA) (Pacific Biological Station, Nanaimo, Canada)
 
@@ -71,6 +60,8 @@ library(RTMB)
 # eventually move to standard R statistical functions
 # Currently using facsimiles of the needed functions from ADMB statsLib.h
 source(here("R/likelihood_funcs.R"))
+# The model function is in a separate file
+# There is a bunch of stuff in the global space that it needs
 source(here("R/model.R"))
 
 # FOR TESTING
@@ -79,7 +70,6 @@ source(here("R/model.R"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Data inputs and controls
 # DATA_SECTION
@@ -89,9 +79,10 @@ dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
 ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
 nyrs <- dat$nyr-dat$syr+1
-yrs <-  dat$syr:dat$nyr
+yrs  <-  dat$syr:dat$nyr
 ages <-  dat$sage:dat$nage
 
+# **Maybe add all of these objects to dat**
 # get the number of and index for commercial (fishery) fleets
 nfleet <- 0 # number of fishing fleets (not surveys)
 for(i in 1:dat$ngear){
@@ -150,6 +141,11 @@ par
 # Current RTMB value: 195.806  :-) :-) :-)
 #model(par)
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Estimate parameters with RTMB
+# PROCEDURE_SECTION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified
 ## from TMB help: map = List defining how to optionally collect and fix parameters
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
@@ -161,21 +157,35 @@ opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(eval.max=1000, iter.max=1000
 opt$objective
 #sdr <- summary(sdreport(obj))
 
-# Estimated parameters
+# Estimated MPD parameters
 pl <- as.list(sdreport(obj),"Est")
 plsd <- as.list(sdreport(obj),"Std")
 # Derived quantities with standard errors (from ADREPORT)
-pladr <- as.list(sdreport(obj),"Est", report=TRUE)
+plrad <- as.list(sdreport(obj),"Est", report=TRUE)
 plradsd <- as.list(sdreport(obj),"Std", report=TRUE)
 # Derived quantities without standard errors (from REPORT)
 # get them out like this: obj$report()$X
 plr <- as.list(obj$report())
 
+# Write out MPD results for plotting
+saveRDS(pl, here("outputs","ParameterEstimates.rda"))
+saveRDS(plsd, here("outputs","ParameterSDs.rda"))
+saveRDS(plrad, here("outputs","DerivedEstimates.rda"))
+saveRDS(plradsd, here("outputs","DerivedSDs.rda"))
 
-# Try running MCMC
+# Plot comparisons with iscam
+# Delete this for package
+source(here("devs","plot_iscam_compare.r"))
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 4. MCMCs - Posterior parameter estimates
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Use tmbstan to run MCMC
+# See example code https://github.com/kaskr/tmbstan
 library(tmbstan)
-fitmcmc <- tmbstan(obj, chains=1,
-                   iter=5000,
+# SA suggested 1000 samples with 4 chains as a start
+fitmcmc <- tmbstan(obj, chains=2,
+                   iter=1000,
                    init=list(opt$par),
                    lower=c(1.,0.2,-2.3,
                            rep(-5,length(par$log_ft_pars)),
@@ -189,20 +199,29 @@ fitmcmc <- tmbstan(obj, chains=1,
 mc <- extract(fitmcmc, pars=names(obj$par),
               inc_warmup=TRUE, permuted=FALSE)
 
+## Can also get ESS and Rhat from rstan::monitor
+mon <- monitor(mc)
+max(mon$Rhat)
+min(mon$Tail_ESS)
 
 mc.df <- as.data.frame(mc[,1,])
-colnames(mc.df)
-mc.df$log_ro
 hist(mc.df$log_ro)
 hist(mc.df$h)
 hist(exp(mc.df$log_m))
 
-# Write out results for plotting
-saveRDS(pl, here("outputs","ParameterEstimates.rda"))
-saveRDS(plsd, here("outputs","ParameterSDs.rda"))
-saveRDS(plrad, here("outputs","DerivedEstimates.rda"))
-saveRDS(plradsd, here("outputs","DerivedSDs.rda"))
-saveRDS(mc, here("outputs","MCMCParameterEstimates.rda"))
+saveRDS(mc.df, here("outputs","MCMCParameterEstimates.rda"))
+saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 
-# Plot comparisons
-source(here("devs","plot.r"))
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 5. Posterior derived parameters and model variables
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Rerun model with posterior parameter estimates,
+# Extract REPORT objects
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 5. Diagnostics
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+

@@ -5,9 +5,9 @@ Still under development. Will eventually be made modular and converted to a pack
 
 Currently uses data, inputs and assumptions from the Canadian 2020 Pacific Cod assessment.
 
-To run, read the instructions in devs/run-model-v1.R
+To run, run the code in devs/run-model-v1.R
 
-Authors: Robyn Forrest and Catarina Wor (Pacific Biological Station, Nanaimo, Canada). Based on iscam delay-difference model developed variously by Steve Martell, Robyn Forrest and Catarina Wor.
+Authors: Robyn Forrest, and Catarina Wor (Pacific Biological Station, Nanaimo, Canada). Based on iscam delay-difference model developed variously by Steve Martell, Robyn Forrest and Catarina Wor.
 
 **iscam model documentation:**
 
