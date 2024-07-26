@@ -36,9 +36,12 @@ plradsd <- readRDS(here("outputs","DerivedSDs.rda"))
 yrs <-  dat$syr:dat$nyr
 pyrs <- dat$syr:(dat$nyr+1) # includes projection year
 
-# Basic plots - just use base R for quickness
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#  MPDs
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Basic plots - just use base R for now, for quickness
 # Catch
-png(here("outputs","figs","CatchFit.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_CatchFit.png"), width=8, height=6, units="in", res=300)
   maxY <- max(dat$catch$value)
   plot(yrs, plrad$ct, col=rtmbcol, lwd=3,type="l", ylim=c(0,maxY), xlab="Years", ylab="Catch (t)")
   points(yrs, dat$catch$value, type="p", pch=19, cex=1.2, col=datcol)
@@ -47,7 +50,7 @@ png(here("outputs","figs","CatchFit.png"), width=8, height=6, units="in", res=30
 dev.off()
 
 # Indices
-png(here("outputs","figs","IndicesFit.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_IndicesFit.png"), width=8, height=6, units="in", res=300)
   par(mfrow=c(2,3))
   for(i in 1:dat$nit){
     obsindex <- dat$indices[[i]]$it
@@ -79,7 +82,7 @@ obsindex <- dat$meanwtdata[[1]]$it
 iwt <- ctl$weight.sig
 iyrs <- dat$meanwtdata[[1]]$iyr
 rtmbindex <- plrad$annual_mean_weight_all
-png(here("outputs","figs","MeanWeightCompare.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_MeanWeightFit.png"), width=8, height=6, units="in", res=300)
   maxY <- max(c((obsindex+2*iwt*obsindex),rtmbindex))
   plot(iyrs,rtmbindex, col=rtmbcol, lwd=3,type="l", ylim=c(0,maxY), xlab="Years", ylab="Annual mean weight (kg)")
   points(iyrs, obsindex, type="p", pch=19, cex=1.2, col=datcol)
@@ -88,7 +91,7 @@ png(here("outputs","figs","MeanWeightCompare.png"), width=8, height=6, units="in
 dev.off()
 
 # Biomass
-png(here("outputs","figs","BiomassCompare.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_Biomass.png"), width=8, height=6, units="in", res=300)
   par(mfrow=(c(1,1)))
   maxY <- max(c(plrad$biomass+2*plradsd$biomass))
   plot(pyrs, plrad$biomass, type="l", lwd=3, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Biomass (t)")
@@ -97,7 +100,7 @@ png(here("outputs","figs","BiomassCompare.png"), width=8, height=6, units="in", 
 dev.off()
 
 # Log rec devs
-png(here("outputs","figs","LogrecdevsCompare.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_Logrecdevs.png"), width=8, height=6, units="in", res=300)
   maxY <- max(c(pl$log_rec_devs+2*plsd$log_rec_devs))
   minY <- min(c(pl$log_rec_devs-2*plsd$log_rec_devs))
   plot(yrs, pl$log_rec_devs, pch=19, cex=1.2, col=rtmbcol, ylim=c(minY,maxY), xlab="Years", ylab="log recruit devs")
@@ -106,7 +109,7 @@ png(here("outputs","figs","LogrecdevsCompare.png"), width=8, height=6, units="in
 dev.off()
 
 # Init log rec devs
-png(here("outputs","figs","InitlogrecdevsCompare.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_Initlogrecdevs.png"), width=8, height=6, units="in", res=300)
   inityrs <- (yrs[1]-length(pl$init_log_rec_devs)):(yrs[1]-1)
   maxY <- max(c(pl$init_log_rec_devs+2*plsd$init_log_rec_devs))
   minY <- min(c(pl$init_log_rec_devs-2*plsd$init_log_rec_devs))
@@ -116,7 +119,7 @@ png(here("outputs","figs","InitlogrecdevsCompare.png"), width=8, height=6, units
 dev.off()
 
 # Derived recruits
-png(here("outputs","figs","RecruitsCompare.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_Recruits.png"), width=8, height=6, units="in", res=300)
   recyrs <- (dat$syr+dat$sage):dat$nyr
   maxY <- max(plrad$rt+2*plradsd$rt)
   plot(recyrs, plrad$rt, pch=19, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Recruits")
@@ -124,7 +127,7 @@ png(here("outputs","figs","RecruitsCompare.png"), width=8, height=6, units="in",
 dev.off()
 
 # Log ft pars
-png(here("outputs","figs","LogftCompare.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_Logft.png"), width=8, height=6, units="in", res=300)
   maxY <- max(c(pl$log_ft_pars+2*plsd$log_ft_pars))
   minY <- min(c(pl$log_ft_pars-2*plsd$log_ft_pars))
   plot(yrs, pl$log_ft_pars, pch=19, cex=1.2, col=rtmbcol, ylim=c(minY,maxY), xlab="Years", ylab="Log ft pars")
@@ -133,7 +136,7 @@ png(here("outputs","figs","LogftCompare.png"), width=8, height=6, units="in", re
 dev.off()
 
 # Derived Ft pars
-png(here("outputs","figs","FtCompare.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MPD_Ft.png"), width=8, height=6, units="in", res=300)
   maxY <- max(exp(pl$log_ft_pars)+exp(2*pl$log_ft_pars))
   plot(yrs, exp(pl$log_ft_pars), type="l", lwd=3,col=rtmbcol, ylim=c(-0.1,maxY), xlab="Years", ylab="Derived ft")
   lines(yrs, exp(pl$log_ft_pars)-exp(2*pl$log_ft_pars), lwd=1, col=rtmbcol, lty="dotted")
@@ -142,34 +145,38 @@ dev.off()
 
 # Parameters
 # Leading
-png(here("outputs","figs","LeadingParamsCompare.png"), width=8, height=6, units="in", res=300)
-  Pars <- matrix(nrow=2, ncol=5)
-  Pars[1,] <- c(pl$log_ro, pl$h, pl$log_m, pl$rho, pl$kappa)
-  Pars[2,] <- c(pcod2020par$theta1,pcod2020par$theta2,pcod2020par$theta3,pcod2020par$theta6,pcod2020par$theta7)
-  colnames(Pars) <- c("log_ro", "h", "log_m", "rho", "kappa")
-  barplot(Pars, beside=T, col=c(rtmbcol, iscamcol), ylim=c(min(Pars),max(Pars)))
-  legend("topright", legend=c("RTMB", "iscam MPD"), pch=15, col=c(rtmbcol, iscamcol) ,bty="n")
+png(here("outputs","figs","RTMB_MPD_LeadingParams.png"), width=8, height=6, units="in", res=300)
+  Pars <- matrix(nrow=3, ncol=5)
+  Pars[1,] <- c(pl$log_ro+2*plsd$log_ro, pl$h +2*plsd$h, pl$log_m+2*plsd$log_m, pl$rho, pl$kappa)
+  Pars[2,] <- c(pl$log_ro, pl$h, pl$log_m, pl$rho, pl$kappa)
+  Pars[3,] <- c(pl$log_ro-2*plsd$log_ro, pl$h -2*plsd$h, pl$log_m-2*plsd$log_m, pl$rho, pl$kappa)
+  minY <- min(Pars[3,])
+  maxY <- max(Pars[1,])
+  boxplot(Pars, ylim=c(1.5*minY,maxY), names=c("log_ro", "h", "log_m", "rho", "kappa"))
+  abline(h=0, lwd=1, lty=2)
 dev.off()
 
-png(here("outputs","figs","LeadingParamshmCompare.png"), width=8, height=6, units="in", res=300)
-  Pars <- matrix(nrow=2, ncol=2)
-  Pars[1,] <- c(pl$h, exp(pl$log_m))
-  Pars[2,] <- c(pcod2020par$theta2, exp(pcod2020par$theta3))
-  colnames(Pars) <- c("h", "M")
-  barplot(Pars, beside=T, col=c(rtmbcol, iscamcol), ylim=c(0,max(Pars)))
-  legend("topright", legend=c("RTMB", "iscam MPD"), pch=15, col=c(rtmbcol, iscamcol) ,bty="n")
+png(here("outputs","figs","RTMB_MPD_hm.png"), width=8, height=6, units="in", res=300)
+  Pars <- matrix(nrow=3, ncol=2)
+  Pars[1,] <- c(pl$h +2*plsd$h, pl$log_m+2*plsd$log_m)
+  Pars[2,] <- c(pl$h, pl$log_m)
+  Pars[3,] <- c(pl$h -2*plsd$h, pl$log_m-2*plsd$log_m)
+  minY <- min(Pars[3,])
+  maxY <- max(Pars[1,])
+  boxplot(Pars, ylim=c(minY,maxY), names=c("h", "log_m"))
+  abline(h=0, lwd=1, lty=2)
 dev.off()
 
 # Catchability, q
-qcolnames <- "q1"
+qnames <- "q1"
 for(i in 2:dat$nit){
-  qcolnames <- c(qcolnames, paste0("q",i))
+  qnames <- c(qnames, paste0("q",i))
 }
-png(here("outputs","figs","qCompare.png"), width=8, height=6, units="in", res=300)
-  Pars <- matrix(nrow=2, ncol=dat$nit)
-  Pars[1,] <- c(plrad$q)
-  Pars[2,] <- c(pcod2020rep$q)
-  colnames(Pars) <- qcolnames
-  barplot(Pars, beside=T, col=c(rtmbcol, iscamcol), ylim=c(0,1.2*max(Pars)))
-  legend("topright", legend=c("RTMB", "iscam MPD"), pch=15, col=c(rtmbcol, iscamcol) ,bty="n")
+png(here("outputs","figs","RTMB_MPD_q.png"), width=8, height=6, units="in", res=300)
+  Pars <- matrix(nrow=3, ncol=dat$nit)
+  Pars[1,] <- c(plrad$q+2*plradsd$q)
+  Pars[2,] <- c(plrad$q)
+  Pars[3,] <- c(plrad$q-2*plradsd$q)
+  maxY <- max(Pars[1,])
+  boxplot(Pars, ylim=c(0,maxY), names=qnames)
 dev.off()
