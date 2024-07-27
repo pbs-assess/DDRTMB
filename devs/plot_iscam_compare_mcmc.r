@@ -30,13 +30,20 @@ rtmbcol <- "darkblue"
 if(!file.exists(here("outputs"))) dir.create(here("outputs"), recursive = TRUE)
 if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recursive = TRUE)
 
-# 1. Read in MCMC outputs - burnin already removed
+# 1. RTMB Read in MCMC outputs - burnin already removed
 mcmcpars <- readRDS(here("outputs","MCMCParameterEstimates.rda"))
 mcmcderived <- readRDS( here("outputs","MCMCDerivedEstimates.rda"))
 mcmcdiagnostics <- readRDS(here("outputs","MCMCDiagnostics.rda"))
 # Also the dat and control file for model dimensions and priors settings
 dat <- pcod2020dat
 ctl <- pcod2020ctl
+
+# 2. iscam Read in MCMC outputs - need to remove burnin
+iscampars <- read_csv(here("data-raw/iscam_mcmc.csv"))
+iscambiomass <- read_csv(here("data-raw/iscam_sbt_mcmc.csv"))
+iscamrecruits <- read_csv(here("data-raw/iscam_rt_mcmc.csv"))
+iscamrecdevs <- read_csv(here("data-raw/iscam_rdev_mcmc.csv"))
+iscamfmort <- read_csv(here("data-raw/iscam_ft_mcmc.csv"))
 
 # Pairs and trace plots
 # Trace plots
@@ -60,19 +67,20 @@ post_biomass_rtmb <- mcmcderived$biomass %>%
   ggplot() +
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="blue", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="blue")+
-  xlab("Year") + ylab("Posterior biomass (t)")+
+  xlab("Year") + ylab("Posterior biomass (t)")+ggtitle("rtmb")+
   theme_pbs()
-print(post_biomass)
+#print(post_biomass_rtmb)
 
-post_biomass_iscam <- mcmcderived$biomass %>%
-  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+post_biomass_iscam <- iscambiomass[1001:2000,] %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975)) %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
   mutate(Year=dat$syr:(dat$nyr+1)) %>%
   ggplot() +
-  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="blue", alpha = 0.3) +
-  geom_line(aes(x=Year,y=med),color="blue")+
-  xlab("Year") + ylab("Posterior biomass (t)")+
+  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="red", alpha = 0.3) +
+  geom_line(aes(x=Year,y=med),color="red")+
+  xlab("Year") + ylab("Posterior biomass (t)")+ggtitle("iscam")+
   theme_pbs()
-print(post_biomass)
+#print(post_biomass_iscam)
+cowplot::plot_grid(post_biomass_rtmb,post_biomass_iscam, ncol=1)
