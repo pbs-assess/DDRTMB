@@ -230,10 +230,10 @@ saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 ## loop through each posterior sample (row) and call the report function
 ## which returns a list. The last column is the log-posterior density (lp__)
 ## and needs to be dropped
-#post <- as.matrix(mc) # this just returns one massive column of the posterior samples
-post <- as.matrix(mc[,1,])
+#post <- as.matrix(mc) # RF: this just returns one massive column of the posterior samples
+post <- as.matrix(mc[,1,]) # RF: Do this because we have more than one parameter
 # Look at the first sample
-# obj$report(post[1,]) # the last column is the final year of rec devs so don't drop it
+# obj$report(post[1,]) # RF: the last column is the final year of rec devs so don't drop it
 
 # Make a list for putting posterior estimates of biomass, recruits and q
 # Note that parameters, rec devs and logf are already reported in the mc object
