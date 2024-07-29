@@ -1,62 +1,29 @@
 # This code modified from the 2018 Pacific Cod Res Doc
 # https://github.com/pbs-assess/pacific-cod-2018/blob/master/R/figures-mcmc-diagnostics.R
 
-make.priors.posts.plot <- function(postpars,
+make.priors.posts.plot <- function(mc,
+                                   ctl,
                                    priors.only = TRUE){
   ## Make a plot of the priors used in the given model overlaid on the
   ##  posterior
   ##
   ## priors.only - Only plot the priors and not posteriors
-  ##
-  ## The values in the control file (model$ctl$param) for each
-  ##  prior are:
-  ## 1. ival  = initial value
-  ## 2. lb    = lower bound
-  ## 3. ub    = upper bound
-  ## 4. phz   = ADMB phase
-  ## 5. prior = prior distribution funnction
-  ##             0 = None
-  ##             1 = normal    (p1=mu,p2=sig)
-  ##             2 = lognormal (p1=log(mu),p2=sig)
-  ##             3 = beta      (p1=alpha,p2=beta)
-  ##             4 = gamma     (p1=alpha,p2=beta)
-  ## 6. p1 (defined by 5 above)
-  ## 7. p2 (defined by 5 above)
-
-  if(class(model) == model.lst.class){
-    model <- model[[1]]
-    if(class(model) != model.class){
-      stop("The structure of the model list is incorrect.")
-    }
-  }
 
   f.names <- c(dunif, dnorm, dlnorm, dbeta, dgamma)
-
-  mc <- model$mcmccalcs$p.dat.log
-
-  ## Remove bo, vartheta, sigma, tau from the posts
-  ## mc <- mc[, -grep("^sel.*", names(mc))]
-  mc <- mc[, -grep("bo", names(mc))]
-  mc <- mc[, -grep("vartheta", names(mc))]
-  ## mc <- mc[, -grep("tau", names(mc))]
-  ## mc <- mc[, -grep("sigma", names(mc))]
-  mc <- mc[, -grep("log_rinit", names(mc))]
-  mc <- mc[, -grep("log_rbar", names(mc))]
-  ## mc <- mc[, -grep("log_ro", names(mc))]
   post.names <- names(mc)
 
-  prior.specs <- as.data.frame(model$ctl$params)
+  prior.specs <- as.data.frame(ctl$params)
   ## Remove fixed parameters
   prior.specs <- prior.specs[prior.specs$phz > 0,]
   ## Remove upper and lower bound, and phase information, but keep initial
   ##  value
   prior.specs <- prior.specs[, -c(2:4)]
-  ## Remove kappa
-  prior.specs <- prior.specs[rownames(prior.specs) != "kappa",]
   prior.names <- rownames(prior.specs)
 
   ## Add the q parameters to the prior specs table
-  q.params <- model$ctl$surv.q
+  ## NOTE that RTMB reports them all in natural space
+  ## even though prior is in log space
+  q.params <- ctl$surv.q
   num.q.params <- ncol(q.params)
   q.specs <- lapply(1:num.q.params,
                     function(x){
@@ -71,48 +38,30 @@ make.priors.posts.plot <- function(postpars,
   prior.specs <- rbind(prior.specs, q.specs)
 
   ## Remove log part for q's with uniform priors
+  ## Remove log part for q's with uniform priors
   j <- prior.specs
   non.q <- j[-grep("q", rownames(j)),]
   non.q <- non.q %>%
     rownames_to_column() %>%
     as.tibble()
-
   q <- j[grep("q", rownames(j)),]
-
   q <- q %>%
     rownames_to_column() %>%
     mutate(rowname = if_else(!prior,
                              gsub("log_", "", rowname),
                              rowname))
-
   prior.specs <- as.data.frame(rbind(non.q, q))
   rownames(prior.specs) <- prior.specs$rowname
   prior.specs <- prior.specs %>% select(-rowname)
   rownames(prior.specs)[rownames(prior.specs) == "steepness"] = "h"
 
-  ## Get MPD estimates for the parameters in the posteriors
-  mpd <- model$mpd
-  q.pattern <- "^log_q([1-9]+)$"
-
-  mpd.lst <- lapply(1:length(post.names),
-                    function(x){
-                      mle <- NULL
-                      p.name <- post.names[x]
-                      if(p.name == "log_m1" | p.name == "log_m"){
-                        mle <- log(mpd$m[1])
-                      }else if(p.name == "log_m2"){
-                        mle <- log(mpd$m[2])
-                      }else if(p.name == "h"){
-                        mle <- mpd$steepness
-                      }else if(length(grep(q.pattern, p.name)) > 0){
-                        num <- as.numeric(sub(q.pattern, "\\1", p.name))
-                        mle <- log(mpd$q[num])
-                      }else{
-                        mle <- as.numeric(mpd[post.names[x]])
-                      }
-                      mle})
-  mpd.param.vals <- do.call(c, mpd.lst)
-  names(mpd.param.vals) <- post.names
+  # RTMB: For q with lognormal prior
+  #  Need to convert the q posterior to log space to match prior
+  for(i in 1:num.q.params){
+    if(q$prior[i]==1){
+      mc[,paste0("q",i)] <- log(mc[,paste0("q",i)])
+    }
+  }
 
   # If priors only, need to change dimensions of plot to reduce white space
   # Also need to remove priors with uniform dist
@@ -126,8 +75,6 @@ make.priors.posts.plot <- function(postpars,
       oma = c(2, 3, 1, 1),
       mai = c(0.3, 0.4, 0.3, 0.2))
 
-
-
   for(i in 1:length(post.names)){
     specs <- prior.specs[i,]
     prior.fn <- f.names[[as.numeric(specs[2] + 1)]]
@@ -135,8 +82,7 @@ make.priors.posts.plot <- function(postpars,
                p1 = as.numeric(specs[3]),
                p2 = as.numeric(specs[4]),
                fn = prior.fn,
-               nm = rownames(prior.specs)[i],
-               mle = as.numeric(mpd.param.vals[i]))
+               nm = rownames(prior.specs)[i])
 
     xx$nm <- get.latex.name(xx$nm)
 
@@ -373,17 +319,9 @@ as.ts.mcmc <- function(x, ...){
   y
 }
 
-make.pairs.plot <- function(model){
+make.pairs.plot <- function(mc){
 
   ## Plot the pairs scatterplots for the estimated parameters
-
-  if(class(model) == model.lst.class){
-    model <- model[[1]]
-    if(class(model) != model.class){
-      stop("The structure of the model list is incorrect.")
-    }
-  }
-
   panel.hist <- function(x, ...){
     usr    <- par("usr");
     on.exit(par(usr))
@@ -400,14 +338,14 @@ make.pairs.plot <- function(model){
          ...)
   }
 
-  mc <- as.data.frame(model$mcmc$params.est)
+  mc <- as.data.frame(mc)
   ## Remove some of them
   ## mc <- mc[, -grep("ro", colnames(mc))]
-  mc <- mc[, -grep("rinit", colnames(mc))]
-  mc <- mc[, -grep("rbar", colnames(mc))]
-  mc <- mc[, -grep("bo", colnames(mc))]
-  mc <- mc[, -grep("msy", colnames(mc))]
-  mc <- mc[, -grep("ssb", colnames(mc))]
+  # mc <- mc[, -grep("rinit", colnames(mc))]
+  # mc <- mc[, -grep("rbar", colnames(mc))]
+  # mc <- mc[, -grep("bo", colnames(mc))]
+  # mc <- mc[, -grep("msy", colnames(mc))]
+  # mc <- mc[, -grep("ssb", colnames(mc))]
 
   c.names <- colnames(mc)
   latex.names <- NULL
@@ -440,3 +378,105 @@ make.pairs.plot <- function(model){
         lower.panel = our.panel.smooth,
         gap = 0.0)
 }
+
+get.rows.cols <- function(num){
+  ## Returns a vector of length 2 representing the number of rows and columns
+  ##  to use to pack a plot in a grid.
+  if(num <= 64 && num > 49){
+    if(num <= 56){
+      nside <- c(8,7)
+    }else{
+      nside <- c(8,8)
+    }
+  }else if(num <= 49 && num > 36){
+    if(num <= 42){
+      nside <- c(7,6)
+    }else{
+      nside <- c(7,7)
+    }
+  }else if(num <= 36 && num > 25){
+    if(num <= 30){
+      nside <- c(6,5)
+    }else{
+      nside <- c(6,6)
+    }
+  }else if(num <= 25 && num > 16){
+    if(num <= 20){
+      nside <- c(5,4)
+    }else{
+      nside <- c(5,5)
+    }
+  }else if(num <= 16 && num > 9){
+    if(num <= 12){
+      nside <- c(4,3)
+    }else{
+      nside <- c(4,4)
+    }
+  }else if(num <=  9 && num > 4){
+    if(num <= 6){
+      nside <- c(3,2)
+    }else{
+      nside <- c(3,3)
+    }
+  }else if(num <=  4 && num > 1){
+    if(num == 2){
+      nside <- c(2,1)
+    }else{
+      nside <- c(2,2)
+    }
+  }else{
+    nside <- c(1,1)
+  }
+  return(nside)
+} # end get.rows.cols
+
+get.latex.name <- function(name, addToQ = 0){
+  ## Return a pretty version of the parameter name found in variable 'name'
+  ##
+  ## addToQ - an integer to the parameter name for the q's. This is necessary
+  ##  because iscam sets the q parameter names to 1, 2, 3... regardless of the
+  ##  gear number. i.e. if gear 1 is a trawl fishery and gear 2 is a survey,
+  ##  iscam will call q1 the survey gear. We must add 1 to it to get q2 to
+  ##  accurately portray the survey gear number
+  if(name == "ro") return(expression("R"[0]))
+  if(name == "rbar") return(expression(bar("R")))
+  if(name == "rinit") return(expression(bar("R")[init]))
+  if(name == "m") return(expression("M"))
+  if(name == "bo") return(expression("B"[0]))
+  if(name == "vartheta") return(expression(vartheta))
+  if(name == "rho") return(expression(rho))
+  if(name == "bmsy") return(expression("B"[MSY]))
+  if(name == "msy") return(expression("MSY"))
+  if(name == "fmsy") return(expression("F"[MSY]))
+  if(name == "umsy") return(expression("U"[MSY]))
+  if(name == "ssb") return(expression("SSB"))
+  if(name == "sel1") return(expression(hat(a)[1]))
+  if(name == "selsd1") return(expression(hat(gamma)[1]))
+  if(name == "sel2") return(expression(hat(a)[2]))
+  if(name == "selsd2") return(expression(hat(gamma)[2]))
+  if(name == "sel3") return(expression(hat(a)[3]))
+  if(name == "selsd3") return(expression(hat(gamma)[3]))
+  if(name == "sel4") return(expression(hat(a)[4]))
+  if(name == "selsd4") return(expression(hat(gamma)[4]))
+  if(name == "sel5") return(expression(hat(a)[5]))
+  if(name == "selsd5") return(expression(hat(gamma)[5]))
+  if(name == "log_ro") return(expression("ln(R"[0]*")"))
+  if(name == "h") return(expression("h"))
+  if(name == "m1") return(expression("M"[1]))
+  if(name == "m2") return(expression("M"[2]))
+  if(name == "log_m") return(expression("ln(M)"))
+  if(name == "log_rbar") return(expression("ln("*bar("R")*")"))
+  if(name == "log_rinit") return(expression("ln("*bar("R")[init]*")"))
+
+  if(length(grep("^q[1-9]+$", name))){
+    digit <- as.numeric(sub("^q([1-9]+)$", "\\1", name))
+    return(substitute("q"[digit], list(digit = digit)))
+  }
+
+  if(length(grep("^log_q[1-9]+$", name))){
+    digit <- as.numeric(sub("^log_q([1-9]+)$", "\\1", name))
+    return(substitute("ln(q"[digit]*")", list(digit = digit)))
+  }
+
+  NULL
+} # end get.latex.name

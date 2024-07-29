@@ -14,7 +14,9 @@ library(reshape2)
 library(cowplot)
 library(here)
 library(gfplot)
+library(KernSmooth)
 source("devs/load-models.R")
+source("devs/mcmc_plots.R")
 
 # Settings
 # Colours for data, iscam and RTMB
@@ -28,11 +30,32 @@ if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recu
 mcmcpars <- readRDS(here("outputs","MCMCParameterEstimates.rda"))
 mcmcderived <- readRDS( here("outputs","MCMCDerivedEstimates.rda"))
 mcmcdiagnostics <- readRDS(here("outputs","MCMCDiagnostics.rda"))
+
 # Also the dat and control file for model dimensions and priors settings
 dat <- pcod2020dat
 ctl <- pcod2020ctl
 
+# Put all estimated scalar parameters together
+# Normally EIV pars would be here too but they are fixed for pcod
+qit <- paste0("q",1)
+for(i in 2:dat$nit){
+  qit <- c(qit,paste0("q",i))
+}
+post_pars <- cbind(mcmcpars[,1:3], mcmcderived$q)
+colnames(post_pars) <- c("log_ro","h","log_m",qit)
+
 # Pairs and trace plots
+# Plots from iscam
+png(here("outputs","figs","RTMB_Priors_Posts_MCMC.png"), width=8, height=6, units="in", res=300)
+  make.priors.posts.plot(post_pars,
+                       ctl=ctl,
+                       priors.only = FALSE)
+dev.off()
+
+png(here("outputs","figs","RTMB_Pairs_MCMC.png"), width=8, height=6, units="in", res=300)
+  make.pairs.plot(post_pars)
+dev.off()
+
 # Trace plots
 
 
