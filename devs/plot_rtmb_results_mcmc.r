@@ -119,7 +119,8 @@ post_logrecdevs_rtmb <- mcmcpars[,79:141] %>%
   theme_pbs()
 ggsave(here("outputs","figs","RTMB_MCMC_Logrecdevs.png"), width=8, height=6, units="in")
 
-
+# Table of mcmc diagnostics
+write_csv(mcmcdiagnostics, here("outputs","RTMB_MCMC_Diagnostic.csv"))
 
 
 

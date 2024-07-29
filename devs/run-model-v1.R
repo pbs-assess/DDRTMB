@@ -181,7 +181,7 @@ saveRDS(plsd, here("outputs","ParameterSDs.rda"))
 saveRDS(plrad, here("outputs","DerivedEstimates.rda"))
 saveRDS(plradsd, here("outputs","DerivedSDs.rda"))
 
-# Plot comparisons with iscam
+# Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mpd.r"))
 source(here("devs","plot_rtmb_results_mpd.r"))
@@ -209,6 +209,18 @@ fitmcmc <- tmbstan(obj, chains=1,
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))))
 
+fitmcmc_4ch <- tmbstan(obj, chains=4,
+                   iter=Iter,
+                   init=list(opt$par),
+                   lower=c(1.,0.2,-2.3,
+                           rep(-5,length(par$log_ft_pars)),
+                           rep(-5, length(par$log_rec_devs)),
+                           rep(-5, length(par$init_log_rec_devs))),
+                   upper=c(12.,1.,0.,
+                           rep(5,length(par$log_ft_pars)),
+                           rep(5, length(par$log_rec_devs)),
+                           rep(5, length(par$init_log_rec_devs))))
+
 # Remove burn in (warmup)
 mc <- extract(fitmcmc, pars=names(obj$par),
               inc_warmup=FALSE, permuted=FALSE)
@@ -219,11 +231,23 @@ mon <- monitor(mc)
 max(mon$Rhat)
 min(mon$Tail_ESS)
 
-# test plotting code - move to separate file
 mc.df <- as.data.frame(mc[,1,])
-
 saveRDS(mc.df, here("outputs","MCMCParameterEstimates.rda"))
 saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
+
+# Four chains
+mc4ch <- extract(fitmcmc_4ch, pars=names(obj$par),
+              inc_warmup=FALSE, permuted=FALSE)
+
+## Can also get ESS and Rhat from rstan::monitor
+# https://github.com/kaskr/tmbstan
+mon4ch <- monitor(mc4ch)
+max(mon4ch$Rhat)
+min(mon4ch$Tail_ESS)
+
+mc.df.4ch <- as.data.frame(mc4ch[,1,])
+saveRDS(mc.df.4ch, here("outputs","MCMCParameterEstimates_4chain.rda"))
+saveRDS(mon4ch, here("outputs","MCMCDiagnostics_4chain.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Posterior derived parameters and model variables
@@ -256,6 +280,11 @@ for(i in 1:nrow(post)){
 }
 
 saveRDS(posteriors, here("outputs","MCMCDerivedEstimates.rda"))
+
+# Plot results and comparisons with iscam
+# Delete this for package
+source(here("devs","plot_iscam_compare_mcmc.r"))
+source(here("devs","plot_rtmb_results_mcmc.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Diagnostics
