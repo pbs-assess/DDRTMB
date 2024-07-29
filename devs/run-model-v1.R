@@ -27,7 +27,13 @@
 
 # TODO (move these to Issues on gitHub repo):
 # 1. Translation of iscam to RTMB:
-#  - Move some of model sections into separate functions
+#  - Move some of model sections (R\model.R) into separate functions:
+#      - Typically, move components where there is a choice to be made
+#         into separate functions (e.g., recruitment)
+#      - Possibly move the major model steps into separate functions,
+#         but be careful that the model steps are preserved in order
+#         i.e., will still need the model function to be called (this is what
+#          is optimised), rather than letting users build their own
 #  - Implement MCMC - tmbstan
 #  - Check source of fished equilibrium equation and check code - or remove it (in calcNumbersBiomass_deldiff)
 
