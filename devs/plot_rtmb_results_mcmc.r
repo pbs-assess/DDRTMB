@@ -14,7 +14,7 @@ library(reshape2)
 library(cowplot)
 library(here)
 library(gfplot)
-library(KernSmooth)
+library(coda)
 source("devs/load-models.R")
 source("devs/mcmc_plots.R")
 
@@ -46,26 +46,23 @@ colnames(post_pars) <- c("log_ro","h","log_m",qit)
 
 # Pairs and trace plots
 # Plots from iscam
-png(here("outputs","figs","RTMB_Priors_Posts_MCMC.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MCMC_Priors_Posts.png"), width=8, height=6, units="in", res=300)
   make.priors.posts.plot(post_pars,
                        ctl=ctl,
-                       priors.only = FALSE)
+                      priors.only = FALSE)
 dev.off()
 
-png(here("outputs","figs","RTMB_Pairs_MCMC.png"), width=8, height=6, units="in", res=300)
+png(here("outputs","figs","RTMB_MCMC_Pairs.png"), width=8, height=6, units="in", res=300)
   make.pairs.plot(post_pars)
 dev.off()
 
-# Trace plots
+png(here("outputs","figs","RTMB_MCMC_Trace.png"), width=8, height=6, units="in", res=300)
+  make.traces.plot(post_pars,axis.lab.freq = 200)
+dev.off()
 
-
-# Parameter histograms (without and with priors)
-# 1. Simple individual histograms
-hist(mcmcpars$log_ro)
-hist(mcmcpars$h)
-hist(exp(mcmcpars$log_m))
-par(mfrow=c(2,3))
-for(i in 1:dat$nit) hist(mcmcderived$q[,i])
+png(here("outputs","figs","RTMB_MCMC_Autocor.png"), width=8, height=6, units="in", res=300)
+  make.autocor.plot(post_pars,ylim = c(-1,1))
+dev.off()
 
 # Biomass, recruits and fishing mortality time series
 post_biomass <- mcmcderived$biomass %>%
@@ -79,7 +76,51 @@ post_biomass <- mcmcderived$biomass %>%
   geom_line(aes(x=Year,y=med),color="blue")+
   xlab("Year") + ylab("Posterior biomass (t)")+
   theme_pbs()
-print(post_biomass)
+ggsave(here("outputs","figs","RTMB_MCMC_Biomass.png"), width=8, height=6, units="in")
+
+# Fishing mortality
+post_ft_rtmb <- exp(mcmcpars[,4:68]) %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=dat$syr:dat$nyr) %>%
+  ggplot() +
+  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="blue", alpha = 0.3) +
+  geom_line(aes(x=Year,y=med),color="blue")+
+  xlab("Year") + ylab("Posterior fishing mortality")+ggtitle("rtmb")+
+  theme_pbs()
+ggsave(here("outputs","figs","RTMB_MCMC_Ft.png"), width=8, height=6, units="in")
+
+# Recruits ... small differences, look at devs
+post_recruits_rtmb <- mcmcderived$recruits %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
+  ggplot() +
+  geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="blue", alpha = 0.5) +
+  xlab("Year") + ylab("Posterior recruits")+ggtitle("rtmb")+
+  theme_pbs()
+ggsave(here("outputs","figs","RTMB_MCMC_Recruits.png"), width=8, height=6, units="in")
+
+# Log rec devs - offset. Iscam mcmc_output only writes out 3:nyrs
+post_logrecdevs_rtmb <- mcmcpars[,79:141] %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
+  ggplot() +
+  geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="blue", alpha = 0.5) +
+  geom_hline(yintercept=0, lty=2)+
+  xlab("Year") + ylab("Posterior log recruit devs")+ggtitle("rtmb")+
+  theme_pbs()
+ggsave(here("outputs","figs","RTMB_MCMC_Logrecdevs.png"), width=8, height=6, units="in")
+
+
+
 
 
 

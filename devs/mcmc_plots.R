@@ -1,5 +1,7 @@
 # This code modified from the 2018 Pacific Cod Res Doc
 # https://github.com/pbs-assess/pacific-cod-2018/blob/master/R/figures-mcmc-diagnostics.R
+# Authors over the years: Steve Martell, Chris Grandin, Robyn Forrest
+
 
 make.priors.posts.plot <- function(mc,
                                    ctl,
@@ -172,26 +174,10 @@ plot.marg <- function(xx,
          col = 2)
 }
 
-make.traces.plot <- function(model,
+make.traces.plot <- function(mc,
                              axis.lab.freq = 200){
   ## Make trace plots for all paramaters from the mcmc output
   ## axis.lab.freq - the frequency of x-axis labelling
-
-  if(class(model) == model.lst.class){
-    model <- model[[1]]
-    if(class(model) != model.class){
-      stop("The structure of the model list is incorrect.")
-    }
-  }
-
-  mc <- model$mcmc$params.est
-  ## Remove some of them
-  ## mc <- mc[, -grep("ro", colnames(mc))]
-  mc <- mc[, -grep("rinit", colnames(mc))]
-  mc <- mc[, -grep("rbar", colnames(mc))]
-  mc <- mc[, -grep("bo", colnames(mc))]
-  mc <- mc[, -grep("msy", colnames(mc))]
-  mc <- mc[, -grep("ssb", colnames(mc))]
 
   n.side <- get.rows.cols(ncol(mc))
   par(mfrow = n.side,
@@ -219,25 +205,9 @@ make.traces.plot <- function(model,
   }
 }
 
-make.autocor.plot <- function(model,
+make.autocor.plot <- function(mc,
                               ylim = c(-1,1)){
   ## Plot the autocorrelation of estimated parameters
-
-  if(class(model) == model.lst.class){
-    model <- model[[1]]
-    if(class(model) != model.class){
-      stop("The structure of the model list is incorrect.")
-    }
-  }
-
-  mc <- model$mcmc$params.est
-  ## Remove some of them
-  ## mc <- mc[, -grep("ro", colnames(mc))]
-  mc <- mc[, -grep("rinit", colnames(mc))]
-  mc <- mc[, -grep("rbar", colnames(mc))]
-  mc <- mc[, -grep("bo", colnames(mc))]
-  mc <- mc[, -grep("msy", colnames(mc))]
-  mc <- mc[, -grep("ssb", colnames(mc))]
 
   n.side <- get.rows.cols(ncol(mc))
   par(mfrow = n.side,
