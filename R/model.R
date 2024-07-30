@@ -730,8 +730,7 @@ model <- function(par){
   #|---------------------------------------------------------------------|
 
   # REPORT_SECTION
-  # Just start with a few things
-  # Need to find a dynamic way of reporting it_hat and annual_mean_weight
+   # Need to find a dynamic way of reporting it_hat and annual_mean_weight
   # NOTE: ADREPORT keeps track of standard error. REPORT does not and is quicker.
   # Can't ADREPORT lists or use loops
   # Hardwire for now
@@ -739,6 +738,7 @@ model <- function(par){
   annual_mean_weight_all <- annual_mean_weight[[1]]
 
   # REPORTS (no std error - obj function components and the MCMC posteriors we want to see)
+  # Includes some variables we need to pass to projection model
   # Objective function components
   REPORT(nlvec_dd_ct)
   REPORT(nlvec_dd_it)
@@ -747,10 +747,17 @@ model <- function(par){
   REPORT(priors)
   REPORT(qvec)
   REPORT(pvec)
+  # Quantities needed for reporting and for the projection model
   # Biomass, recruits, q ... get R0, M, h, F and recdevs directly from tmbstan
   REPORT(biomass)
+  REPORT(numbers)
+  REPORT(Ft)
   REPORT(rt)
   REPORT(q)
+  REPORT(surv)
+  REPORT(tau)
+  REPORT(alpha.sr)
+  REPORT(beta.sr)
 
   # ADREPORT, includes standard error
   ADREPORT(biomass)

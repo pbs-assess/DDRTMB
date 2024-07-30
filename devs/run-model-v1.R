@@ -61,7 +61,9 @@ devtools::load_all()
 
 library(here)
 library(tidyverse)
+library(purrr)
 library(RTMB)
+library(tmbstan)
 
 # eventually move to standard R statistical functions
 # Currently using facsimiles of the needed functions from ADMB statsLib.h
@@ -209,6 +211,23 @@ fitmcmc <- tmbstan(obj, chains=1,
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))))
 
+# Remove burn in (warmup)
+mc <- extract(fitmcmc, pars=names(obj$par),
+              inc_warmup=FALSE, permuted=FALSE)
+
+## Can also get ESS and Rhat from rstan::monitor
+# https://github.com/kaskr/tmbstan
+mon <- monitor(mc)
+max(mon$Rhat)
+min(mon$Tail_ESS)
+
+# Save results as a data frame
+# (if running more than one chain, then would do this for each chain)
+mc.df <- as.data.frame(mc[,1,])
+saveRDS(mc.df, here("outputs","MCMCParameterEstimates.rda"))
+saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
+
+# # Four chains
 # fitmcmc_4ch <- tmbstan(obj, chains=4,
 #                    iter=Iter,
 #                    init=list(opt$par),
@@ -220,22 +239,6 @@ fitmcmc <- tmbstan(obj, chains=1,
 #                            rep(5,length(par$log_ft_pars)),
 #                            rep(5, length(par$log_rec_devs)),
 #                            rep(5, length(par$init_log_rec_devs))))
-
-# Remove burn in (warmup)
-mc <- extract(fitmcmc, pars=names(obj$par),
-              inc_warmup=FALSE, permuted=FALSE)
-
-## Can also get ESS and Rhat from rstan::monitor
-# https://github.com/kaskr/tmbstan
-mon <- monitor(mc)
-max(mon$Rhat)
-min(mon$Tail_ESS)
-
-mc.df <- as.data.frame(mc[,1,])
-saveRDS(mc.df, here("outputs","MCMCParameterEstimates.rda"))
-saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
-
-# # Four chains
 # mc4ch <- extract(fitmcmc_4ch, pars=names(obj$par),
 #               inc_warmup=FALSE, permuted=FALSE)
 #
@@ -251,7 +254,7 @@ saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 # saveRDS(mon4ch, here("outputs","MCMCDiagnostics_4chain_list.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 5. Posterior derived parameters and model variables
+# 5. Posterior derived variables
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Rerun model with posterior parameter estimates,
 # Extract REPORT objects
@@ -259,27 +262,48 @@ saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 # https://github.com/kaskr/tmbstan
 ## What if you want a posterior for derived quantities in the report? Just
 ## loop through each posterior sample (row) and call the report function
-## which returns a list. The last column is the log-posterior density (lp__)
-## and needs to be dropped
 post <- as.matrix(mc[,1,])
-# Look at the first sample
-# obj$report(post[1,]) # RF: the last column is the final year of rec devs so don't drop it
 
-# Make a list for putting posterior estimates of biomass, recruits and q
-# Note that parameters, rec devs and logf are already reported in the mc object
-posteriors <- list()
-posteriors$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
-posteriors$recruits <- matrix(NA, ncol=nyrs-dat$sage, nrow=nrow(post))
-posteriors$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
+# Version 1: for reporting, graphs etc
+# This is a list where each element is a variable of interest
+# Make a list for putting posterior estimates of biomass,
+#    recruits and q
+# Note that parameters, rec devs and logf are
+#    already reported in the mc object
+#   (but have added Ft to REPORT to simplify projection model)
+posteriors_by_variable <- list()
+posteriors_by_variable$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+posteriors_by_variable$numbers <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
+posteriors_by_variable$recruits <- matrix(NA, ncol=nyrs-dat$sage, nrow=nrow(post))
+posteriors_by_variable$surv <- matrix(NA, ncol=nyrs, nrow=nrow(post))
+posteriors_by_variable$Ft <- matrix(NA, ncol=nyrs, nrow=nrow(post))
+posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
+# Version 2: for projections
+# This is a list where each element is a posterior sample
+#  containing all the variables
+#  - can be passed to projection model using purrr
+posteriors_by_sample <- list()
 
 for(i in 1:nrow(post)){
   r <- obj$report(post[i,])
-  posteriors$biomass[i,] <- r$biomass
-  posteriors$recruits[i,] <- r$rt
-  posteriors$q[i,] <- r$q
+  # Posteriors by variable
+  posteriors_by_variable$biomass[i,] <- r$biomass
+  posteriors_by_variable$numbers[i,] <- r$numbers
+  posteriors_by_variable$recruits[i,] <- r$rt
+  posteriors_by_variable$S[i,] <- r$surv
+  posteriors_by_variable$Ft[i,] <- r$Ft
+  posteriors_by_variable$q[i,] <- r$q
+  # Posteriors by sample
+  posteriors_by_sample[[i]] <- r
 }
+saveRDS(posteriors_by_variable, here("outputs","MCMCDerivedEstimates.rda"))
 
-saveRDS(posteriors, here("outputs","MCMCDerivedEstimates.rda"))
+# Now add the estimated parameters to the list
+
+
+
+saveRDS(posteriors_by_sample, here("outputs","MCMCEstimates_bysample.rda"))
+
 
 # Plot results and comparisons with iscam
 # Delete this for package
@@ -296,9 +320,18 @@ for(i in 2:dat$nit){
   qit <- c(qit,paste0("q",i))
 }
 
-post_pars <- cbind(mcmcpars[,1:3], mcmcderived$q)
-colnames(post_pars) <- c("log_ro","h","log_m",qit)
-# npyr=number of projection years
-proj <- project_model(post_pars, npyr=1)
+# NEED:
+# 1. Posterior estimates from the historical period (syr:nyr):
+#   i) Biomass, Numbers, Fishing mortality, Survival rate
+#        and Recruits from the historical period (from posteriors object)
+# 2. A vector of future TACs (from pfc file)
+# 3. Number of projection years (from pfc file)
+
+
+tmp <- posteriors[[1]]
+
+
+# NOT SURE HOW THIS IS GOING TO WORK YET
+proj <- apply(project_model,posteriors,1, npyr=1)
 
 
