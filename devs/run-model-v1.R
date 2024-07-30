@@ -196,7 +196,7 @@ library(tmbstan)
 # parallel causing errors - I'm not setting it up correctly
 # cores <- parallel::detectCores()-1
 # options(mc.cores = cores)
-Iter <- 2000
+Iter <- 5000
 fitmcmc <- tmbstan(obj, chains=1,
                    iter=Iter,
                    init=list(opt$par),
@@ -209,17 +209,17 @@ fitmcmc <- tmbstan(obj, chains=1,
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))))
 
-fitmcmc_4ch <- tmbstan(obj, chains=4,
-                   iter=Iter,
-                   init=list(opt$par),
-                   lower=c(1.,0.2,-2.3,
-                           rep(-5,length(par$log_ft_pars)),
-                           rep(-5, length(par$log_rec_devs)),
-                           rep(-5, length(par$init_log_rec_devs))),
-                   upper=c(12.,1.,0.,
-                           rep(5,length(par$log_ft_pars)),
-                           rep(5, length(par$log_rec_devs)),
-                           rep(5, length(par$init_log_rec_devs))))
+# fitmcmc_4ch <- tmbstan(obj, chains=4,
+#                    iter=Iter,
+#                    init=list(opt$par),
+#                    lower=c(1.,0.2,-2.3,
+#                            rep(-5,length(par$log_ft_pars)),
+#                            rep(-5, length(par$log_rec_devs)),
+#                            rep(-5, length(par$init_log_rec_devs))),
+#                    upper=c(12.,1.,0.,
+#                            rep(5,length(par$log_ft_pars)),
+#                            rep(5, length(par$log_rec_devs)),
+#                            rep(5, length(par$init_log_rec_devs))))
 
 # Remove burn in (warmup)
 mc <- extract(fitmcmc, pars=names(obj$par),
@@ -235,19 +235,20 @@ mc.df <- as.data.frame(mc[,1,])
 saveRDS(mc.df, here("outputs","MCMCParameterEstimates.rda"))
 saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 
-# Four chains
-mc4ch <- extract(fitmcmc_4ch, pars=names(obj$par),
-              inc_warmup=FALSE, permuted=FALSE)
-
-## Can also get ESS and Rhat from rstan::monitor
-# https://github.com/kaskr/tmbstan
-mon4ch <- monitor(mc4ch)
-max(mon4ch$Rhat)
-min(mon4ch$Tail_ESS)
-
-mc.df.4ch <- as.data.frame(mc4ch[,1,])
-saveRDS(mc.df.4ch, here("outputs","MCMCParameterEstimates_4chain.rda"))
-saveRDS(mon4ch, here("outputs","MCMCDiagnostics_4chain.rda"))
+# # Four chains
+# mc4ch <- extract(fitmcmc_4ch, pars=names(obj$par),
+#               inc_warmup=FALSE, permuted=FALSE)
+#
+# ## Can also get ESS and Rhat from rstan::monitor
+# # https://github.com/kaskr/tmbstan
+# mon4ch <- monitor(mc4ch)
+#
+# mc.df.4ch <- list()
+# for(i in 1:4){
+#   mc.df.4ch[[i]] <- as.data.frame(mc4ch[,i,])
+# }
+# saveRDS(mc.df.4ch, here("outputs","MCMCParameterEstimates_4chain_list.rda"))
+# saveRDS(mon4ch, here("outputs","MCMCDiagnostics_4chain_list.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Posterior derived parameters and model variables
@@ -260,8 +261,7 @@ saveRDS(mon4ch, here("outputs","MCMCDiagnostics_4chain.rda"))
 ## loop through each posterior sample (row) and call the report function
 ## which returns a list. The last column is the log-posterior density (lp__)
 ## and needs to be dropped
-#post <- as.matrix(mc) # RF: this just returns one massive column of the posterior samples
-post <- as.matrix(mc[,1,]) # RF: Do this because we have more than one parameter
+post <- as.matrix(mc[,1,])
 # Look at the first sample
 # obj$report(post[1,]) # RF: the last column is the final year of rec devs so don't drop it
 
@@ -287,8 +287,18 @@ source(here("devs","plot_iscam_compare_mcmc.r"))
 source(here("devs","plot_rtmb_results_mcmc.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 5. Diagnostics
+# 5. Projections - post MCMC step
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Put all estimated scalar parameters together
+# Normally EIV pars would be here too but they are fixed for pcod
+qit <- paste0("q",1)
+for(i in 2:dat$nit){
+  qit <- c(qit,paste0("q",i))
+}
 
+post_pars <- cbind(mcmcpars[,1:3], mcmcderived$q)
+colnames(post_pars) <- c("log_ro","h","log_m",qit)
+# npyr=number of projection years
+proj <- project_model(post_pars, npyr=1)
 
 

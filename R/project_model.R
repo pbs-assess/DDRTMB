@@ -17,19 +17,11 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PROJECTION MODEL
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-project_model <- function(par){
+# arguments: mcmc = mcmc estimates (post_pars), npyr=number of projection years
+project_model <- function(mc,
+                          npyr){
 
    getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
-
-  # Pseudocode from iscam
-  # 1. initParameters()
-  # 2. calcTotalMortality_deldiff()
-  # 3. calcNumbersBiomass_deldiff()
-  # 4. calcFisheryObservations_deldiff()
-  # 5. calcSurveyObservations_deldiff()
-  # 6. calcStockRecruitment_deldiff()
-  # 7. calcAnnualMeanWeight_deldiff() //RF added this for P cod - only gets added to objective function if cntrl(15)==1
-  # 8. calcObjectiveFunction()
 
   #|---------------------------------------------------------------------|
   # probably don't need to use par$ anywhere in model bc of the getAll function above
@@ -230,24 +222,7 @@ project_model <- function(par){
     }
     tmp_nAge[j] <- (exp(log_recinit + init_log_rec_devs[j-1]) * exp(-Mt[1]*(j-1)))/(1 - exp(-Mt[1])) # plus group
 
-    ## TEST (see iscam calcNumbersAtAge function) - make sure tr is the same as log(tmp_nAge)
-    ## DELETE THIS IN LATER VERSIONS
-    ## A little tricky  because ADMB indexes actual ages or years rather than indexes
-    ## **YES, calculations are identical**
-    # tr <- vector(length=length(sage:nage)) # iscam ASM's version of log(tmp_n_Age)
-    # lx <- vector(length=length(sage:nage)) # unfished survivorship at age
-    # lx[1] <- 1
-    # for(j in 2:length(sage:nage)){
-    #   lx[j] = lx[j-1] * exp(-Mt[1])
-    # }
-    # lx[j] <- lx[j]/(1-exp(-Mt[1]))
-    #
-    # tr[1]  <- log_avgrec+log_rec_devs[1]
-    # tr[2:length(tr)] <- log_recinit +init_log_rec_devs
-    # tr[2:length(tr)] <- tr[2:length(tr)]+log(lx[2:length(tr)])
-    # exp(tr)
-
-    # Add up the numbers at age to get numbers in year 1
+     # Add up the numbers at age to get numbers in year 1
     # RF confirmed numbers, biomass and mean wt calculations with rep file
     numbers[1] <- sum(tmp_nAge)
     biomass[1] <- sum(tmp_nAge*d3_wt_avg) # d3_wt_avg calculated in data section from vonB parameters
@@ -429,11 +404,6 @@ project_model <- function(par){
     epsilon[[kk]][1:nitnobs[kk]] = zt - zbar
     it_hat[[kk]][1:nitnobs[kk]] = q[kk] * V[1:nitnobs[kk]]
 
-    # SPECIAL CASE: penalized random walk in q.
-    # !!!NOT TESTED!!! This is dimensioned correctly but have not checked calcs
-    if(q_prior[kk]==2 ){
-      epsilon[[kk]][1:nitnobs[kk]] <- 0 # initialize epsilon
-
       # iscam ADMB code:
       # fd_zt <- first_difference(zt)
       # From the admb source code, looks like first_difference returns a vector of
@@ -571,168 +541,7 @@ project_model <- function(par){
   # End calcAnnualMeanWeight_deldiff
   #|---------------------------------------------------------------------|
 
-  #|---------------------------------------------------------------------|
-  # calcObjectiveFunction();
-
-  # !!Distributions that match those in ADMB are
-  #   provided in the file R\likelihood_funcs.R!! (sourced above)
-
-  #==============================================================================================
-  # ~Data and recruitment~ (nlvec_dd)
-  #==============================================================================================
-
-  # Likelihood for catch
-  tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
-  nlvec_dd_ct <- tmp
-
-  # Likelihood for relative abundance indices
-  # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
-  # then weights by a global mean
-  # We can just make a vector since we just need it for the mean
-  it_wt <- dat$indices[[1]][,4]
-  for(kk in 2:nit){
-    tmp <- dat$indices[[kk]][,4]
-    it_wt <- c(it_wt, tmp)
-  }
-  # global mean of it_wts
-  tmp_mean <- mean(it_wt) #devs/iscam.tpl L463
-
-  # Now loop over surveys to weight the indices and get the likelihood component
-  for(kk in 1:nit){
-    # normalise the weights
-    # Note that iscam normalizes it_wt in the data section
-    # by dividing by the mean. But above, where q is calculated, the weights (called wt)
-    # are normalized by dividing by sum
-    it_wt <- dat$indices[[kk]][,4]/tmp_mean #devs/iscam.tpl L466
-    # vector for weights for each obs in survey k
-    sig_it <- sig/it_wt
-
-    tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
-    # print(kk)
-    # print(tmp) # Yes. Matches nlvec_dd in rep file
-    nlvec_dd_it[kk] <- tmp
-  }
-
-  # Likelihood for recruitment
-  tmp <- admb_dnorm_vector_const(delta, tau)
-  nlvec_dd_rt <- tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
-
-  # Likelihood for mean weight
-  # We are entering the likelihood in log space here - do we need a Jacobian transformation?
-  for(kk in 1:nmeanwt){
-    tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
-    nlvec_dd_wt <- tmp # 3.407 Yes. Matches nlvec_dd in rep file.
-  }
-
-  #==============================================================================================
-  # ~PRIORS~ (priors)
-  #==============================================================================================
-  # Leading parameters
-  # !The uniform is returning a negative value!
-  for(i in 1:length(theta)){
-    ptype <- theta_control$prior[i] # prior type
-
-    if(theta_control$phz[i]>=1){
-      # Uniform
-      if(ptype==0){
-        #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
-        # For testing use the same as iscam. Why is the uniform set up like this?
-        ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
-      }
-      # Normal
-      if(ptype==1){
-        ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
-      }
-      # Lognormal
-      if(ptype==2){
-        ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
-      }
-      # Beta
-      if(ptype==3){
-        # Constrain between 0.2 and 1
-        trans <- (theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i])
-        ptmp <- admb_dbeta_const_const(trans, theta_control$p1[i],theta_control$p2[i])
-      }
-      # Gamma
-      if(ptype==4){
-        ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
-      }
-      priors[i] <- ptmp
-    } # end if
-  }# end i
-
-  # Catchability coefficients q
-  for(kk in 1:nit){
-    if(q_control$priortype[kk] == 1){
-      qtmp <- admb_dnorm_const_const(log(q[kk]), q_control$priormeanlog[kk], q_control$priorsd[kk])
-      qvec[kk] <- qtmp
-    }
-  }
-
-  # #==============================================================================================
-  # # ~PENALTIES~ pvec
-  # # ---------------------------------------------------------------------------------|
-  # #  LIKELIHOOD PENALTIES TO REGULARIZE SOLUTION
-  # # ---------------------------------------------------------------------------------|
-  # #  NOTE: iscam includes another element pvec(2) for m deviations and
-  # # also has an empty spot in pvec(3)
-  # #  pvec(1)  -> penalty on mean fishing mortality rate.
-  # #  pvec(2)  -> penalty on recruitment deviations.
-  # #  pvec(3)  -> penalty on initial recruitment vector.
-  # #  pvec(4)  -> constraint to ensure sum(log_rec_dev) = 0
-  # #  pvec(5)  -> constraint to ensure sum(init_log_rec_dev) = 0
-  # #==============================================================================================
-  #
-  # Fishing mortality
-  nft <- length(log_ft_pars)
-  mean_log_ft_pars <- sum(log_ft_pars)/nft # getting the mean manually prevents lost class attribute error
-  pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
-
-  # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
-  bigsd <- 2. # possibly put this in the data
-
-  pvec[2] <- admb_dnorm_vector_const(log_rec_devs, bigsd)
-  pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
-
-  #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
-  ndev <- length(log_rec_devs) # getting the mean manually prevents lost class attribute error
-  meandev <- sum(log_rec_devs)/ndev # this was s in iscam
-  pvec[4] <- 1.e5*meandev*meandev #mean(log_rec_devs)*mean(log_rec_devs)
-
-  nidev <- length(init_log_rec_devs) # getting the mean manually prevents lost class attribute error
-  meanidev <- sum(init_log_rec_devs)/nidev # this was s in iscam
-  pvec[5] <- 1.e5*meanidev*meanidev
-
-  # joint likelihood, priors and penalties
-  objfun <- nlvec_dd_ct +
-    sum(nlvec_dd_it) +
-    nlvec_dd_rt +
-    nlvec_dd_wt +
-    sum(priors) +
-    sum(qvec) +
-    sum(pvec)
-
-  # if(test==T){
-  #   # just for testing likelihood coded correctly. Delete after testing
-  #   objfunlist <- list()
-  #   objfunlist$objfun <- objfun
-  #   objfunlist$nlvec_dd_ct <- nlvec_dd_ct
-  #   objfunlist$nlvec_dd_it <- nlvec_dd_it
-  #   objfunlist$nlvec_dd_rt <- nlvec_dd_rt
-  #   objfunlist$nlvec_dd_wt <- nlvec_dd_wt
-  #   objfunlist$priors <- priors
-  #   objfunlist$qvec <- qvec
-  #   objfunlist$pvec <- pvec
-  #   print(objfunlist)
-  # } # end if test
-  # End calcObjectiveFunction
-  #|---------------------------------------------------------------------|
-
   # REPORT_SECTION
-  # Just start with a few things
-  # Need to find a dynamic way of reporting it_hat and annual_mean_weight
-  # NOTE: ADREPORT keeps track of standard error. REPORT does not and is quicker.
-  # Can't ADREPORT lists or use loops
   # Hardwire for now
   it_hat_all <- c(it_hat[[1]],it_hat[[2]],it_hat[[3]],it_hat[[4]],it_hat[[5]])
   annual_mean_weight_all <- annual_mean_weight[[1]]
