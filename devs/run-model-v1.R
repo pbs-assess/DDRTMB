@@ -91,6 +91,8 @@ nyrs <- dat$nyr-dat$syr+1
 yrs  <-  dat$syr:dat$nyr
 ages <-  dat$sage:dat$nage
 
+proj_years <- 1 # projection years for decision tables - put this in a better place!
+
 # **Maybe add all of these objects to dat**
 # get the number of and index for commercial (fishery) fleets
 nfleet <- 0 # number of fishing fleets (not surveys)
@@ -301,6 +303,7 @@ for(i in 1:nrow(post)){
   posteriors_by_sample[[i]]$log_ro <- mc.df$log_ro[i]
   posteriors_by_sample[[i]]$h      <- mc.df$h[i]
   posteriors_by_sample[[i]]$log_m  <- mc.df$log_m[i]
+  posteriors_by_sample[[i]]$proj_years  <- proj_years # for now add projection years here
 }
 
 saveRDS(posteriors_by_variable, here("outputs","MCMC_derived_estimates.rda"))
@@ -316,13 +319,40 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # NEED:
-# 1. Posterior estimates from the historical period (syr:nyr):
+# 1. Posterior samples from the historical period (syr:nyr),
+#     plus the leading parameters log_ro, h and log_m
 #   i) Biomass, Numbers, Fishing mortality, Survival rate
-#        and Recruits from the historical period (from posteriors object)
+#        and Recruits from the historical period
+#        (from posteriors object)
 # 2. A vector of future TACs (from pfc file)
-# 3. Number of projection years (from pfc file)
+# 3. Number of projection years
 
+# try putting outputs in a list:
+#   one list item for each tac (from pfc$tac.vec)
+# each list item is a matrix with dim
+#    nrow=number of posterior samples,
+#    ncol=however many variables we want for the decision tables
+# NOTE: iscam had a giant matrix. It was slightly challenging to
+#       get the results out for the decision tables.
+#       Having one list object per tac will be easier for getting
+#       out the probabilities
 
-proj <- purrr(project_model,posteriors,1, npyr=1)
+# List object for projection outputs
+# This will be inputs for decision tables
+proj_out <- list()
 
+# Need to loop over future TACs but do not need to loop
+#  over posterior samples. Let purrr do that.
+for(i in 1:5){
+  tac <- pfc$tac.vec[i]
+  pyr <- 1 # num projection years. Put this somewhere more universal, like in pfc
+
+  # Run the projection model for tac[i]
+  proj_out[[i]] <- purrr::map2_df(posteriors_by_sample, tac, project_model_test)
+}
+names(proj_out) <- pfc$tac.vec[1:5]
+
+# TODO:
+# Add decision table code
+# Produce decision tables and graphics
 

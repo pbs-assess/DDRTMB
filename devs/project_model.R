@@ -3,23 +3,45 @@
 
 # Robyn Forrest
 # Date created:  July 26, 2024
-# Last Modified: July 26, 2024
+# Last Modified: July 31, 2024
 
 # TODO:
-# Put posteriors into a format that can be read by the model
-# Run in a loop, purrr or some other way? Probably purrr.
-# Pass it the posterior parameter values
-# Update reporting and return projected values
-# Add reference point calcs
-# Add decision table code
-# Produce decision tables and graphics
+# Add reference point calcs and calculate projected stock status
+
+devtools::document()
+devtools::load_all()
+
+dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
+ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
+pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
+nyrs <- dat$nyr-dat$syr+1
+yrs  <-  dat$syr:dat$nyr
+
+project_model_test <- function(posteriors,tac){
+
+  pyr <- posteriors$proj_year
+
+  output <- as.data.frame(matrix(nrow=1,ncol=3))
+  output[1,1] <- tac
+  output[1,2] <- pyr
+  output[1,4] <- posteriors$biomass[1]
+
+
+  colnames(output) <- c("TAC","pyr","B")
+
+  return(output)
+}
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PROJECTION MODEL
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# arguments: mcmc = mcmc estimates (post_pars), npyr=number of projection years
-project_model <- function(mc,
-                          npyr){
+# arguments:
+# posteriors = a list of posterior outputs
+# the TAC for this projection
+project_model <- function(posteriors,
+                          tac,
+                          pyr){
 
    getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
 
