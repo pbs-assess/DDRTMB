@@ -178,10 +178,10 @@ plradsd <- as.list(sdreport(obj),"Std", report=TRUE)
 plr <- as.list(obj$report())
 
 # Write out MPD results for plotting
-saveRDS(pl, here("outputs","ParameterEstimates.rda"))
-saveRDS(plsd, here("outputs","ParameterSDs.rda"))
-saveRDS(plrad, here("outputs","DerivedEstimates.rda"))
-saveRDS(plradsd, here("outputs","DerivedSDs.rda"))
+saveRDS(pl, here("outputs","parameter_estimates.rda"))
+saveRDS(plsd, here("outputs","parameter_sds.rda"))
+saveRDS(plrad, here("outputs","derived_estimates.rda"))
+saveRDS(plradsd, here("outputs","derived_sds.rda"))
 
 # Plot results and comparisons with iscam
 # Delete this for package
@@ -193,12 +193,12 @@ source(here("devs","plot_rtmb_results_mpd.r"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Use tmbstan to run MCMC
 # See example code https://github.com/kaskr/tmbstan
-library(tmbstan)
+
 # SA suggested 1000 samples with 4 chains as a start
 # parallel causing errors - I'm not setting it up correctly
 # cores <- parallel::detectCores()-1
 # options(mc.cores = cores)
-Iter <- 5000
+Iter <- 2000
 fitmcmc <- tmbstan(obj, chains=1,
                    iter=Iter,
                    init=list(opt$par),
@@ -224,8 +224,8 @@ min(mon$Tail_ESS)
 # Save results as a data frame
 # (if running more than one chain, then would do this for each chain)
 mc.df <- as.data.frame(mc[,1,])
-saveRDS(mc.df, here("outputs","MCMCParameterEstimates.rda"))
-saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
+saveRDS(mc.df, here("outputs","MCMC_parameter_estimates.rda"))
+saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 
 # # Four chains
 # fitmcmc_4ch <- tmbstan(obj, chains=4,
@@ -262,7 +262,7 @@ saveRDS(mon, here("outputs","MCMCDiagnostics.rda"))
 # https://github.com/kaskr/tmbstan
 ## What if you want a posterior for derived quantities in the report? Just
 ## loop through each posterior sample (row) and call the report function
-post <- as.matrix(mc[,1,])
+post <- as.matrix(mc.df)
 
 # Version 1: for reporting, graphs etc
 # This is a list where each element is a variable of interest
@@ -275,12 +275,13 @@ posteriors_by_variable <- list()
 posteriors_by_variable$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
 posteriors_by_variable$numbers <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
 posteriors_by_variable$recruits <- matrix(NA, ncol=nyrs-dat$sage, nrow=nrow(post))
-posteriors_by_variable$surv <- matrix(NA, ncol=nyrs, nrow=nrow(post))
+posteriors_by_variable$S <- matrix(NA, ncol=nyrs, nrow=nrow(post))
 posteriors_by_variable$Ft <- matrix(NA, ncol=nyrs, nrow=nrow(post))
 posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
+
 # Version 2: for projections
 # This is a list where each element is a posterior sample
-#  containing all the variables
+#  containing all the variables needed for the proj model
 #  - can be passed to projection model using purrr
 posteriors_by_sample <- list()
 
@@ -294,16 +295,16 @@ for(i in 1:nrow(post)){
   posteriors_by_variable$Ft[i,] <- r$Ft
   posteriors_by_variable$q[i,] <- r$q
   # Posteriors by sample
+  # This is a list to pass to projection model
+  #   includes 3 leading parameters and key derived variables)
   posteriors_by_sample[[i]] <- r
+  posteriors_by_sample[[i]]$log_ro <- mc.df$log_ro[i]
+  posteriors_by_sample[[i]]$h      <- mc.df$h[i]
+  posteriors_by_sample[[i]]$log_m  <- mc.df$log_m[i]
 }
-saveRDS(posteriors_by_variable, here("outputs","MCMCDerivedEstimates.rda"))
 
-# Now add the estimated parameters to the list
-
-
-
-saveRDS(posteriors_by_sample, here("outputs","MCMCEstimates_bysample.rda"))
-
+saveRDS(posteriors_by_variable, here("outputs","MCMC_derived_estimates.rda"))
+saveRDS(posteriors_by_sample, here("outputs","MCMC_outputs_bysample.rda"))
 
 # Plot results and comparisons with iscam
 # Delete this for package
@@ -313,12 +314,6 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Projections - post MCMC step
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Put all estimated scalar parameters together
-# Normally EIV pars would be here too but they are fixed for pcod
-qit <- paste0("q",1)
-for(i in 2:dat$nit){
-  qit <- c(qit,paste0("q",i))
-}
 
 # NEED:
 # 1. Posterior estimates from the historical period (syr:nyr):
@@ -328,10 +323,6 @@ for(i in 2:dat$nit){
 # 3. Number of projection years (from pfc file)
 
 
-tmp <- posteriors[[1]]
-
-
-# NOT SURE HOW THIS IS GOING TO WORK YET
-proj <- apply(project_model,posteriors,1, npyr=1)
+proj <- purrr(project_model,posteriors,1, npyr=1)
 
 

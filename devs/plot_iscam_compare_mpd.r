@@ -29,10 +29,10 @@ if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recu
 dat <- pcod2020dat
 ctl <- pcod2020ctl
 # RTMB outputs
-pl <- readRDS(here("outputs","ParameterEstimates.rda"))
-plsd <- readRDS(here("outputs","ParameterSDs.rda"))
-plrad <- readRDS(here("outputs","DerivedEstimates.rda"))
-plradsd <- readRDS(here("outputs","DerivedSDs.rda"))
+pl <- readRDS(here("outputs","parameter_estimates.rda"))
+plsd <- readRDS(here("outputs","parameter_sds.rda"))
+plrad <- readRDS(here("outputs","derived_estimates.rda"))
+plradsd <- readRDS(here("outputs","derived_sds.rda"))
 # iscam outputs
 pcod2020rep <- read.report.file("data-raw/iscam.rep")
 pcod2020par <- read.par.file("data-raw/iscam.par")

@@ -31,9 +31,9 @@ if(!file.exists(here("outputs"))) dir.create(here("outputs"), recursive = TRUE)
 if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recursive = TRUE)
 
 # 1. RTMB Read in MCMC outputs - burnin already removed
-mcmcpars <- readRDS(here("outputs","MCMCParameterEstimates.rda"))
-mcmcderived <- readRDS( here("outputs","MCMCDerivedEstimates.rda"))
-mcmcdiagnostics <- readRDS(here("outputs","MCMCDiagnostics.rda"))
+mcmcpars <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
+mcmcderived <- readRDS( here("outputs","MCMC_derived_estimates.rda"))
+mcmcdiagnostics <- readRDS(here("outputs","MCMC_diagnostics.rda"))
 
 # Also the dat and control file for model dimensions and priors settings
 dat <- pcod2020dat
@@ -107,7 +107,7 @@ cowplot::plot_grid(post_biomass_rtmb,post_biomass_iscam, ncol=1)
 ggsave(here("outputs","figs","CompareBiomass_MCMC.png"), width=8, height=6, units="in")
 
 # Fishing mortality
-post_ft_rtmb <- exp(mcmcpars[,4:68]) %>%
+post_ft_rtmb <- mcmcderived$Ft %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
