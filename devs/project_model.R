@@ -8,33 +8,51 @@
 # TODO:
 # Add reference point calcs and calculate projected stock status
 
+library(here)
+
 devtools::document()
 devtools::load_all()
 
 dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
 ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
-nyrs <- dat$nyr-dat$syr+1
-yrs  <-  dat$syr:dat$nyr
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PROJECTION MODEL
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # arguments:
-# posteriors = a list of posterior outputs
+# posteriors = a list of posterior outputs from one mcmc posterior sample
 # the TAC for this projection
+
+# Returns
+# A data frame with one row with TAC and
+#  all the variables of interest for the decision tables
+#  If pyr>1, projections for subsequent years will be appended columnwise
+
+########################################################################
+# For testing only. DELETE AFTER TESTING!
+# These are the function arguments
+# Take first posterior sample
+posteriors <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))[[1]]
+tac <- 0
+########################################################################
+
 project_model <- function(posteriors,
                           tac){
 
-   getAll(dat,ctl,pfc) # RTMB function. Puts arguments into global space
+  getAll(dat,ctl,pfc) # RTMB function. Puts arguments into global space
+
+  # Get the years for the projection under the tac
+  # The model projects biomass into nyr+1 based on catches to nyr.
+  #  pyr determines the number of projection years after this for
+  #  decision tables
+  pyrs <- (dat$nyr+1):dat$nyr+1+posteriors$proj_years
+  hyrs <- dat$syr:dat$nyr # historical years
 
   # 1. initParameters
   ro        <- exp(theta[1])
   steepness <- theta[2]
   m         <- exp(theta[3])
-  rho       <- theta[4]
-  kap       <- theta[5] #kappa in par file. Call it kap here bc kappa is an R function
-
   tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
 
   # A decision was made in 2018 to fix these two parameters to be the same

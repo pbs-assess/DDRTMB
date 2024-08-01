@@ -96,6 +96,10 @@ dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
 ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
 nyrs <- dat$nyr-dat$syr+1
+
+# TODO: Everything being put in the global space here should be
+#  inside the model function and should come from dat (via the getAll function)
+#  i.e., the model function needs a DATA_SECTION
 yrs  <-  dat$syr:dat$nyr
 ages <-  dat$sage:dat$nage
 
@@ -261,15 +265,12 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 # saveRDS(mon4ch, here("outputs","MCMCDiagnostics_4chain_list.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 5. Posterior derived variables
+# 5. Get posteriors for derived variables (REPORT objects)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Rerun model with posterior parameter estimates,
-# Extract REPORT objects
-
-# https://github.com/kaskr/tmbstan
-## What if you want a posterior for derived quantities in the report? Just
-## loop through each posterior sample (row) and call the report function
-post <- as.matrix(mc.df)
+# Rerun model with posterior parameter estimates (extract REPORT objects)
+#  See readme at https://github.com/kaskr/tmbstan:
+#    "What if you want a posterior for derived quantities in the report? Just
+#    loop through each posterior sample (row) and call the report function"
 
 # Version 1: for reporting, graphs etc
 # This is a list where each element is a variable of interest
@@ -289,22 +290,26 @@ posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
 # Version 2: for projections
 # This is a list where each element is a posterior sample
 #  containing all the variables needed for the proj model
-#  - can be passed to projection model using purrr
+#  Gets passed to projection model using purrr::map2_df()
 posteriors_by_sample <- list()
+
+# Get the posterior output from tmbstan, as matrix
+post <- as.matrix(mc.df)
 
 for(i in 1:nrow(post)){
   r <- obj$report(post[i,])
+
   # Posteriors by variable
-  posteriors_by_variable$biomass[i,] <- r$biomass
-  posteriors_by_variable$numbers[i,] <- r$numbers
+  posteriors_by_variable$biomass[i,]  <- r$biomass
+  posteriors_by_variable$numbers[i,]  <- r$numbers
   posteriors_by_variable$recruits[i,] <- r$rt
-  posteriors_by_variable$S[i,] <- r$surv
+  posteriors_by_variable$S[i,]  <- r$surv
   posteriors_by_variable$Ft[i,] <- r$Ft
-  posteriors_by_variable$q[i,] <- r$q
-  # Posteriors by sample
-  # This is a list to pass to projection model
-  #   includes 3 leading parameters and key derived variables)
+  posteriors_by_variable$q[i,]  <- r$q
+
+  # Posteriors by sample (for project_model)
   posteriors_by_sample[[i]] <- r
+  # Append 3 leading parameters and proj_years
   posteriors_by_sample[[i]]$log_ro <- mc.df$log_ro[i]
   posteriors_by_sample[[i]]$h      <- mc.df$h[i]
   posteriors_by_sample[[i]]$log_m  <- mc.df$log_m[i]
@@ -322,6 +327,8 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Projections - post MCMC step
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# TODO: THIS SHOULD BE A FUNCTION
 
 # NEED:
 # 1. Posterior samples from the historical period (syr:nyr),
