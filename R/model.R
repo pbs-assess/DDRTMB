@@ -20,7 +20,7 @@
 # arguments:
 # pars= a list of starting parameters
 
-# Returns
+# Returns:
 # objective function value
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

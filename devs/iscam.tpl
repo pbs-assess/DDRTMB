@@ -6007,7 +6007,7 @@ FUNCTION void projection_model_dd(const double& tac)
 	//double pso = value (so(1));
 	//double pbeta =value(beta(1));
 
-	dvector p_bt(syr,pyr);
+	dvector p_bt(syr,pyr); 
 	dvector p_ft(syr,pyr);
 	dvector p_N(syr,pyr);
 	dvector p_S(syr,pyr);

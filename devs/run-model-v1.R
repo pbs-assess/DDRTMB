@@ -304,7 +304,7 @@ for(i in 1:nrow(post)){
   posteriors_by_variable$biomass[i,]  <- r$biomass
   posteriors_by_variable$numbers[i,]  <- r$numbers
   posteriors_by_variable$recruits[i,] <- r$rt
-  posteriors_by_variable$S[i,]  <- r$surv
+  posteriors_by_variable$surv[i,]  <- r$surv
   posteriors_by_variable$Ft[i,] <- r$Ft
   posteriors_by_variable$q[i,]  <- r$q
 
