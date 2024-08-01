@@ -20,6 +20,7 @@ model <- function(par){
 
   `[<-` <- RTMB::ADoverload("[<-") # Need this to avoid problem of some variables being reassigned from ADvariable
 
+  # Should we put ctl in here too?
   getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
 
   # Pseudocode from iscam

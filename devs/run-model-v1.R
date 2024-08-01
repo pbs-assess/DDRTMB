@@ -36,6 +36,8 @@
 #          is optimised), rather than letting users build their own
 #  - Implement MCMC - tmbstan
 #  - Check source of fished equilibrium equation and check code - or remove it (in calcNumbersBiomass_deldiff)
+# Think about a consistent way to move objects around.
+#  Some are in global space and some come in through the getAll func
 
 # 2. Potential model changes:
 #  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
@@ -73,9 +75,15 @@ source(here("R/likelihood_funcs.R"))
 # There is a bunch of stuff in the global space that it needs
 source(here("R/model.R"))
 
-# FOR TESTING
-# source("devs/load-models.R")
-# pcod2020rep<-read.report.file("data-raw/iscam.rep")
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#  ~ SETTINGS ~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nsample <- 5000 # number of posterior samples for the mcmc
+nchain <- # number of chains for the mcmc (outputs only look at one chain for now)
+proj_years <- 1 # How many projection years for decision table
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls
@@ -90,8 +98,6 @@ pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see def
 nyrs <- dat$nyr-dat$syr+1
 yrs  <-  dat$syr:dat$nyr
 ages <-  dat$sage:dat$nage
-
-proj_years <- 1 # projection years for decision tables - put this in a better place!
 
 # **Maybe add all of these objects to dat**
 # get the number of and index for commercial (fishery) fleets
@@ -200,9 +206,8 @@ source(here("devs","plot_rtmb_results_mpd.r"))
 # parallel causing errors - I'm not setting it up correctly
 # cores <- parallel::detectCores()-1
 # options(mc.cores = cores)
-Iter <- 2000
-fitmcmc <- tmbstan(obj, chains=1,
-                   iter=Iter,
+fitmcmc <- tmbstan(obj, chains=nchain,
+                   iter=nsample,
                    init=list(opt$par),
                    lower=c(1.,0.2,-2.3,
                            rep(-5,length(par$log_ft_pars)),
@@ -340,6 +345,9 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 # List object for projection outputs
 # This will be inputs for decision tables
 proj_out <- list()
+
+# Read in posterior samples (in case just doing projections)
+posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
 # Need to loop over future TACs but do not need to loop
 #  over posterior samples. Let purrr do that.
