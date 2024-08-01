@@ -1,19 +1,30 @@
-# This is a development script for a delay-difference model in rtmb
-# The first draft attempts to reproduce the iscam delay difference model from
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# MODEL
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# model (based on iscam delay difference model (see devs\iscam.tpl))
+
+# Author: Robyn Forrest
+# Date created:  July 26, 2024
+# Last Modified: August 1, 2024
+
+# This model is called [in run-model-v1]*
+#   * This model will be called by a yet-to-be-written function
+
+# This first draft attempts to reproduce the iscam delay difference model from
 #   the 2020 Pacific Cod stock assessment for Haida Gwaii/Queen Charlotte
 #   Sound stock in Pacific Canada (Area 5ABCD) [published in 2021]
-
-# This is the model, currently sourced by run-model-v1.R
 
 # **For this first version, this is a ONE group, ONE area, ONE sex model**
 # M is fixed, not time-varying - adapt later for tvm
 
-# Set test mode for testing model with MPD estimates from pcod2020 test file
-# Delete this eventually. The test code is currently commented out anyway.
-test <- FALSE
+# arguments:
+# pars= a list of starting parameters
+
+# Returns
+# objective function value
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 3. Model
+# Model
 # Eventually define some components as functions and move to separate R scripts
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 model <- function(par){

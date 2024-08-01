@@ -1,33 +1,46 @@
-# THIS IS A PLACEHOLDER FOR THE PROJECTION MODEL. IT WILL MAKE DECISION TABLES AND
-# CALCULATE REFERENCE POINTS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# PROJECTION MODEL
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# projection_model (based on iscam project_model_dd (see devs\iscam.tpl))
 
-# Robyn Forrest
+# Author: Robyn Forrest
 # Date created:  July 26, 2024
-# Last Modified: July 31, 2024
+# Last Modified: August 1, 2024
+
+# This model takes one sample of posterior parameters and historical estimates
+#  and projects biomass and F forward the number of projection years (proj_years)
+#  It also calculates ref points based on estimated parameters so that
+#   stock status relative to ref points under each tac can be reported
+
+# This model is called [in run-model-v1]* using purrr::map2df() which loops
+#  over posterior samples and future TACs, and builds the data-frame
+#  needed to make decision tables
+#   * This model will be called by a yet-to-be-written function
+
+# arguments:
+# posteriors = a list of posterior outputs from one mcmc posterior sample
+# tac = the future Total Allowable Catch for this projection
+
+# Returns
+# A one-row data frame for the tac
+#  all the variables of interest for the decision tables
+#  If pyr>1, projections for subsequent years will be appended columnwise
+
 
 # TODO:
 # Add reference point calcs and calculate projected stock status
 
 library(here)
 
+# Load documentation and inputs
 devtools::document()
 devtools::load_all()
 
+# Get global inputs
 dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
 ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# PROJECTION MODEL
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# arguments:
-# posteriors = a list of posterior outputs from one mcmc posterior sample
-# the TAC for this projection
-
-# Returns
-# A data frame with one row with TAC and
-#  all the variables of interest for the decision tables
-#  If pyr>1, projections for subsequent years will be appended columnwise
 
 ########################################################################
 # For testing only. DELETE AFTER TESTING!
@@ -45,7 +58,7 @@ project_model <- function(posteriors,
   # Get the years for the projection under the tac
   # The model projects biomass into nyr+1 based on catches to nyr.
   #  pyr determines the number of projection years after this for
-  #  decision tables
+  #    decision tables
   pyrs <- (dat$nyr+1):dat$nyr+1+posteriors$proj_years
   hyrs <- dat$syr:dat$nyr # historical years
 

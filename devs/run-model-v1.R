@@ -81,9 +81,10 @@ source(here("R/model.R"))
 nsample <- 5000 # number of posterior samples for the mcmc
 nchain <- # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 1 # How many projection years for decision table
-
+# Set test mode for testing model with MPD estimates from pcod2020 test file
+# Delete this eventually. The test code is currently commented out anyway.
+test <- FALSE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls
@@ -350,7 +351,7 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #       out the probabilities
 
 # List object for projection outputs
-# This will be inputs for decision tables
+# This will be the inputs for decision tables
 proj_out <- list()
 
 # Read in posterior samples (in case just doing projections)
@@ -360,10 +361,9 @@ posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 #  over posterior samples. Let purrr do that.
 for(i in 1:5){
   tac <- pfc$tac.vec[i]
-  pyr <- 1 # num projection years. Put this somewhere more universal, like in pfc
 
   # Run the projection model for tac[i]
-  proj_out[[i]] <- purrr::map2_df(posteriors_by_sample, tac, project_model_test)
+  proj_out[[i]] <- purrr::map2_df(posteriors_by_sample, tac, project_model)
 }
 names(proj_out) <- pfc$tac.vec[1:5]
 
