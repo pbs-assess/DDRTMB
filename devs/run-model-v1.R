@@ -81,7 +81,7 @@ source(here("devs/project_model.R"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 nsample <- 1000 # number of posterior samples for the mcmc
 nchain <- # number of chains for the mcmc (outputs only look at one chain for now)
-proj_years <- 1 # How many projection years for decision table
+proj_years <- 2 # How many projection years for decision table
 # Set test mode for testing model with MPD estimates from pcod2020 test file
 # Delete this eventually. The test code is currently commented out anyway.
 test <- FALSE
@@ -281,6 +281,9 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 # Note that parameters, rec devs and logf are
 #    already reported in the mc object
 #   (but have added Ft to REPORT to simplify projection model)
+
+# Read in posterior samples (in case you have already saved the mc outputs)
+mc.df <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
 
 # Get the posterior output from tmbstan, as matrix
 post <- as.matrix(mc.df)
