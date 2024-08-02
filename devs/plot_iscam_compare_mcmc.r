@@ -11,9 +11,12 @@
 #
 # FIRST run the model in run-model-v1.R
 # Load documentation and inputs
-# # Uncomment these 2 lines if running standalone
+# # Uncomment these 4 lines if running standalone
 # devtools::document()
 # devtools::load_all()
+# Also the dat and control file for model dimensions and priors settings
+# dat <- pcod2020dat
+# ctl <- pcod2020ctl
 
 library(tidyverse)
 library(reshape2)
@@ -34,10 +37,6 @@ if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recu
 mcmcpars <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
 mcmcderived <- readRDS(here("outputs","MCMC_outputs_byvariable.rda"))
 mcmcdiagnostics <- readRDS(here("outputs","MCMC_diagnostics.rda"))
-
-# Also the dat and control file for model dimensions and priors settings
-dat <- pcod2020dat
-ctl <- pcod2020ctl
 
 # 2. iscam Read in MCMC outputs
 iscampars <- read_csv(here("data-raw/iscam_mcmc.csv"))

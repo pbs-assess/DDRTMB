@@ -89,9 +89,9 @@ nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for 
 proj_years <- 2 # How many projection years for decision table
 
 # Set test modes
-# Delete these eventually. The test code is currently commented out anyway.
+# Delete these eventually. The test code for the model is currently commented out anyway.
 test <- FALSE # for testing model with MPD estimates from pcod2020 test file
-testrefpts <- TRUE # for testing msy ref points to make sure eqm calcs are correct
+testrefpts <- FALSE # for testing msy ref points to make sure eqm calcs are correct
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -101,6 +101,7 @@ testrefpts <- TRUE # for testing msy ref points to make sure eqm calcs are corre
 # DATA_SECTION
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Input lists (*run filter-inputs.R first*)
+# Many of the other scripts rely on these objects being in the global space
 dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
 ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions

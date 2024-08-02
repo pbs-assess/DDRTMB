@@ -5,9 +5,12 @@
 #
 # FIRST run the model in run-model-v1.R
 # Load documentation and inputs
-# Uncomment these 2 lines if running standalone
+# Uncomment these 4 lines if running standalone
 # devtools::document()
 # devtools::load_all()
+# Also the dat and control file for model dimensions and priors settings
+# dat <- pcod2020dat
+# ctl <- pcod2020ctl
 
 library(tidyverse)
 library(reshape2)
@@ -24,9 +27,7 @@ if(!file.exists(here("outputs"))) dir.create(here("outputs"), recursive = TRUE)
 if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recursive = TRUE)
 
 # 1. Read in input files and output files from RTMB and iscam
-# inputs
-dat <- pcod2020dat
-ctl <- pcod2020ctl
+
 # RTMB outputs
 pl <- readRDS(here("outputs","parameter_estimates.rda"))
 plsd <- readRDS(here("outputs","parameter_sds.rda"))
