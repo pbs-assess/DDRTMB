@@ -274,9 +274,7 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 # 5. Get posteriors for derived variables (REPORT objects)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Rerun model with posterior parameter estimates (extract REPORT objects)
-#  See readme at https://github.com/kaskr/tmbstan:
-#    "What if you want a posterior for derived quantities in the report? Just
-#    loop through each posterior sample (row) and call the report function"
+
 
 # Version 1: for reporting, graphs etc
 # posteriors_by_variable
