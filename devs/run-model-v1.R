@@ -400,6 +400,11 @@ for(i in 1:ntac){
 # Now we have a lovely list of all the metrics we need for decision tables
 #  one list object per tac :-)
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Make decision tables
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 # TODO:
 # Add decision table code
 # Produce decision tables and graphics

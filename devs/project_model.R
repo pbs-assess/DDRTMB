@@ -35,7 +35,7 @@ library(RTMB)
 source(here("R","get_ftdd.R"))
 source(here("R","calc_reference_points.R"))
 
-# Load documentation and inputs
+# Load documentation and inputs - technically, this should happen only once in run-model
 devtools::document()
 devtools::load_all()
 
@@ -48,8 +48,8 @@ pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see def
 # For testing only. DELETE AFTER TESTING!
 # These are the function arguments
 # Take first posterior sample
-posteriors <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))[[1]]
-tac <- 0
+#posteriors <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))[[1]]
+#tac <- 0
 ########################################################################
 
 project_model <- function(posteriors,
@@ -62,8 +62,8 @@ project_model <- function(posteriors,
   #  pyr determines the number of projection years *after* this for
   #    decision tables
   npyr <- posteriors$proj_years # number of projection years (set by user)
-  pyr  <- dat$nyr+1+posteriors$proj_years # actual final projection year
-  pyrs <- (dat$nyr+1+1):(dat$nyr+1+posteriors$proj_years) # actual years of projection period
+  pyr  <- dat$nyr+1+npyr # actual final projection year
+  pyrs <- (dat$nyr+1+1):(dat$nyr+1+npyr) # actual years of projection period
   yrs  <- dat$syr:dat$nyr # actual historical years
   nyrs <- length(yrs) # number of historical years
 
@@ -79,7 +79,7 @@ project_model <- function(posteriors,
 
   # 2. Set up the time series vectors for model variables of interest
   # Fill the historical period and add projections years
-  # For biomas and numbers, the historical period includes the one year
+  # For biomass and numbers, the historical period includes the one year
   #   projection arising from catch in the final historical year
   biomass <- c(posteriors$biomass, rep(NA,npyr)) # this is p_bt in iscam
   numbers <- c(posteriors$numbers, rep(NA,npyr)) # this is p_N in iscam
@@ -122,26 +122,44 @@ project_model <- function(posteriors,
       surv[i] = exp(-(m+ft[i]))
   }
 
-   # REPORT_SECTION - return a one-row dataframe containing all the stock status
-   # calculations under the current TAC for the current posterior sample
+  # REPORT_SECTION - return a one-row dataframe containing all the stock status
+  # calculations under the current TAC for the current posterior sample
 
-  # output <- as.data.frame(matrix(nrow=1,ncol=5))
-  # output[1,1] <- tac
-  # output[1,2] <- biomass[nyrs+1]
-  # output[1,3] <- biomass[nyrs+2] # this needs to be dynamic
-  # output[1,4] <- ft[nyrs]
-  # output[1,5] <- ft[nyrs+1]
-  #
-  # # TODO: make colnames dynamic and deal with the case when pyr>1
-  # colnames(output) <- c("TAC",
-  #                       "B2021", "B2022",
-  #                       "F2020","F2021")
+  # Output df is robust to multiple projection years
+  if(npyr==1){
+    output <- data.frame(tac,
+                       biomass[nyrs+1],
+                       biomass[nyrs+2],
+                       ft[nyrs],
+                       ft[nyrs+1])
+    colnames(output)<-c("TAC",
+                        paste0("B",nyr+1),
+                        paste0("B",nyr+2),
+                        paste0("F",nyr),
+                        paste0("F",nyr+1))
+  }else{
+    output <- data.frame(tac,
+                         biomass[nyrs+1],
+                         biomass[nyrs+2],
+                         ft[nyrs],
+                         ft[nyrs+1])
+    cols <- c("TAC",
+              paste0("B",nyr+1),
+              paste0("B",nyr+2),
+              paste0("F",nyr),
+              paste0("F",nyr+1))
+    for(ii in 2:npyr){
+      tmp <- data.frame(biomass[nyrs+1+ii],
+                        ft[nyrs+ii])
 
-  output <- data.frame("TAC"=tac,
-                       "B2021"=biomass[nyrs+1],
-                       "B2022"=biomass[nyrs+2],
-                       "F2020"=biomass[nyrs],
-                       "F2021"=biomass[nyrs+1])
+      output <- cbind(output,tmp)
+      cols <- c(cols,
+                paste0("B",nyr+1+ii),
+                paste0("F",nyr+ii))
+
+    } # end for ii
+    colnames(output) <- cols
+  }# end ifelse
 
   return(output)
 
