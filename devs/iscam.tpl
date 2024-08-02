@@ -4288,7 +4288,7 @@ FUNCTION void calcReferencePoints()
   	[ ] - allow user to specify which selectivity years are used in reference point
   	      calculations. This should probably be done in the projection File Control.
   	*/
-  	if(delaydiff){
+  if(delaydiff){
       run_FRPdd();
     }else{
       if(d_iscamCntrl(13) || d_iscamCntrl(17)){

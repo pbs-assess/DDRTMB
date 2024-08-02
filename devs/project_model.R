@@ -33,6 +33,7 @@
 library(here)
 library(RTMB)
 source(here("R","get_ftdd.R"))
+source(here("R","calc_reference_points.R"))
 
 # Load documentation and inputs
 devtools::document()
@@ -48,7 +49,7 @@ pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see def
 # These are the function arguments
 # Take first posterior sample
 posteriors <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))[[1]]
-tac <- 100
+tac <- 0
 ########################################################################
 
 project_model <- function(posteriors,
@@ -63,7 +64,12 @@ project_model <- function(posteriors,
   npyr <- posteriors$proj_years # number of projection years (set by user)
   pyr  <- dat$nyr+1+posteriors$proj_years # actual final projection year
   pyrs <- (dat$nyr+1+1):(dat$nyr+1+posteriors$proj_years) # actual years of projection period
-  nyrs <- length(dat$syr:dat$nyr) # number of historical years
+  yrs  <- dat$syr:dat$nyr # actual historical years
+  nyrs <- length(yrs) # number of historical years
+
+  # Create a lookup for years because ADMB works with actual years as index
+  year_lookup <- as.data.frame(cbind(yrs, 1:nyrs))
+  colnames(year_lookup) <- c("year", "year_index")
 
   # 1. Get posterior estimates of leading parameters
   ro        <- exp(posteriors$log_ro)
@@ -112,17 +118,35 @@ project_model <- function(posteriors,
       # tac
       # testc --> should be identical to tac
 
-
       #Calculate survival for next projection year
       surv[i] = exp(-(m+ft[i]))
-    }
+  }
 
+   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   # Get reference points
+   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   # 1. Historical reference points first
+   endyr_refpt <- pfc$ctl.options[7]
+   endyr_refpt_ind <- year_lookup[which(year_lookup[,1]==endyr_refpt),2]
+   bminyr <- pfc$ctl.options[9]
+   bminyr_ind <- year_lookup[which(year_lookup[,1]==bminyr),2]
 
+   bavg <- mean(biomass[1:endyr_refpt_ind])
+   favg <- mean(ft[1:endyr_refpt_ind])
+   bmin  <- biomass[bminyr_ind]
+
+   # 2. Do MSY-based reference points
+   # Do the slow way first - but takes less than a second
+   #  for one posterior sample
+   # Returns a list of msy, fmsy and bmsy
+   msyrefpts_slow <- ddiff_msy_slow(posteriors,
+                                    dat$alpha.g,
+                                    dat$rho.g,
+                                    dat$wk)
   # REPORT_SECTION
-  output <- as.data.frame(matrix(nrow=1,ncol=3))
-  output[1,1] <- tac
-  output[1,2] <- pyr
-  output[1,4] <- posteriors$biomass[1]
+  # output <- as.data.frame(matrix(nrow=1,ncol=3))
+  # output[1,1] <- tac
+  # output[1,4] <- posteriors$biomass[1]
 
 
   colnames(output) <- c("TAC","pyr","B")
