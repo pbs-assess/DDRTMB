@@ -32,7 +32,7 @@ model <- function(par){
   `[<-` <- RTMB::ADoverload("[<-") # Need this to avoid problem of some variables being reassigned from ADvariable
 
   # Should we put ctl in here too?
-  getAll(par,dat, pfc) # RTMB function. Puts arguments into global space
+  getAll(par,indat, pfc) # RTMB function. Puts arguments into global space
 
   # Pseudocode from iscam
   # 1. initParameters()
@@ -354,7 +354,7 @@ model <- function(par){
       ct[ii] = (ft[k,i]/(Mt[i] + ft[k,i]))*(1-exp(-Mt[i]-ft[k,i]))*numbers[i]
     }
     if(!mm %in% 1:2){
-      stop("Catch type must be 1 (weight) or 2 (numbers). Set in column 3 of dat$catch")
+      stop("Catch type must be 1 (weight) or 2 (numbers). Set in column 3 of indat$catch")
     }
 
     # catch residual
@@ -425,7 +425,7 @@ model <- function(par){
         V[ii] <- Bp
       }
       if(!survtype[kk] %in% 1:2){
-        stop(("Survey type must be 1 (survey proporional to numbers) or 2 (survey proporional to biomass). Set in dat$survtype"))
+        stop(("Survey type must be 1 (survey proporional to numbers) or 2 (survey proporional to biomass). Set in indat$survtype"))
       }
     } #end of ii loop
 
@@ -602,9 +602,9 @@ model <- function(par){
   # iscam makes a ragged matrix of the it weights (see L445 of devs/iscam.tpl)
   # then weights by a global mean
   # We can just make a vector since we just need it for the mean
-  it_wt <- dat$indices[[1]][,4]
+  it_wt <- indat$indices[[1]][,4]
   for(kk in 2:nit){
-    tmp <- dat$indices[[kk]][,4]
+    tmp <- indat$indices[[kk]][,4]
     it_wt <- c(it_wt, tmp)
   }
   # global mean of it_wts
@@ -616,7 +616,7 @@ model <- function(par){
     # Note that iscam normalizes it_wt in the data section
     # by dividing by the mean. But above, where q is calculated, the weights (called wt)
     # are normalized by dividing by sum
-    it_wt <- dat$indices[[kk]][,4]/tmp_mean #devs/iscam.tpl L466
+    it_wt <- indat$indices[[kk]][,4]/tmp_mean #devs/iscam.tpl L466
     # vector for weights for each obs in survey k
     sig_it <- sig/it_wt
 

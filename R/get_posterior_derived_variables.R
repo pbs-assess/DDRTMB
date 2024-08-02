@@ -58,10 +58,10 @@ get_posterior_derived_variables <- function(obj,mc,type="bysample", proj_years){
     posteriors_by_variable <- list()
     posteriors_by_variable$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(mcdf))
     posteriors_by_variable$numbers <- matrix(NA, ncol=nyrs+1, nrow=nrow(mcdf))
-    posteriors_by_variable$recruits <- matrix(NA, ncol=nyrs-dat$sage, nrow=nrow(mcdf))
+    posteriors_by_variable$recruits <- matrix(NA, ncol=nyrs-indat$sage, nrow=nrow(mcdf))
     posteriors_by_variable$surv <- matrix(NA, ncol=nyrs, nrow=nrow(mcdf))
     posteriors_by_variable$Ft <- matrix(NA, ncol=nyrs, nrow=nrow(mcdf))
-    posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(mcdf))
+    posteriors_by_variable$q <- matrix(NA, ncol=indat$nit, nrow=nrow(mcdf))
 
     # loop over posterior samples
     for(i in 1:nrow(mcdf)){

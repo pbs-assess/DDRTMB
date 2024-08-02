@@ -34,8 +34,8 @@ plsd <- readRDS(here("outputs","parameter_sds.rda"))
 plrad <- readRDS(here("outputs","derived_estimates.rda"))
 plradsd <- readRDS(here("outputs","derived_sds.rda"))
 
-yrs <-  dat$syr:dat$nyr
-pyrs <- dat$syr:(dat$nyr+1) # includes projection year
+yrs <-  indat$syr:indat$nyr
+pyrs <- indat$syr:(indat$nyr+1) # includes projection year
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  MPDs
@@ -43,29 +43,29 @@ pyrs <- dat$syr:(dat$nyr+1) # includes projection year
 # Basic plots - just use base R for now, for quickness
 # Catch
 png(here("outputs","figs","RTMB_MPD_CatchFit.png"), width=8, height=6, units="in", res=300)
-  maxY <- max(dat$catch$value)
+  maxY <- max(indat$catch$value)
   plot(yrs, plrad$ct, col=rtmbcol, lwd=3,type="l", ylim=c(0,maxY), xlab="Years", ylab="Catch (t)")
-  points(yrs, dat$catch$value, type="p", pch=19, cex=1.2, col=datcol)
-  arrows(x0=yrs, y0=dat$catch$value-0.05*dat$catch$value, x1 = yrs, y1=dat$catch$value+0.05*dat$catch$value, code = 0)
+  points(yrs, indat$catch$value, type="p", pch=19, cex=1.2, col=datcol)
+  arrows(x0=yrs, y0=indat$catch$value-0.05*indat$catch$value, x1 = yrs, y1=indat$catch$value+0.05*indat$catch$value, code = 0)
   legend("topright", legend=c("Data", "RTMB MPD"), lwd=3, col=c(datcol, rtmbcol) ,bty="n")
 dev.off()
 
 # Indices
 png(here("outputs","figs","RTMB_MPD_IndicesFit.png"), width=8, height=6, units="in", res=300)
   par(mfrow=c(2,3))
-  for(i in 1:dat$nit){
-    obsindex <- dat$indices[[i]]$it
-    iwt <- 1/(dat$indices[[i]]$wt) # Equivalent to CV (I think)
-    iyrs <- dat$indices[[i]]$iyr
+  for(i in 1:indat$nit){
+    obsindex <- indat$indices[[i]]$it
+    iwt <- 1/(indat$indices[[i]]$wt) # Equivalent to CV (I think)
+    iyrs <- indat$indices[[i]]$iyr
     # right now, rtmb is reporting all the it_hats in one vector.
     # Need to get them out
     if(i==1){
       n1 <- 1
-      n2 <- dat$nitnobs[i]
+      n2 <- indat$nitnobs[i]
       rtmbindex <- plrad$it_hat_all[n1:n2]
     }else{
       n1 <- n2+1
-      n2 <- n1+dat$nitnobs[i]-1
+      n2 <- n1+indat$nitnobs[i]-1
       rtmbindex <- plrad$it_hat_all[n1:n2]
     }
 
@@ -79,9 +79,9 @@ dev.off()
 
 # Annual mean weight
 # This is not robust to there being more than one mean weight series but good for initial testing
-obsindex <- dat$meanwtdata[[1]]$it
+obsindex <- indat$meanwtdata[[1]]$it
 iwt <- ctl$weight.sig
-iyrs <- dat$meanwtdata[[1]]$iyr
+iyrs <- indat$meanwtdata[[1]]$iyr
 rtmbindex <- plrad$annual_mean_weight_all
 png(here("outputs","figs","RTMB_MPD_MeanWeightFit.png"), width=8, height=6, units="in", res=300)
   maxY <- max(c((obsindex+2*iwt*obsindex),rtmbindex))
@@ -121,7 +121,7 @@ dev.off()
 
 # Derived recruits
 png(here("outputs","figs","RTMB_MPD_Recruits.png"), width=8, height=6, units="in", res=300)
-  recyrs <- (dat$syr+dat$sage):dat$nyr
+  recyrs <- (indat$syr+indat$sage):indat$nyr
   maxY <- max(plrad$rt+2*plradsd$rt)
   plot(recyrs, plrad$rt, pch=19, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Recruits")
   arrows(x0=recyrs, y0=(plrad$rt-2*plradsd$rt), x1 = recyrs, y1=(plrad$rt+2*plradsd$rt), code = 0, col=rtmbcol)
@@ -170,11 +170,11 @@ dev.off()
 
 # Catchability, q
 qnames <- "q1"
-for(i in 2:dat$nit){
+for(i in 2:indat$nit){
   qnames <- c(qnames, paste0("q",i))
 }
 png(here("outputs","figs","RTMB_MPD_q.png"), width=8, height=6, units="in", res=300)
-  Pars <- matrix(nrow=3, ncol=dat$nit)
+  Pars <- matrix(nrow=3, ncol=indat$nit)
   Pars[1,] <- c(plrad$q+2*plradsd$q)
   Pars[2,] <- c(plrad$q)
   Pars[3,] <- c(plrad$q-2*plradsd$q)

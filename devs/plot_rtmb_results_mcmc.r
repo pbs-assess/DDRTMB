@@ -37,7 +37,7 @@ mcmcdiagnostics <- readRDS(here("outputs","MCMC_diagnostics.rda"))
 # Put all estimated scalar parameters together
 # Normally EIV pars would be here too but they are fixed for pcod
 qit <- paste0("q",1)
-for(i in 2:dat$nit){
+for(i in 2:indat$nit){
   qit <- c(qit,paste0("q",i))
 }
 post_pars <- cbind(mcmcpars[,1:3], mcmcderived$q)
@@ -69,7 +69,7 @@ post_biomass <- mcmcderived$biomass %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:(dat$nyr+1)) %>%
+  mutate(Year=indat$syr:(indat$nyr+1)) %>%
   ggplot() +
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="blue", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="blue")+
@@ -83,7 +83,7 @@ post_ft_rtmb <- mcmcderived$Ft %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:dat$nyr) %>%
+  mutate(Year=indat$syr:indat$nyr) %>%
   ggplot() +
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="blue", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="blue")+
@@ -97,7 +97,7 @@ post_recruits_rtmb <- mcmcderived$recruits %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
+  mutate(Year=(indat$syr+indat$sage):indat$nyr) %>%
   ggplot() +
   geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="blue", alpha = 0.5) +
   xlab("Year") + ylab("Posterior recruits")+ggtitle("rtmb")+
@@ -110,7 +110,7 @@ post_logrecdevs_rtmb <- mcmcpars[,79:141] %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
+  mutate(Year=(indat$syr+indat$sage):indat$nyr) %>%
   ggplot() +
   geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="blue", alpha = 0.5) +
   geom_hline(yintercept=0, lty=2)+

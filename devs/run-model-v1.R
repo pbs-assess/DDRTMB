@@ -59,7 +59,7 @@
 
 # Load documentation and inputs
 # All the functions called here assume that this has been done and
-# key objects dat, ctl and pfc are in the global space
+# key objects indat, ctl and pfc are in the global space
 devtools::document()
 devtools::load_all()
 
@@ -69,6 +69,7 @@ library(purrr)
 library(RTMB)
 library(tmbstan)
 
+# Once the package is set up correctly, will not have to source individual files
 # eventually move to standard R statistical functions
 # Currently using facsimiles of the needed functions from ADMB statsLib.h
 source(here("R/likelihood_funcs.R"))
@@ -102,37 +103,37 @@ testrefpts <- FALSE # for testing msy ref points to make sure eqm calcs are corr
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Input lists (*run filter-inputs.R first*)
 # Many of the other scripts rely on these objects being in the global space
-dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
+indat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
 ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
 pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
-nyrs <- dat$nyr-dat$syr+1
+nyrs <- indat$nyr-indat$syr+1
 
 # TODO: Everything being put in the global space here should be
-#  inside the model function and should come from dat (via the getAll function)
+#  inside the model function and should come from indat (via the getAll function)
 #  i.e., the model function needs a DATA_SECTION
-yrs  <-  dat$syr:dat$nyr
-ages <-  dat$sage:dat$nage
+yrs  <-  indat$syr:indat$nyr
+ages <-  indat$sage:indat$nage
 
-# **Maybe add all of these objects to dat**
+# **Maybe add all of these objects to indat**
 # get the number of and index for commercial (fishery) fleets
 nfleet <- 0 # number of fishing fleets (not surveys)
-for(i in 1:dat$ngear){
-  nfleet <- ifelse(dat$alloc[i]>0, nfleet+1, nfleet) # not sure if this is needed
+for(i in 1:indat$ngear){
+  nfleet <- ifelse(indat$alloc[i]>0, nfleet+1, nfleet) # not sure if this is needed
 }
 
 # Index to identfy which gears are fishing fleets
-fleetindex <- which(dat$alloc>0)
+fleetindex <- which(indat$alloc>0)
 
 # get number of estimated log_ft parameters
-ft_count = dat$nctobs # one estimated ft per catch obs
+ft_count = indat$nctobs # one estimated ft per catch obs
 
 # Create a lookup for years because ADMB works with actual years as index
 year_lookup <- as.data.frame(cbind(yrs, 1:nyrs))
 colnames(year_lookup) <- c("year", "year_index")
 
 # Get length and weight at age for first year (for initializing population at non-equilibrium, ctl$misc[5]==0)
-la <- dat$linf*(1. - exp(-dat$k*(ages-dat$to)))
-wa <- dat$lwscal*la^dat$lwpow
+la <- indat$linf*(1. - exp(-indat$k*(ages-indat$to)))
+wa <- indat$lwscal*la^indat$lwpow
 d3_wt_avg <- wa # just to be consistent with iscam rep file
 
 # Get settings for priors
@@ -163,7 +164,7 @@ par$rho <- theta_control[6,1] # Errors in Variables: fraction of the total varia
 par$kappa <- theta_control[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
 # TODO: Check these are dimensioned and initialized correctly
 par$log_ft_pars <- numeric(nyrs) # estimated log fishing mortalities (total across fleets)
-par$init_log_rec_devs <- numeric(length=length((dat$sage+1):dat$nage)) # I think this is length nage-sage+1 (i.e., length 2:9)
+par$init_log_rec_devs <- numeric(length=length((indat$sage+1):indat$nage)) # I think this is length nage-sage+1 (i.e., length 2:9)
 par$log_rec_devs <- numeric(nyrs)
 par
 
@@ -209,7 +210,7 @@ saveRDS(plradsd, here("outputs","derived_sds.rda"))
 # Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mpd.r"))
-source(here("R","plot_rtmb_results_mpd.r"))
+source(here("devs","plot_rtmb_results_mpd.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 4. MCMCs - Posterior parameter estimates
@@ -308,7 +309,7 @@ saveRDS(posteriors_by_sample, here("outputs","MCMC_outputs_bysample.rda"))
 # Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mcmc.r"))
-source(here("R","plot_rtmb_results_mcmc.r"))
+source(here("devs","plot_rtmb_results_mcmc.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Projections - post MCMC step
