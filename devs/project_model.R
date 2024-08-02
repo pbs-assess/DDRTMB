@@ -5,7 +5,7 @@
 
 # Author: Robyn Forrest
 # Date created:  July 26, 2024
-# Last Modified: August 1, 2024
+# Last Modified: August 2, 2024
 
 # This model takes one sample of posterior parameters and historical estimates
 #  and projects biomass and F forward the number of projection years (proj_years)
@@ -25,10 +25,6 @@
 # A one-row data frame for the tac
 #  all the variables of interest for the decision tables
 #  If pyr>1, projections for subsequent years will be appended columnwise
-
-
-# TODO:
-# Add reference point calcs and calculate projected stock status
 
 library(here)
 library(RTMB)

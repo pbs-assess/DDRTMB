@@ -11,9 +11,9 @@
 #
 # FIRST run the model in run-model-v1.R
 # Load documentation and inputs
-# Uncomment these 2 lines if running standalone
-devtools::document()
-devtools::load_all()
+# # Uncomment these 2 lines if running standalone
+# devtools::document()
+# devtools::load_all()
 
 library(tidyverse)
 library(reshape2)
