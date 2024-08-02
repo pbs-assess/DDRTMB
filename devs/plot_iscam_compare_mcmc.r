@@ -49,7 +49,7 @@ iscamfmort <- read_csv(here("data-raw/iscam_ft_mcmc.csv"))
 iscampars <- iscampars[1001:2000,]
 iscamrecruits <- iscamrecruits[1001:2000,]
 iscamrecdevs <- iscamrecdevs[1001:2000,]
-iscamfmort <- iscamfmort[1001:2000,1:(indat$nyr-indat$syr+1)] # take  only gear 1, remove survey gears
+iscamfmort <- iscamfmort[1001:2000,1:(dat$nyr-dat$syr+1)] # take  only gear 1, remove survey gears
 
 # Parameter histograms (without and with priors)
 # 1. Simple individual histograms
@@ -65,12 +65,12 @@ png(here("outputs","figs","CompareLeadingParams_MCMC.png"), width=8, height=6, u
 dev.off()
 
 png(here("outputs","figs","Compareq_MCMC.png"), width=8, height=6, units="in", res=300)
-  par(mfrow=c(2,indat$nit),mai=rep(0.3,4),oma=c(0.5,0.5,0.1,0.1))
-  for(i in 1:indat$nit) {
+  par(mfrow=c(2,dat$nit),mai=rep(0.3,4),oma=c(0.5,0.5,0.1,0.1))
+  for(i in 1:dat$nit) {
     qit <- paste0("q",i)
     hist(mcmcderived$q[,i],col="darkblue", main=qit, xlab="")
   }
-  for(i in 1:indat$nit) {
+  for(i in 1:dat$nit) {
     qit <- paste0("q",i)
     hist(as.matrix(iscampars)[,qit], col="red", main=qit, xlab="")
   }
@@ -83,7 +83,7 @@ post_biomass_rtmb <- mcmcderived$biomass %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=indat$syr:(indat$nyr+1)) %>%
+  mutate(Year=dat$syr:(dat$nyr+1)) %>%
   ggplot() +
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="blue", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="blue")+
@@ -95,7 +95,7 @@ post_biomass_iscam <- iscambiomass %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=indat$syr:(indat$nyr+1)) %>%
+  mutate(Year=dat$syr:(dat$nyr+1)) %>%
   ggplot() +
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="red", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="red")+
@@ -111,7 +111,7 @@ post_ft_rtmb <- mcmcderived$Ft %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=indat$syr:indat$nyr) %>%
+  mutate(Year=dat$syr:dat$nyr) %>%
   ggplot() +
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="blue", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="blue")+
@@ -125,7 +125,7 @@ post_ft_iscam <- iscamfmort %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=indat$syr:indat$nyr) %>%
+  mutate(Year=dat$syr:dat$nyr) %>%
   ggplot() +
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="red", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="red")+
@@ -141,7 +141,7 @@ post_recruits_rtmb <- mcmcderived$recruits %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=(indat$syr+indat$sage):indat$nyr) %>%
+  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
   ggplot() +
   geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="blue", alpha = 0.5) +
   xlab("Year") + ylab("Posterior recruits")+ggtitle("rtmb")+
@@ -153,7 +153,7 @@ post_recruits_iscam <- iscamrecruits %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=(indat$syr+indat$sage):indat$nyr) %>%
+  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
   ggplot() +
   geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="red", alpha = 0.5) +
   xlab("Year") + ylab("Posterior recruits")+ggtitle("iscam")+
@@ -168,7 +168,7 @@ post_logrecdevs_rtmb <- mcmcpars[,79:141] %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=(indat$syr+indat$sage):indat$nyr) %>%
+  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
   ggplot() +
   geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="blue", alpha = 0.5) +
   geom_hline(yintercept=0, lty=2)+
@@ -181,7 +181,7 @@ post_logrecdevs_iscam <- iscamrecdevs %>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=(indat$syr+indat$sage):indat$nyr) %>%
+  mutate(Year=(dat$syr+dat$sage):dat$nyr) %>%
   ggplot() +
   geom_pointrange(aes(x=Year,y=med, ymin=lwr, ymax=upr), col="red", alpha = 0.5) +
   geom_hline(yintercept=0, lty=2)+

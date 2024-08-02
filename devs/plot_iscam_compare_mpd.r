@@ -36,37 +36,37 @@ plradsd <- readRDS(here("outputs","derived_sds.rda"))
 pcod2020rep <- read.report.file("data-raw/iscam.rep")
 pcod2020par <- read.par.file("data-raw/iscam.par")
 
-yrs <-  indat$syr:indat$nyr
-pyrs <- indat$syr:(indat$nyr+1) # includes projection year
+yrs <-  dat$syr:dat$nyr
+pyrs <- dat$syr:(dat$nyr+1) # includes projection year
 
 # Basic plots - just use base R for quickness
 # Catch
 png(here("outputs","figs","CompareCatch.png"), width=8, height=6, units="in", res=300)
-  maxY <- max(indat$catch$value)
+  maxY <- max(dat$catch$value)
   plot(yrs, pcod2020rep$ct, col=iscamcol, lwd=3,type="l", ylim=c(0,maxY), xlab="Years", ylab="Catch (t)")
   lines(yrs, plrad$ct, col=rtmbcol, lwd=3, lty=2)
-  points(yrs, indat$catch$value, type="p", pch=19, cex=1.2, col=datcol)
-  arrows(x0=yrs, y0=indat$catch$value-0.05*indat$catch$value, x1 = yrs, y1=indat$catch$value+0.05*indat$catch$value, code = 0)
+  points(yrs, dat$catch$value, type="p", pch=19, cex=1.2, col=datcol)
+  arrows(x0=yrs, y0=dat$catch$value-0.05*dat$catch$value, x1 = yrs, y1=dat$catch$value+0.05*dat$catch$value, code = 0)
   legend("topright", legend=c("Data", "RTMB", "iscam MPD"), lwd=3, col=c(datcol, rtmbcol, iscamcol) ,bty="n")
 dev.off()
 
 # Indices
 png(here("outputs","figs","CompareIndices.png"), width=8, height=6, units="in", res=300)
   par(mfrow=c(2,3))
-  for(i in 1:indat$nit){
-    obsindex <- indat$indices[[i]]$it
-    iwt <- 1/(indat$indices[[i]]$wt) # Equivalent to CV (I think)
-    iyrs <- indat$indices[[i]]$iyr
+  for(i in 1:dat$nit){
+    obsindex <- dat$indices[[i]]$it
+    iwt <- 1/(dat$indices[[i]]$wt) # Equivalent to CV (I think)
+    iyrs <- dat$indices[[i]]$iyr
     iscamindex <- pcod2020rep$it_hat[i,][which(!is.na(pcod2020rep$it_hat[i,]))]
     # right now, rtmb is reporting all the it_hats in one vector.
     # Need to get them out
     if(i==1){
       n1 <- 1
-      n2 <- indat$nitnobs[i]
+      n2 <- dat$nitnobs[i]
       rtmbindex <- plrad$it_hat_all[n1:n2]
     }else{
       n1 <- n2+1
-      n2 <- n1+indat$nitnobs[i]-1
+      n2 <- n1+dat$nitnobs[i]-1
       rtmbindex <- plrad$it_hat_all[n1:n2]
     }
 
@@ -81,9 +81,9 @@ dev.off()
 
 # Annual mean weight
 # This is not robust to there being more than one mean weight series but good for initial testing
-obsindex <- indat$meanwtdata[[1]]$it
+obsindex <- dat$meanwtdata[[1]]$it
 iwt <- ctl$weight.sig
-iyrs <- indat$meanwtdata[[1]]$iyr
+iyrs <- dat$meanwtdata[[1]]$iyr
 iscamindex <- pcod2020rep$annual_mean_weight
 rtmbindex <- plrad$annual_mean_weight_all
 png(here("outputs","figs","CompareMeanWeight.png"), width=8, height=6, units="in", res=300)
@@ -131,7 +131,7 @@ dev.off()
 
 # Derived recruits
 png(here("outputs","figs","CompareRecruits.png"), width=8, height=6, units="in", res=300)
-  recyrs <- (indat$syr+indat$sage):indat$nyr
+  recyrs <- (dat$syr+dat$sage):dat$nyr
   maxY <- max(c(pcod2020rep$rt,(plrad$rt+2*plradsd$rt)))
   plot(recyrs, plrad$rt, pch=19, col=rtmbcol, ylim=c(0,maxY), xlab="Years", ylab="Recruits")
   arrows(x0=recyrs, y0=(plrad$rt-2*plradsd$rt), x1 = recyrs, y1=(plrad$rt+2*plradsd$rt), code = 0, col=rtmbcol)
@@ -182,11 +182,11 @@ dev.off()
 
 # Catchability, q
 qcolnames <- "q1"
-for(i in 2:indat$nit){
+for(i in 2:dat$nit){
   qcolnames <- c(qcolnames, paste0("q",i))
 }
 png(here("outputs","figs","Compareq.png"), width=8, height=6, units="in", res=300)
-  Pars <- matrix(nrow=2, ncol=indat$nit)
+  Pars <- matrix(nrow=2, ncol=dat$nit)
   Pars[1,] <- c(plrad$q)
   Pars[2,] <- c(pcod2020rep$q)
   colnames(Pars) <- qcolnames

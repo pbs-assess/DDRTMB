@@ -41,9 +41,9 @@ ddiff_msy <- function(posteriors){
    M <- exp(posteriors$log_m)
    ro <- exp(posteriors$log_ro)
    # alpha_g, rho_g and wk = growth parameters from the dat file - assumes dat is in global space
-   alpha_g <- indat$alpha.g
-   rho_g <- indat$rho.g
-   wk <- indat$wk
+   alpha_g <- dat$alpha.g
+   rho_g <- dat$rho.g
+   wk <- dat$wk
 
    ye <- numeric(nft)
    be <- numeric(nft)
@@ -96,10 +96,10 @@ ddiff_msy_long <- function(posteriors){
   # alpha_g, rho_g and wk = growth parameters from the dat file
   # kage = age at recrtuitment from the dat file
   # srr = stock recruit relationship 1=BH, 2=Ricker, from the ctl file
-  alpha_g <- indat$alpha.g
-  rho_g <- indat$rho.g
-  wk <- indat$wk
-  kage <- indat$kage
+  alpha_g <- dat$alpha.g
+  rho_g <- dat$rho.g
+  wk <- dat$wk
+  kage <- dat$kage
   srr <- ctl$misc[2]
 
   ye <- numeric(nft)
@@ -127,7 +127,7 @@ ddiff_msy_long <- function(posteriors){
     recruits[1] <- ro
 
     for(i in 2:nyrs){
-       if(i <= indat$kage){
+       if(i <= dat$kage){
          recruits[i] <- ro
        }else{
          sbt <- biomass[i-kage]
@@ -169,7 +169,7 @@ ddiff_msy_long <- function(posteriors){
 
 calc_hist_refpts <- function(posteriors){
 
-  yrs  <- indat$syr:indat$nyr # actual historical years
+  yrs  <- dat$syr:dat$nyr # actual historical years
   nyrs <- length(yrs) # number of historical years
 
   biomass <- posteriors$biomass

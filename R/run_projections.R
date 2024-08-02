@@ -22,12 +22,12 @@
 
 # NOTE: as for all the function scripts, this function assumes that dat, ctl and pfc
 #  are already in the global space
-
 run_projections <- function(posteriors){
 
   npyr <- posteriors$proj_years # number of projection years (set by user)
-  pyr  <- indat$nyr+1+npyr # actual final projection year
-  pyrs <- (indat$nyr+1+1):(indat$nyr+1+npyr) # actual years of projection period
+  pyr_s <- dat$nyr+1+1 # first projection year
+  pyr  <- dat$nyr+1+npyr # actual final projection year
+  pyrs <- pyr_s:pyr # actual years of projection period
 
   # List object for projection outputs
   # These will be the inputs for decision tables

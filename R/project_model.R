@@ -53,16 +53,16 @@ source(here("R","calc_reference_points.R"))
 project_model <- function(posteriors,
                           tac){
 
-  #getAll(indat,ctl,pfc) # RTMB function. Puts arguments into global space
+  #getAll(dat,ctl,pfc) # RTMB function. Puts arguments into global space
 
   # Get the years for the projection under the tac
   # The model projects biomass into nyr+1 based on catches to nyr.
   #  pyr determines the number of projection years *after* this for
   #    decision tables
   npyr <- posteriors$proj_years # number of projection years (set by user)
-  pyr  <- indat$nyr+1+npyr # actual final projection year
-  pyrs <- (indat$nyr+1+1):(indat$nyr+1+npyr) # actual years of projection period
-  yrs  <- indat$syr:indat$nyr # actual historical years
+  pyr  <- dat$nyr+1+npyr # actual final projection year
+  pyrs <- (dat$nyr+1+1):(dat$nyr+1+npyr) # actual years of projection period
+  yrs  <- dat$syr:dat$nyr # actual historical years
   nyrs <- length(yrs) # number of historical years
 
   # Create a lookup for years because ADMB works with actual years as index
@@ -91,17 +91,17 @@ project_model <- function(posteriors,
     # recruits
     set.seed(99+i)
     xx  <- rnorm(1)*tau
-    sbt <- biomass[i-indat$kage]
+    sbt <- biomass[i-dat$kage]
 
     # BH (1) or Ricker (2)
     if(ctl$misc[2]==1)recruits[i] <- (posteriors$alpha.sr*sbt/(1.+posteriors$beta.sr*sbt))*exp(xx-0.5*tau*tau)
     if(ctl$misc[2]==2)recruits[i] <- (posteriors$alpha.sr*sbt*exp(-posteriors$beta.sr*sbt))*exp(xx-0.5*tau*tau)
 
     #numbers and biomass
-    # for indat$nyr+1 the projected values using final historical year catch
+    # for dat$nyr+1 the projected values using final historical year catch
     #   are already included in the biomass and numbers vectors
     if(i>(nyrs+1)){
-       biomass[i] <- (surv[i-1]*(indat$rho.g*biomass[i-1]+alpha.g*numbers[i-1])+indat$wk*recruits[i])
+       biomass[i] <- (surv[i-1]*(dat$rho.g*biomass[i-1]+alpha.g*numbers[i-1])+dat$wk*recruits[i])
        numbers[i] <- surv[i-1]*numbers[i-1]+recruits[i]
      }
 
