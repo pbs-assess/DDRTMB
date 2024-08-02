@@ -74,6 +74,7 @@ source(here("R/likelihood_funcs.R"))
 # The model function is in a separate file
 # There is a bunch of stuff in the global space that it needs
 source(here("R/model.R"))
+source(here("devs/project_model.R"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
@@ -360,14 +361,14 @@ posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
 # Need to loop over future TACs but do not need to loop
 #  over posterior samples. Let purrr do that.
-for(i in 1:2){
+for(i in 1:10){
   print(i)
   tac <- pfc$tac.vec[i]
 
   # Run the projection model for tac[i]
   proj_out[[i]] <- purrr::map2_df(posteriors_by_sample, tac, project_model)
 }
-names(proj_out) <- pfc$tac.vec[1:5]
+names(proj_out) <- pfc$tac.vec[1:10]
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Get reference points
