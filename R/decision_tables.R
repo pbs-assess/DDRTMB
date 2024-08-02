@@ -1,4 +1,4 @@
-decision.table <- function(proj_outputs){
+decision_table <- function(proj_outputs){
 
   dtable <- as.data.frame(matrix(NA,
                               ncol = 6,

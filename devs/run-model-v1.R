@@ -76,7 +76,7 @@ source(here("R/likelihood_funcs.R"))
 # The model function is in a separate file
 # There is a bunch of stuff in the global space that it needs
 source(here("R/model.R"))
-source(here("devs/project_model.R"))
+source(here("R/project_model.R"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
@@ -279,6 +279,7 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 #    loop through each posterior sample (row) and call the report function"
 
 # Version 1: for reporting, graphs etc
+# posteriors_by_variable
 # This is a list where each element is a variable of interest
 # Make a list for putting posterior estimates of biomass,
 #    recruits and q
@@ -286,7 +287,7 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 #    already reported in the mc object
 #   (but have added Ft to REPORT to simplify projection model)
 
-# Read in posterior samples (in case you have already saved the mc outputs)
+# Read in posterior samples (in case you have already saved the mc outputs and don't want to run them again)
 mc.df <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
 
 # Get the posterior output from tmbstan, as matrix
@@ -301,6 +302,7 @@ posteriors_by_variable$Ft <- matrix(NA, ncol=nyrs, nrow=nrow(post))
 posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
 
 # Version 2: for projections
+# posteriors_by_sample
 # This is a list where each element is a posterior sample
 #  containing all the variables needed for the proj model
 #  Gets passed to projection model using purrr::map2_df()
@@ -356,7 +358,7 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #       Having one list object per tac will be easier for getting
 #       out the probabilities
 
-# Read in posterior samples (in case just not re-running mcmcs)
+# Read in posterior samples (instead of re-running mcmcs)
 posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
 projections_output <- run_projections(posteriors_by_sample)

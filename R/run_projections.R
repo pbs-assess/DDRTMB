@@ -2,6 +2,7 @@
 # RUN PROJECTIONS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # run_projections
+# Called from run-model-v1.R
 
 # Author: Robyn Forrest
 # Date created:  August 2, 2024
@@ -53,6 +54,7 @@ run_projections <- function(posteriors){
   # Note that the function depends on dat and ctl being in the global space
   msyrefpts <- purrr::map_df(posteriors_by_sample,ddiff_msy)
 
+  # testrefpts should be in global space
   if(testrefpts == TRUE){
     # For testing ddiff_msy - run out a delay difference model for 100 years
     #   to make sure eqm calcs in ddiff_msy are actually returning eqm values

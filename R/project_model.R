@@ -3,6 +3,8 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # projection_model (based on iscam project_model_dd (see devs\iscam.tpl))
 
+# Called from run_projections()
+
 # Author: Robyn Forrest
 # Date created:  July 26, 2024
 # Last Modified: August 2, 2024
@@ -31,14 +33,14 @@ library(RTMB)
 source(here("R","get_ftdd.R"))
 source(here("R","calc_reference_points.R"))
 
-# Load documentation and inputs - technically, this should happen only once in run-model
-devtools::document()
-devtools::load_all()
+# Load documentation and inputs
+# devtools::document()
+# devtools::load_all()
 
 # Get global inputs
-dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
-ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
-pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
+# dat <- pcod2020dat # Data inputs. Use ?pcod2020dat to see definitions
+# ctl <- pcod2020ctl # Control inputs. Use ?pcod2020ctl to see definitions. Not all used in d-d model
+# pfc <- pcod2020pfc # Control inputs for projections. Use ?pcod2020pfc to see definitions
 
 ########################################################################
 # For testing only. DELETE AFTER TESTING!
