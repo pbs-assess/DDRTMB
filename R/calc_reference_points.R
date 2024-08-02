@@ -27,21 +27,23 @@
 # 1. ddiff_msy - delay-difference equilibrium calculations
 # arguments:
 # posteriors = a list of posterior outputs from one mcmc posterior sample
-# alpha_g, rho_g and wk = growth parameters from the dat file
+# alpha_g, rho_g and wk = growth parameters from the dat file - assumes dat is in global space
 
 # Returns:
 # a list with msy, fmsy and bmsy for that posterior sample
 
-ddiff_msy <- function(posteriors,
-                           alpha_g,
-                           rho_g,
-                           wk){
+ddiff_msy <- function(posteriors){
+
    ftest <- seq(0,3,by=.001)
    nft <- length(ftest)
    rec_a <- posteriors$alpha.sr
    rec_b <- posteriors$beta.sr
    M <- exp(posteriors$log_m)
    ro <- exp(posteriors$log_ro)
+
+   alpha_g <- dat$alpha.g
+   rho_g <- dat$rho.g
+   wk <- dat$wk
 
    ye <- numeric(nft)
    be <- numeric(nft)
@@ -132,7 +134,7 @@ ddiff_msy_long <- function(posteriors,
          if(srr==2)recruits[i] <- (posteriors$alpha.sr*sbt*exp(-posteriors$beta.sr*sbt))
        }
 
-      biomass[i] <- surv*(rho.g*biomass[i-1]+alpha.g*numbers[i-1]) +wk*recruits[i] # eq. 9.2.5 in HW
+      biomass[i] <- surv*(rho_g*biomass[i-1]+alpha_g*numbers[i-1]) +wk*recruits[i] # eq. 9.2.5 in HW
       numbers[i] <- surv*numbers[i-1]+recruits[i]
 
     } # end i loop (yrs)
@@ -153,4 +155,31 @@ ddiff_msy_long <- function(posteriors,
   return(out)
 
 } # end function
+
+# Historical reference points
+
+calc_hist_refpts <- function(posteriors){
+
+  yrs  <- dat$syr:dat$nyr # actual historical years
+  nyrs <- length(yrs) # number of historical years
+
+  biomass <- posteriors$biomass
+  ft <- posteriors$Ft
+
+  # Create a lookup for years because ADMB works with actual years as index
+  year_lookup <- as.data.frame(cbind(yrs, 1:nyrs))
+  colnames(year_lookup) <- c("year", "year_index")
+
+  endyr_refpt <- pfc$ctl.options[7]
+  endyr_refpt_ind <- year_lookup[which(year_lookup[,1]==endyr_refpt),2]
+  bminyr <- pfc$ctl.options[9]
+  bminyr_ind <- year_lookup[which(year_lookup[,1]==bminyr),2]
+
+  bavg <- mean(biomass[1:endyr_refpt_ind])
+  favg <- mean(ft[1:endyr_refpt_ind])
+  bmin  <- biomass[bminyr_ind]
+
+  out <- list("bavg"=bavg, "favg"=favg, "bmin"=bmin)
+  return(out)
+}
 

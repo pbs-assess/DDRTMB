@@ -374,37 +374,26 @@ names(proj_out) <- pfc$tac.vec[1:10]
 # Get reference points
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Historical reference points first
-endyr_refpt <- pfc$ctl.options[7]
-endyr_refpt_ind <- year_lookup[which(year_lookup[,1]==endyr_refpt),2]
-bminyr <- pfc$ctl.options[9]
-bminyr_ind <- year_lookup[which(year_lookup[,1]==bminyr),2]
-
-bavg <- mean(biomass[1:endyr_refpt_ind])
-favg <- mean(ft[1:endyr_refpt_ind])
-bmin  <- biomass[bminyr_ind]
+# Note that the function depends on dat and pfc being in the global space
+histrefpts <- purrr::map_df(posteriors_by_sample,calc_hist_refpts)
 
 # 2. Do MSY-based reference points
-# Do the slow way first - but takes less than a second
-#  for one posterior sample
-# Returns a list of msy, fmsy and bmsy
-# ctl$misc[2] indicates stock-recruit relationship 1=BH, 2=Ricker
-msyrefpts <- ddiff_msy(posteriors,
-                       dat$alpha.g,
-                       dat$rho.g,
-                       dat$wk)
+# Note that the function depends on dat and ctl being in the global space
+# should be able to run with purrr
+msyrefpts <- purrr::map_df(posteriors_by_sample,ddiff_msy)
 
 # For testing ddiff_msy - run out a delay difference model for 100 years
 #  to make sure eqm calcs in ddiff_msy are actually returning eqm values
-msyrefpts_long <- ddiff_msy_long(posteriors,
-                                 dat$alpha.g,
-                                 dat$rho.g,
-                                 dat$wk,
-                                 dat$kage,
-                                 ctl$misc[2])
-
-# compare to check that msyrefpts is working - YES!!
-msyrefpts
-msyrefpts_long
+# msyrefpts_long <- ddiff_msy_long(posteriors_by_sample[[1]],
+#                                  dat$alpha.g,
+#                                  dat$rho.g,
+#                                  dat$wk,
+#                                  dat$kage,
+#                                  ctl$misc[2])
+#
+# # compare to check that msyrefpts is working - YES!!
+# c(msyrefpts$msy[1],msyrefpts$fmsy[1],msyrefpts$bmsy[1],msyrefpts$bo[1])
+# msyrefpts_long
 
 msy <- msyrefpts$msy
 fmsy <- msyrefpts$fmsy
