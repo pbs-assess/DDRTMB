@@ -314,12 +314,10 @@ source(here("R","plot_rtmb_results_mcmc.r"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NEED:
 # 1. Posterior samples from the historical period (syr:nyr),
-#     plus the leading parameters log_ro, h and log_m
-#   i) Biomass, Numbers, Fishing mortality, Survival rate
-#        and Recruits from the historical period
-#        (from posteriors object)
+#     plus posterior estimates of leading parameters log_ro, h and log_m
+#     (from posteriors_by_sample object)
 # 2. A vector of future TACs (from pfc file)
-# 3. Number of projection years (added above to posteriors object)
+# 3. Number of projection years (added above to posteriors_by_sample object)
 
 # Outputs are in a list:
 #   one list item per tac (from pfc$tac.vec)
@@ -329,7 +327,7 @@ source(here("R","plot_rtmb_results_mcmc.r"))
 # NOTE: iscam had a giant matrix. It was slightly challenging to
 #       get the results out for the decision tables.
 #       Having one list object per tac will be easier for getting
-#       out the probabilities
+#       the probabilities by tac
 
 # Read in posterior samples (instead of re-running mcmcs)
 posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))

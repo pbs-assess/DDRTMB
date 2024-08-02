@@ -63,18 +63,19 @@ run_projections <- function(posteriors){
     samp <- 1
     msyrefpts_long <- ddiff_msy_long(posteriors_by_sample[[samp]])
 
-    if(msyrefpts_long[1]==msyrefpts$msy[samp]&&
-       msyrefpts_long[2]==msyrefpts$fmsy[samp]&&
-       msyrefpts_long[3]==msyrefpts$bmsy[samp]&&
-       msyrefpts_long[4]==msyrefpts$bo[samp]){
+    if(round(msyrefpts_long[1],2)==round(msyrefpts$msy[samp],2)&&
+       round(msyrefpts_long[2],2)==round(msyrefpts$fmsy[samp],2)&&
+       round(msyrefpts_long[3],2)==round(msyrefpts$bmsy[samp],2)&&
+       round(msyrefpts_long[4],2)==round(msyrefpts$bo[samp],2)){
       message("Equilibrium reference points match long model!\n")
     }else{
       message("Equilibrium reference points DO NOT match long model!\n")
-      print("Long model")
-      print(msyrefpts_long)
-      print("Equilibrium model")
-      print(c(msyrefpts$msy[samp],msyrefpts$fmsy[samp],msyrefpts$bmsy[samp],msyrefpts$bo[samp]))
     } # end ifelse
+    print(paste("Long model for posterior sample",samp))
+    print(msyrefpts_long)
+    print(paste("Equilibrium model for posterior sample",samp))
+    print(c(round(msyrefpts$msy[samp],2),round(msyrefpts$fmsy[samp],2),
+            round(msyrefpts$bmsy[samp],2),round(msyrefpts$bo[samp],2)))
   } # end if
 
   # Add reference points to proj_out (they are the same for each tac)
