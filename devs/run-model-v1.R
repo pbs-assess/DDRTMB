@@ -78,7 +78,7 @@ source(here("R/model.R"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nsample <- 5000 # number of posterior samples for the mcmc
+nsample <- 1000 # number of posterior samples for the mcmc
 nchain <- # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 1 # How many projection years for decision table
 # Set test mode for testing model with MPD estimates from pcod2020 test file
@@ -280,11 +280,15 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 # Note that parameters, rec devs and logf are
 #    already reported in the mc object
 #   (but have added Ft to REPORT to simplify projection model)
+
+# Get the posterior output from tmbstan, as matrix
+post <- as.matrix(mc.df)
+
 posteriors_by_variable <- list()
 posteriors_by_variable$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
 posteriors_by_variable$numbers <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
 posteriors_by_variable$recruits <- matrix(NA, ncol=nyrs-dat$sage, nrow=nrow(post))
-posteriors_by_variable$S <- matrix(NA, ncol=nyrs, nrow=nrow(post))
+posteriors_by_variable$surv <- matrix(NA, ncol=nyrs, nrow=nrow(post))
 posteriors_by_variable$Ft <- matrix(NA, ncol=nyrs, nrow=nrow(post))
 posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
 
@@ -293,9 +297,6 @@ posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
 #  containing all the variables needed for the proj model
 #  Gets passed to projection model using purrr::map2_df()
 posteriors_by_sample <- list()
-
-# Get the posterior output from tmbstan, as matrix
-post <- as.matrix(mc.df)
 
 for(i in 1:nrow(post)){
   r <- obj$report(post[i,])
@@ -359,7 +360,8 @@ posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
 # Need to loop over future TACs but do not need to loop
 #  over posterior samples. Let purrr do that.
-for(i in 1:5){
+for(i in 1:2){
+  print(i)
   tac <- pfc$tac.vec[i]
 
   # Run the projection model for tac[i]
