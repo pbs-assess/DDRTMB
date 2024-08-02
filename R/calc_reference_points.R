@@ -27,7 +27,7 @@
 # posteriors = a list of posterior outputs from one mcmc posterior sample
 
 # Returns:
-# a list with msy, fmsy, bmsy and bo for that posterior sample
+# a df with msy, fmsy, bmsy and bo for that posterior sample
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ddiff_msy <- function(posteriors){
@@ -67,7 +67,7 @@ ddiff_msy <- function(posteriors){
   fmsy <- ftest[which(ye==msy)]
   bmsy <- be[which(ye==msy)]
 
-  out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy, "bo"=be[1])
+  out <- data.frame("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy, "bo"=be[1])
 
   return(out)
 } # end function
@@ -78,7 +78,7 @@ ddiff_msy <- function(posteriors){
 # posteriors = a list of posterior outputs from one mcmc posterior sample
 
 # Returns:
-# a list with msy, fmsy, bmsy and bo for that posterior sample
+# a df with msy, fmsy, bmsy and bo for that posterior sample
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ddiff_msy_long <- function(posteriors){
@@ -149,7 +149,7 @@ ddiff_msy_long <- function(posteriors){
   fmsy <- ftest[which(ye==msy)]
   bmsy <- be[which(ye==msy)]
 
-  out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy, "bo"=bo)
+  out <- data.frame("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy, "bo"=bo)
 
   return(out)
 
@@ -162,7 +162,7 @@ ddiff_msy_long <- function(posteriors){
 # posteriors = a list of posterior outputs from one mcmc posterior sample
 
 # Returns:
-# a list with bavg, favg and bmin for that posterior sample
+# a df with bavg, favg and bmin for that posterior sample
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 calc_hist_refpts <- function(posteriors){
@@ -186,7 +186,7 @@ calc_hist_refpts <- function(posteriors){
   favg <- mean(ft[1:endyr_refpt_ind])
   bmin  <- biomass[bminyr_ind]
 
-  out <- list("bavg"=bavg, "favg"=favg, "bmin"=bmin)
+  out <- data.frame("bavg"=bavg, "favg"=favg, "bmin"=bmin)
   return(out)
 }
 

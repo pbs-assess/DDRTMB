@@ -361,44 +361,44 @@ posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
 # Need to loop over future TACs but do not need to loop
 #  over posterior samples. Let purrr do that.
-for(i in 1:10){
-  print(i)
+ntac <- pfc$num.tac
+
+for(i in 1:ntac){
   tac <- pfc$tac.vec[i]
+  message(paste("Getting projections for TAC",tac))
 
   # Run the projection model for tac[i]
   proj_out[[i]] <- purrr::map2_df(posteriors_by_sample, tac, project_model)
 }
-names(proj_out) <- pfc$tac.vec[1:10]
+names(proj_out) <- pfc$tac.vec
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Get reference points
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Historical reference points first
 # Note that the function depends on dat and pfc being in the global space
+message("Calculating reference points")
 histrefpts <- purrr::map_df(posteriors_by_sample,calc_hist_refpts)
 
 # 2. Do MSY-based reference points
 # Note that the function depends on dat and ctl being in the global space
-# should be able to run with purrr
 msyrefpts <- purrr::map_df(posteriors_by_sample,ddiff_msy)
 
-# For testing ddiff_msy - run out a delay difference model for 100 years
-#  to make sure eqm calcs in ddiff_msy are actually returning eqm values
-# msyrefpts_long <- ddiff_msy_long(posteriors_by_sample[[1]],
-#                                  dat$alpha.g,
-#                                  dat$rho.g,
-#                                  dat$wk,
-#                                  dat$kage,
-#                                  ctl$misc[2])
-#
-# # compare to check that msyrefpts is working - YES!!
-# c(msyrefpts$msy[1],msyrefpts$fmsy[1],msyrefpts$bmsy[1],msyrefpts$bo[1])
+## For testing ddiff_msy - run out a delay difference model for 100 years
+##   to make sure eqm calcs in ddiff_msy are actually returning eqm values
+##   just pick one posterior sample (too slow to do all of them!)
+# samp <- 1
+# msyrefpts_long <- ddiff_msy_long(posteriors_by_sample[[samp]])
+# c(msyrefpts$msy[samp],msyrefpts$fmsy[samp],msyrefpts$bmsy[samp],msyrefpts$bo[samp])
 # msyrefpts_long
 
-msy <- msyrefpts$msy
-fmsy <- msyrefpts$fmsy
-bmsy <- msyrefpts$bmsy
-bo <- msyrefpts$bo
+# Add reference points to proj_out (they are the same for each tac)
+for(i in 1:ntac){
+  proj_out[[i]]<- cbind(proj_out[[i]],histrefpts,msyrefpts)
+}
+
+# Now we have a lovely list of all the metrics we need for decision tables
+#  one list object per tac :-)
 
 # TODO:
 # Add decision table code

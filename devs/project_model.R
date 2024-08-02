@@ -125,17 +125,23 @@ project_model <- function(posteriors,
    # REPORT_SECTION - return a one-row dataframe containing all the stock status
    # calculations under the current TAC for the current posterior sample
 
-  output <- as.data.frame(matrix(nrow=1,ncol=5))
-  output[1,1] <- tac
-  output[1,2] <- biomass[nyrs+1]
-  output[1,3] <- biomass[nyrs+2] # this needs to be dynamic
-  output[1,4] <- ft[nyrs]
-  output[1,5] <- ft[nyrs+1]
+  # output <- as.data.frame(matrix(nrow=1,ncol=5))
+  # output[1,1] <- tac
+  # output[1,2] <- biomass[nyrs+1]
+  # output[1,3] <- biomass[nyrs+2] # this needs to be dynamic
+  # output[1,4] <- ft[nyrs]
+  # output[1,5] <- ft[nyrs+1]
+  #
+  # # TODO: make colnames dynamic and deal with the case when pyr>1
+  # colnames(output) <- c("TAC",
+  #                       "B2021", "B2022",
+  #                       "F2020","F2021")
 
-  # TODO: make colnames dynamic and deal with the case when pyr>1
-  colnames(output) <- c("TAC",
-                        "B2021", "B2022",
-                        "F2020","F2021")
+  output <- data.frame("TAC"=tac,
+                       "B2021"=biomass[nyrs+1],
+                       "B2022"=biomass[nyrs+2],
+                       "F2020"=biomass[nyrs],
+                       "F2021"=biomass[nyrs+1])
 
   return(output)
 
