@@ -94,15 +94,16 @@ run_projections <- function(posteriors){
   # (dividing F or Biomass by refpoints or benchmarks)
   # As in project_model(), need to be robust to proj_year >1
   if(npyr==1){
-    tmp1 <- data.frame((biomass[nyrs+2]/biomass[nyrs+1]),
-                      (biomass[nyrs+2]/bavg),
-                      (biomass[nyrs+2]/bmin),
-                      (biomass[nyrs+2]/(0.8*bmsy)),
-                      (biomass[nyrs+2]/(0.4*bmsy)),
-                      (biomass[nyrs+2]/bo),
-                      (ft[nyrs+1]/ft[nyrs]),
-                      (ft[nyrs+1]/favg),
-                      (ft[nyrs+1]/fmsy))
+    tmp <- proj_out[[i]]
+    tmp1 <- data.frame((tmp[,paste0("B",nyr+2)]/tmp[,paste0("B",nyr+1)]),
+                      (tmp[,paste0("B",nyr+2)]/tmp[,"bavg"]),
+                      (tmp[,paste0("B",nyr+2)]/tmp[,"bmin"]),
+                      (tmp[,paste0("B",nyr+2)]/0.8*tmp[,"bmsy"]),
+                      (tmp[,paste0("B",nyr+2)]/0.4*tmp[,"bmsy"]),
+                      (tmp[,paste0("B",nyr+2)]/tmp[,"bo"]),
+                      (tmp[,paste0("F",nyr+1)]/tmp[,paste0("F",nyr)]),
+                      (tmp[,paste0("F",nyr+1)]/tmp[,"favg"]),
+                      (tmp[,paste0("F",nyr+1)]/tmp[,"fmsy"]))
     colnames(output)<-c(paste0("B",nyr+2,"B",nyr+1),
                         paste0("B",nyr+2,"Bavg"),
                         paste0("B",nyr+2,"Bmin"),
