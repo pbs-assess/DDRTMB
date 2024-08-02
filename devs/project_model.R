@@ -141,18 +141,18 @@ project_model <- function(posteriors,
    # Returns a list of msy, fmsy and bmsy
    # ctl$misc[2] indicates stock-recruit relationship 1=BH, 2=Ricker
    msyrefpts <- ddiff_msy(posteriors,
-                                    dat$alpha.g,
-                                    dat$rho.g,
-                                    dat$wk)
+                          dat$alpha.g,
+                          dat$rho.g,
+                          dat$wk)
 
   # For testing ddiff_msy - run out a delay difference model for 100 years
-  #  to make sure eqm calcs in ddiff_msy are returning eqm values
+  #  to make sure eqm calcs in ddiff_msy are actually returning eqm values
   msyrefpts_long <- ddiff_msy_long(posteriors,
-                               dat$alpha.g,
-                               dat$rho.g,
-                               dat$wk,
-                               dat$kage,
-                               ctl$misc[2])
+                                  dat$alpha.g,
+                                  dat$rho.g,
+                                  dat$wk,
+                                  dat$kage,
+                                  ctl$misc[2])
 
    # compare to check that msyrefpts is working - YES!!
    msyrefpts
@@ -161,15 +161,30 @@ project_model <- function(posteriors,
    msy <- msyrefpts$msy
    fmsy <- msyrefpts$fmsy
    bmsy <- msyrefpts$bmsy
+   bo <- msyrefpts$bo
 
 
-  # REPORT_SECTION
-  # output <- as.data.frame(matrix(nrow=1,ncol=3))
-  # output[1,1] <- tac
-  # output[1,4] <- posteriors$biomass[1]
+  # REPORT_SECTION - return a one-row dataframe containing all the stock status
+   # calculations under the current TAC for the current posterior sample
 
+  output <- as.data.frame(matrix(nrow=1,ncol=11))
+  output[1,1] <- tac
+  output[1,2] <- biomass[nyr+1]
+  output[1,3] <- biomass[nyr+2] # this needs to be dynamic
+  output[1,4] <- biomass[nyr+2]/biomass[nyr+1]
+  output[1,5] <- ft[nyr]
+  output[1,6] <- ft[nyr+1]
+  output[1,7] <- ft[nyr+1]/ft[nyr]
+  output[1,8] <- msy
+  output[1,9] <- bmsy
+  output[1,10] <- fmsy
+  output[1,11] <- bo
 
-  colnames(output) <- c("TAC","pyr","B")
+  # TODO: make colnames dynamic and deal with the case when pyr>1
+  colnames(output) <- c("TAC",
+                        "B2021", "B2022", "B20222021",
+                        "F2020","F2021","F2021F2020",
+                        "MSY","BMSY","FMSY","B0")
 
   return(output)
 

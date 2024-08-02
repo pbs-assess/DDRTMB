@@ -41,6 +41,7 @@ ddiff_msy <- function(posteriors,
    rec_a <- posteriors$alpha.sr
    rec_b <- posteriors$beta.sr
    M <- exp(posteriors$log_m)
+   ro <- exp(posteriors$log_ro)
 
    ye <- numeric(nft)
    be <- numeric(nft)
@@ -66,7 +67,7 @@ ddiff_msy <- function(posteriors,
   fmsy <- ftest[which(ye==msy)]
   bmsy <- be[which(ye==msy)]
 
-  out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy)
+  out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy, "bo"=be[1])
 
   return(out)
 } # end function
@@ -96,6 +97,7 @@ ddiff_msy_long <- function(posteriors,
   rec_a <- posteriors$alpha.sr
   rec_b <- posteriors$beta.sr
   M <- exp(posteriors$log_m)
+  ro <- exp(posteriors$log_ro)
 
   ye <- numeric(nft)
   be <- numeric(nft)
@@ -146,7 +148,7 @@ ddiff_msy_long <- function(posteriors,
   fmsy <- ftest[which(ye==msy)]
   bmsy <- be[which(ye==msy)]
 
-  out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy)
+  out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy, "bo"=bo)
 
   return(out)
 
