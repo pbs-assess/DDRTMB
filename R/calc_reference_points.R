@@ -37,15 +37,16 @@ ddiff_msy <- function(posteriors,
                            rho_g,
                            wk){
    ftest <- seq(0,3,by=.001)
+   nft <- length(ftest)
    rec_a <- posteriors$alpha.sr
    rec_b <- posteriors$beta.sr
    M <- exp(posteriors$log_m)
 
-   ye <- numeric(length(ftest))
-   be <- numeric(length(ftest))
+   ye <- numeric(nft)
+   be <- numeric(nft)
 
   # Calculate equilibrium survivorship as function of FMSY
-  for(k in 1:length(ftest)){
+  for(k in 1:nft){
     # se = eqm survival
     # we = eqm average weight
     se <- exp(-M - ftest[k])
@@ -60,9 +61,10 @@ ddiff_msy <- function(posteriors,
       be[k] = 0
     }
   }# end for k
-  msy = max(ye);
-  fmsy = ftest[which(ye==msy)]
-  bmsy = be[which(ye==msy)]
+
+  msy <- max(ye)
+  fmsy <- ftest[which(ye==msy)]
+  bmsy <- be[which(ye==msy)]
 
   out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy)
 
@@ -74,60 +76,79 @@ ddiff_msy <- function(posteriors,
 # arguments:
 # posteriors = a list of posterior outputs from one mcmc posterior sample
 # alpha_g, rho_g and wk = growth parameters from the dat file
+# kage = age at recrtuitment from the dat file
+# srr = stock recruit relationship 1=BH, 2=Ricker, from the ctl file
 
 # Returns:
 # a list with msy, fmsy and bmsy for that posterior sample
 
-ddiff_msy_slow() <- function(posteriors,
+ddiff_msy_long <- function(posteriors,
                       alpha_g,
                       rho_g,
-                      wk){
+                      wk,
+                      kage,
+                      srr){
 
-  yrs <- 1:1000 # a long time
+  yrs <- 1:100 # a long time
+  nyrs <- length(yrs)
   ftest <- seq(0,3,by=.001)
+  nft <- length(ftest)
   rec_a <- posteriors$alpha.sr
   rec_b <- posteriors$beta.sr
   M <- exp(posteriors$log_m)
 
-  ye <- numeric(length(ftest))
-  be <- numeric(length(ftest))
+  ye <- numeric(nft)
+  be <- numeric(nft)
 
-  # Calculate equilibrium biomass and yield as function of F
-  for(k in 1:length(ftest)){
+  # Calculate equilibrium biomass and yield as function of F  1:nft
+  for(k in 1:nft){
 
-    surv <- numeric(yrs)
-    numbers <- numeric(yrs)
-    biomass <- numeric(yrs)
-    recruits <- numeric(yrs)
-    annual_mean_wt <- numeric(yrs)
+    numbers <- numeric(nyrs)
+    biomass <- numeric(nyrs)
+    recruits <- numeric(nyrs)
 
     # Initial Conditions
     snat <- exp(-M) # natural survival rate
+    surv <- exp(-M-ftest[k]) # fished survival rate (constant bc M and ft are constant)
     # Eqm mean weight
     wbar <- (snat*alpha_g + wk*(1-snat))/(1-snat*rho_g) # RF: calculation checked against rep file
     # Unfished numbers and biomass
     no <- ro/(1-snat)
     bo <- no*wbar # RF: calculation checked against rep file
-    # initialize at posterior initial conditions
-    surv[i] <- exp(-M-ftest[k]) # fished survival rate
-    numbers[1] <- posteriors$numbers[1]
-    biomass[1] <- posteriors$biomass[1]
-    annual_mean_wt[1] <- biomass[1]/numbers[1]
-    recruits[1] <- posteriors$recruits[1]
 
-    for(j in 2:yrs){
+    # initialize at bo
+    numbers[1] <- no
+    biomass[1] <- bo
+    recruits[1] <- ro
 
+    for(i in 2:nyrs){
+       if(i <= dat$kage){
+         recruits[i] <- ro
+       }else{
+         sbt <- biomass[i-kage]
+         if(srr==1)recruits[i] <- (posteriors$alpha.sr*sbt/(1.+posteriors$beta.sr*sbt))
+         if(srr==2)recruits[i] <- (posteriors$alpha.sr*sbt*exp(-posteriors$beta.sr*sbt))
+       }
 
-    } # end j loop
-   }# end for k
+      biomass[i] <- surv*(rho.g*biomass[i-1]+alpha.g*numbers[i-1]) +wk*recruits[i] # eq. 9.2.5 in HW
+      numbers[i] <- surv*numbers[i-1]+recruits[i]
 
-  msy = max(ye);
-  fmsy = ftest[which(ye==msy)]
-  bmsy = be[which(ye==msy)]
+    } # end i loop (yrs)
 
+    # get final equilibrium values
+    # just calculate yield in final year
+    be[k] <- biomass[nyrs] # take last biomass value as eqm value
+    ye[k] <- (ftest[k]/(ftest[k]+M)) * (1-exp(-(ftest[k]+M)))*be[k]
+
+  }# end k loop (ftest)
+
+  msy <- max(ye)
+  fmsy <- ftest[which(ye==msy)]
+  bmsy <- be[which(ye==msy)]
 
   out <- list("msy"=msy, "fmsy"=fmsy, "bmsy"=bmsy)
 
   return(out)
+
 } # end function
 
