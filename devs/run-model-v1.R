@@ -77,18 +77,21 @@ source(here("R/likelihood_funcs.R"))
 # There is a bunch of stuff in the global space that it needs
 source(here("R/model.R"))
 source(here("R/project_model.R"))
+source(here("R/run_projections.R"))
+source(here("R/get_posterior_derived_variables.R"))
+source(here("R/make_decision_tables.R"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nsample <- 1000 # number of posterior samples for the mcmc
+nsample <- 2000 # number of posterior samples for the mcmc
 nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 2 # How many projection years for decision table
 
 # Set test modes
 # Delete these eventually. The test code is currently commented out anyway.
 test <- FALSE # for testing model with MPD estimates from pcod2020 test file
-testrefpts <- FALSE # for testing msy ref points to make sure eqm calcs are correct
+testrefpts <- TRUE # for testing msy ref points to make sure eqm calcs are correct
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,6 +181,7 @@ par
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
 # Fixing rho and kappa  log_m=factor(NA) h=factor(NA),
 # Note the model is in model.R and was sourced above
+message("Estimating parameters in delay-difference model")
 obj <- MakeADFun(model, par, silent=FALSE,
                map=list(rho=factor(NA), kappa=factor(NA)))
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
@@ -216,6 +220,7 @@ source(here("devs","plot_rtmb_results_mpd.r"))
 # parallel causing errors - I'm not setting it up correctly
 # cores <- parallel::detectCores()-1
 # options(mc.cores = cores)
+message(paste("Running MCMCs for", nsample, "samples"))
 fitmcmc <- tmbstan(obj, chains=nchain,
                    iter=nsample,
                    init=list(opt$par),
@@ -235,8 +240,8 @@ mc <- extract(fitmcmc, pars=names(obj$par),
 ## Can also get ESS and Rhat from rstan::monitor
 # https://github.com/kaskr/tmbstan
 mon <- monitor(mc)
-max(mon$Rhat)
-min(mon$Tail_ESS)
+#max(mon$Rhat)
+#min(mon$Tail_ESS)
 
 # Save results as a data frame
 # (if running more than one chain, then would do this for each chain)
@@ -274,15 +279,29 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 # 5. Get posteriors for derived variables (REPORT objects)
 # Rerun model with posterior parameter estimates (extract REPORT objects)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 # Read in posterior samples (in case you have already saved the mc outputs and don't want to run them again)
 mc.df <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
 # Get the posterior output from tmbstan, as matrix
 mcdf <- as.matrix(mc.df)
 
+# Version 1: for reporting, graphs etc
+#  posteriors_by_variable
+#  see notes in get_posterior_derived_variables.R
+#  Notes will eventually be part of package documentation
+# DO NOT CHANGE THESE ARGUMENTS
+posteriors_by_variable <- get_posterior_derived_variables(obj,
+                                                          mcdf,
+                                                          type="byvariable",
+                                                          proj_years=proj_years)
+# Version 2: outputs needed to pass to projection_model
+#  posteriors_by_variable (see notes in get_posterior_derived_variables.R)
+# DO NOT CHANGE THESE ARGUMENTS
+posteriors_by_sample <- get_posterior_derived_variables(obj,
+                                                        mcdf,
+                                                        type="bysample",
+                                                        proj_years=proj_years)
 
-
-saveRDS(posteriors_by_variable, here("outputs","MCMC_derived_estimates.rda"))
+saveRDS(posteriors_by_variable, here("outputs","MCMC_outputs_byvariable.rda"))
 saveRDS(posteriors_by_sample, here("outputs","MCMC_outputs_bysample.rda"))
 
 # Plot results and comparisons with iscam

@@ -53,6 +53,7 @@ get_posterior_derived_variables <- function(obj,mc,type="bysample", proj_years){
   # Version 1: for reporting, graphs etc
   # posteriors_by_variable
   if(type=="byvariable"){
+    message("Calculating posteriors for REPORT objects (derived model variables): sorting by variable")
     # prepare the list
     posteriors_by_variable <- list()
     posteriors_by_variable$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(mcdf))
@@ -79,18 +80,21 @@ get_posterior_derived_variables <- function(obj,mc,type="bysample", proj_years){
   # Version 2: for projections
   # posteriors_by_sample
   if(type=="bysample"){
+    message("Calculating posteriors for REPORT objects (derived model variables): sorting by posterior sample")
+
     # prepare the list
     posteriors_by_sample <- list()
 
     # loop over posterior samples
     for(i in 1:nrow(mcdf)){
+      df <- as.data.frame(mcdf)
       r <- obj$report(mcdf[i,])
 
       posteriors_by_sample[[i]] <- r
       # Append 3 leading parameters and proj_years
-      posteriors_by_sample[[i]]$log_ro <- mcdf$log_ro[i]
-      posteriors_by_sample[[i]]$h      <- mcdf$h[i]
-      posteriors_by_sample[[i]]$log_m  <- mcdf$log_m[i]
+      posteriors_by_sample[[i]]$log_ro <- df$log_ro[i]
+      posteriors_by_sample[[i]]$h      <- df$h[i]
+      posteriors_by_sample[[i]]$log_m  <- df$log_m[i]
       posteriors_by_sample[[i]]$proj_years  <- proj_years # for now add projection years here
     } # end for i
     output <- posteriors_by_sample

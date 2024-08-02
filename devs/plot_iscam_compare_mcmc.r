@@ -32,7 +32,7 @@ if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recu
 
 # 1. RTMB Read in MCMC outputs - burnin already removed
 mcmcpars <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
-mcmcderived <- readRDS( here("outputs","MCMC_derived_estimates.rda"))
+mcmcderived <- readRDS(here("outputs","MCMC_outputs_byvariable.rda"))
 mcmcdiagnostics <- readRDS(here("outputs","MCMC_diagnostics.rda"))
 
 # Also the dat and control file for model dimensions and priors settings
