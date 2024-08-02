@@ -208,7 +208,7 @@ saveRDS(plradsd, here("outputs","derived_sds.rda"))
 # Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mpd.r"))
-source(here("devs","plot_rtmb_results_mpd.r"))
+source(here("R","plot_rtmb_results_mpd.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 4. MCMCs - Posterior parameter estimates
@@ -307,7 +307,7 @@ saveRDS(posteriors_by_sample, here("outputs","MCMC_outputs_bysample.rda"))
 # Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mcmc.r"))
-source(here("devs","plot_rtmb_results_mcmc.r"))
+source(here("R","plot_rtmb_results_mcmc.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Projections - post MCMC step
