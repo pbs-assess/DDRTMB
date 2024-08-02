@@ -101,7 +101,7 @@ project_model <- function(posteriors,
     # for dat$nyr+1 the projected values using final historical year catch
     #   are already included in the biomass and numbers vectors
     if(i>(nyrs+1)){
-       biomass[i] <- (surv[i-1]*(dat$rho.g*biomass[i-1]+alpha.g*numbers[i-1])+dat$wk*recruits[i])
+       biomass[i] <- (surv[i-1]*(dat$rho.g*biomass[i-1]+dat$alpha.g*numbers[i-1])+dat$wk*recruits[i])
        numbers[i] <- surv[i-1]*numbers[i-1]+recruits[i]
      }
 

@@ -85,7 +85,7 @@ source(here("R/make_decision_tables.R"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nsample <- 2000 # number of posterior samples for the mcmc
+nsample <- 1000 # number of posterior samples for the mcmc
 nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 2 # How many projection years for decision table
 
@@ -248,6 +248,7 @@ mon <- monitor(mc)
 # Save results as a data frame
 # (if running more than one chain, then would do this for each chain)
 mc.df <- as.data.frame(mc[,1,])
+
 saveRDS(mc.df, here("outputs","MCMC_parameter_estimates.rda"))
 saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 

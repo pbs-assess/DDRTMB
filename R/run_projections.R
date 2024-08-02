@@ -24,10 +24,13 @@
 #  are already in the global space
 run_projections <- function(posteriors){
 
-  npyr <- posteriors$proj_years # number of projection years (set by user)
-  pyr_s <- dat$nyr+1+1 # first projection year
-  pyr  <- dat$nyr+1+npyr # actual final projection year
+  nyr <- dat$nyr # actual final historical year
+  npyr <- posteriors[[1]]$proj_years # number of projection years (set by user)
+  pyr_s <- nyr+1+1 # actual first projection year
+  pyr  <-  nyr+1+npyr # actual final projection year
   pyrs <- pyr_s:pyr # actual years of projection period
+  yrs  <- dat$syr:dat$nyr # actual historical years
+  nyrs <- length(yrs) # number of historical years
 
   # List object for projection outputs
   # These will be the inputs for decision tables
