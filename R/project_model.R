@@ -53,7 +53,7 @@ source(here("R","calc_reference_points.R"))
 project_model <- function(posteriors,
                           tac){
 
-  getAll(dat,ctl,pfc) # RTMB function. Puts arguments into global space
+  #getAll(dat,ctl,pfc) # RTMB function. Puts arguments into global space
 
   # Get the years for the projection under the tac
   # The model projects biomass into nyr+1 based on catches to nyr.

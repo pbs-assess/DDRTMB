@@ -334,6 +334,8 @@ posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
 projections_output <- run_projections(posteriors_by_sample)
 
+write_csv(as.data.frame(projections_output[[1]]), here("outputs","proj_output_tmp.csv"))
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Make decision tables
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
