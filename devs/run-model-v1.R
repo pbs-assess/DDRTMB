@@ -58,6 +58,8 @@
 #    this will incorporate new functions saved in the R and data folders
 
 # Load documentation and inputs
+# All the functions called here assume that this has been done and
+# key objects dat, ctl and pfc are in the global space
 devtools::document()
 devtools::load_all()
 
@@ -76,16 +78,18 @@ source(here("R/likelihood_funcs.R"))
 source(here("R/model.R"))
 source(here("devs/project_model.R"))
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 nsample <- 1000 # number of posterior samples for the mcmc
-nchain <- # number of chains for the mcmc (outputs only look at one chain for now)
+nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 2 # How many projection years for decision table
-# Set test mode for testing model with MPD estimates from pcod2020 test file
-# Delete this eventually. The test code is currently commented out anyway.
-test <- FALSE
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Set test modes
+# Delete these eventually. The test code is currently commented out anyway.
+test <- FALSE # for testing model with MPD estimates from pcod2020 test file
+testrefpts <- FALSE # for testing msy ref points to make sure eqm calcs are correct
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set up data and parameter controls
@@ -333,9 +337,6 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Projections - post MCMC step
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# TODO: THIS SHOULD BE A FUNCTION
-
 # NEED:
 # 1. Posterior samples from the historical period (syr:nyr),
 #     plus the leading parameters log_ro, h and log_m
@@ -343,11 +344,11 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #        and Recruits from the historical period
 #        (from posteriors object)
 # 2. A vector of future TACs (from pfc file)
-# 3. Number of projection years
+# 3. Number of projection years (added above to posteriors object)
 
-# try putting outputs in a list:
-#   one list item for each tac (from pfc$tac.vec)
-# each list item is a matrix with dim
+# Outputs are in a list:
+#   one list item per tac (from pfc$tac.vec)
+# each list item is a dataframe with dim:
 #    nrow=number of posterior samples,
 #    ncol=however many variables we want for the decision tables
 # NOTE: iscam had a giant matrix. It was slightly challenging to
@@ -355,53 +356,10 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 #       Having one list object per tac will be easier for getting
 #       out the probabilities
 
-# List object for projection outputs
-# This will be the inputs for decision tables
-proj_out <- list()
-
-# Read in posterior samples (in case just doing projections)
+# Read in posterior samples (in case just not re-running mcmcs)
 posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
-# Need to loop over future TACs but do not need to loop
-#  over posterior samples. Let purrr do that.
-ntac <- pfc$num.tac
-
-for(i in 1:ntac){
-  tac <- pfc$tac.vec[i]
-  message(paste("Getting projections for TAC",tac))
-
-  # Run the projection model for tac[i]
-  proj_out[[i]] <- purrr::map2_df(posteriors_by_sample, tac, project_model)
-}
-names(proj_out) <- pfc$tac.vec
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Get reference points
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 1. Historical reference points first
-# Note that the function depends on dat and pfc being in the global space
-message("Calculating reference points")
-histrefpts <- purrr::map_df(posteriors_by_sample,calc_hist_refpts)
-
-# 2. Do MSY-based reference points
-# Note that the function depends on dat and ctl being in the global space
-msyrefpts <- purrr::map_df(posteriors_by_sample,ddiff_msy)
-
-## For testing ddiff_msy - run out a delay difference model for 100 years
-##   to make sure eqm calcs in ddiff_msy are actually returning eqm values
-##   just pick one posterior sample (too slow to do all of them!)
-# samp <- 1
-# msyrefpts_long <- ddiff_msy_long(posteriors_by_sample[[samp]])
-# c(msyrefpts$msy[samp],msyrefpts$fmsy[samp],msyrefpts$bmsy[samp],msyrefpts$bo[samp])
-# msyrefpts_long
-
-# Add reference points to proj_out (they are the same for each tac)
-for(i in 1:ntac){
-  proj_out[[i]]<- cbind(proj_out[[i]],histrefpts,msyrefpts)
-}
-
-# Now we have a lovely list of all the metrics we need for decision tables
-#  one list object per tac :-)
+projections_output <- run_projections(posteriors_by_sample)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Make decision tables
