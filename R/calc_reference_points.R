@@ -10,27 +10,25 @@
 # 1. ddiff_msy based on ddiff_msy in devs/iscam.tpl
 # Use equilibrium calculations for delay difference model
 
-# calcReferencePoints (based on iscam calcReferencePoints
-# (see devs\iscam.tpl and devs\msy.cpp)
+# 2. ddiff_msy_long (FOR TESTING ONLY)
+# The slow way, run out the model for a long time under a sequence of fixed F
+#  and check the final year values match the ye and be values from ddiff_msy
 
-# 2. FOR TESTING ONLY:
-#  ddiff_msy_slow
-# The slow way, run out the model for a long time under a fixed F
-# arguments and check the final values match the ye and be values from
-# the first way
+# 3. calc_hist_refpts
+# Gets the historical reference points for biomass and F
+#  based on the posterior estimates of biomass and F,
+#   and settings in the ctl file that set the end years for averaging and
+#   the year for bmin
+# TODO: Make the settings more flexible
 
-# 3. NOT IMPLEMENTED YET:
-#  COULD ALSO TRY IMPLEMENTING THE AGE STRUCTURED VERSION WITH KNIFE-EDGED
-#  SELECTIVITY AND MATURITY AT KAGE. SHOULD RETURN SAME REF POINTS AS
-#  DDIFF_MSY AND *MIGHT BE QUICKER*
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. ddiff_msy - delay-difference equilibrium calculations
 # arguments:
 # posteriors = a list of posterior outputs from one mcmc posterior sample
-# alpha_g, rho_g and wk = growth parameters from the dat file - assumes dat is in global space
 
 # Returns:
-# a list with msy, fmsy and bmsy for that posterior sample
+# a list with msy, fmsy, bmsy and bo for that posterior sample
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ddiff_msy <- function(posteriors){
 
@@ -40,7 +38,7 @@ ddiff_msy <- function(posteriors){
    rec_b <- posteriors$beta.sr
    M <- exp(posteriors$log_m)
    ro <- exp(posteriors$log_ro)
-
+   # alpha_g, rho_g and wk = growth parameters from the dat file - assumes dat is in global space
    alpha_g <- dat$alpha.g
    rho_g <- dat$rho.g
    wk <- dat$wk
@@ -74,23 +72,16 @@ ddiff_msy <- function(posteriors){
   return(out)
 } # end function
 
-
-# 2. ddiff_msy_slow
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 2. ddiff_msy_slow - just for testing eqm calcs in ddiff_msy
 # arguments:
 # posteriors = a list of posterior outputs from one mcmc posterior sample
-# alpha_g, rho_g and wk = growth parameters from the dat file
-# kage = age at recrtuitment from the dat file
-# srr = stock recruit relationship 1=BH, 2=Ricker, from the ctl file
 
 # Returns:
-# a list with msy, fmsy and bmsy for that posterior sample
+# a list with msy, fmsy, bmsy and bo for that posterior sample
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ddiff_msy_long <- function(posteriors,
-                      alpha_g,
-                      rho_g,
-                      wk,
-                      kage,
-                      srr){
+ddiff_msy_long <- function(posteriors){
 
   yrs <- 1:100 # a long time
   nyrs <- length(yrs)
@@ -100,6 +91,14 @@ ddiff_msy_long <- function(posteriors,
   rec_b <- posteriors$beta.sr
   M <- exp(posteriors$log_m)
   ro <- exp(posteriors$log_ro)
+  # alpha_g, rho_g and wk = growth parameters from the dat file
+  # kage = age at recrtuitment from the dat file
+  # srr = stock recruit relationship 1=BH, 2=Ricker, from the ctl file
+  alpha_g <- dat$alpha.g
+  rho_g <- dat$rho.g
+  wk <- dat$wk
+  kage <- dat$kage
+  srr <- ctl$misc[2]
 
   ye <- numeric(nft)
   be <- numeric(nft)
@@ -156,7 +155,15 @@ ddiff_msy_long <- function(posteriors,
 
 } # end function
 
-# Historical reference points
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. calc_hist_refpts
+# Gets the historical reference points for biomass and F
+# arguments:
+# posteriors = a list of posterior outputs from one mcmc posterior sample
+
+# Returns:
+# a list with bavg, favg and bmin for that posterior sample
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 calc_hist_refpts <- function(posteriors){
 
