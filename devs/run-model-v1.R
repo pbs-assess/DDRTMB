@@ -272,59 +272,15 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Get posteriors for derived variables (REPORT objects)
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Rerun model with posterior parameter estimates (extract REPORT objects)
-
-
-# Version 1: for reporting, graphs etc
-# posteriors_by_variable
-# This is a list where each element is a variable of interest
-# Make a list for putting posterior estimates of biomass,
-#    recruits and q
-# Note that parameters, rec devs and logf are
-#    already reported in the mc object
-#   (but have added Ft to REPORT to simplify projection model)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Read in posterior samples (in case you have already saved the mc outputs and don't want to run them again)
 mc.df <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
-
 # Get the posterior output from tmbstan, as matrix
-post <- as.matrix(mc.df)
+mcdf <- as.matrix(mc.df)
 
-posteriors_by_variable <- list()
-posteriors_by_variable$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
-posteriors_by_variable$numbers <- matrix(NA, ncol=nyrs+1, nrow=nrow(post))
-posteriors_by_variable$recruits <- matrix(NA, ncol=nyrs-dat$sage, nrow=nrow(post))
-posteriors_by_variable$surv <- matrix(NA, ncol=nyrs, nrow=nrow(post))
-posteriors_by_variable$Ft <- matrix(NA, ncol=nyrs, nrow=nrow(post))
-posteriors_by_variable$q <- matrix(NA, ncol=dat$nit, nrow=nrow(post))
 
-# Version 2: for projections
-# posteriors_by_sample
-# This is a list where each element is a posterior sample
-#  containing all the variables needed for the proj model
-#  Gets passed to projection model using purrr::map2_df()
-posteriors_by_sample <- list()
-
-for(i in 1:nrow(post)){
-  r <- obj$report(post[i,])
-
-  # Posteriors by variable
-  posteriors_by_variable$biomass[i,]  <- r$biomass
-  posteriors_by_variable$numbers[i,]  <- r$numbers
-  posteriors_by_variable$recruits[i,] <- r$rt
-  posteriors_by_variable$surv[i,]  <- r$surv
-  posteriors_by_variable$Ft[i,] <- r$Ft
-  posteriors_by_variable$q[i,]  <- r$q
-
-  # Posteriors by sample (for project_model)
-  posteriors_by_sample[[i]] <- r
-  # Append 3 leading parameters and proj_years
-  posteriors_by_sample[[i]]$log_ro <- mc.df$log_ro[i]
-  posteriors_by_sample[[i]]$h      <- mc.df$h[i]
-  posteriors_by_sample[[i]]$log_m  <- mc.df$log_m[i]
-  posteriors_by_sample[[i]]$proj_years  <- proj_years # for now add projection years here
-}
 
 saveRDS(posteriors_by_variable, here("outputs","MCMC_derived_estimates.rda"))
 saveRDS(posteriors_by_sample, here("outputs","MCMC_outputs_bysample.rda"))
