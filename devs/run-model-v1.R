@@ -306,11 +306,6 @@ posteriors_by_sample <- get_posterior_derived_variables(obj,
 saveRDS(posteriors_by_variable, here("outputs","MCMC_outputs_byvariable.rda"))
 saveRDS(posteriors_by_sample, here("outputs","MCMC_outputs_bysample.rda"))
 
-# Plot results and comparisons with iscam
-# Delete this for package
-source(here("devs","plot_iscam_compare_mcmc.r"))
-source(here("devs","plot_rtmb_results_mcmc.r"))
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 5. Projections - post MCMC step
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -347,4 +342,10 @@ saveRDS(projections_output,here("outputs","Projections_output.rda"))
 #Check against figures and do longhand calcs
 decision_table <- make_decision_table(projections_output,proj_years)
 saveRDS(decision_table,here("outputs","Decision_table.rda"))
+
+# Plot results and comparisons with iscam
+# Delete this for package
+source(here("devs","plot_iscam_compare_mcmc.r"))
+source(here("devs","plot_rtmb_results_mcmc.r"))
+
 
