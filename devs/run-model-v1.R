@@ -344,7 +344,7 @@ projections_output <- run_projections(posteriors_by_sample)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Make decision tables
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+decision_table <- make_decision_table(projections_output,proj_years)
 
 # TODO:
 # Add decision table code

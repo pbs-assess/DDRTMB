@@ -13,33 +13,70 @@
 
 # arguments:
 # proj_outputs = the list object returned by run_projections()
+# npyr = number of projection years
 
 # Returns:
 # A decision table
 
-make_decision_table <- function(proj_outputs){
+make_decision_table <- function(proj_output,npyr){
 
-  dtable <- as.data.frame(matrix(NA,
-                              ncol = 6,
-                              nrow = length(tac)))
-  tac <- pfc$num.tac
+  nyr <-  dat$nyr # actual final historical year
+  tac <- pfc$tac.vec
 
-  for(t in seq_along(tac)){
-    d <- as.data.frame(model$mcmccalcs$proj.dat)
-    d <- d[d$TAC == tac[t],]
-    dat[t, 1] <- f(tac[t], 0)
-    dat[t, 2] <- f(mean(d$B2022B2021 < 1), 2)
-    dat[t, 3] <- f(mean(d$F2021F2020 > 1), 2)
-    dat[t, 4] <- f(mean(d$B2022Bmin < 1), 2)
-    dat[t, 5] <- f(mean(d$B2022BAvgS < 1), 2)
-    dat[t, 6] <- f(mean(d$F2021FAvgS > 1), 2)
-  }
+  for(i in seq_along(tac)){
+    raw <- proj_output[[i]]
+    # Get the probability of each stock status quantity
+    dtable <-  data.frame(tac,
+                          mean(raw[,paste0("B",nyr+2,"B",nyr+1)]<1),
+                          mean(raw[,paste0("B",nyr+2,"Bavg")]<1),
+                          mean(raw[,paste0("B",nyr+2,"Bmin")]<1),
+                          mean(raw[,paste0("B",nyr+2,"08Bmsy")]<1),
+                          mean(raw[,paste0("B",nyr+2,"04Bmsy")]<1),
+                          mean(raw[,paste0("B",nyr+2,"B0")]<1),
+                          mean(raw[,paste0("F",nyr+1,"F",nyr)]>1),
+                          mean(raw[,paste0("F",nyr+1,"Favg")]>1),
+                          mean(raw[,paste0("F",nyr+1,"Fmsy")]>1))
+    cols <- c("TAC",
+              paste0("P(B",nyr+2,"<B",nyr+1,")"),
+              paste0("P(B",nyr+2,"<Bavg)"),
+              paste0("P(B",nyr+2,"<Bmin)"),
+              paste0("P(B",nyr+2,"<08Bmsy)"),
+              paste0("P(B",nyr+2,"<04Bmsy)"),
+              paste0("P(B",nyr+2,"<B0)"),
+              paste0("P(F",nyr+1,">F",nyr,")"),
+              paste0("P(F",nyr+1,">Favg)"),
+              paste0("P(F",nyr+1,">Fmsy)"))
 
-  col.names <- c("2021 Catch (mt)",
-                 "P(B2022 < B2021)",
-                 "P(F2021 > F2020)",
-                 "P(B2022 < LRP)",
-                 "P(B2022 < USR)",
-                 "P(F2021 > LRR)")
-}
+    if(npyr>1){
+        # if more than one projection year, add stock status for subsequent years
+        for(ii in 2:npyr){
+          tmp <- data.frame(mean(raw[,paste0("B",nyr+1+ii,"B",nyr+1)]<1),
+                            mean(raw[,paste0("B",nyr+1+ii,"Bavg")]<1),
+                            mean(raw[,paste0("B",nyr+1+ii,"Bmin")]<1),
+                            mean(raw[,paste0("B",nyr+1+ii,"08Bmsy")]<1),
+                            mean(raw[,paste0("B",nyr+1+ii,"04Bmsy")]<1),
+                            mean(raw[,paste0("B",nyr+1+ii,"B0")]<1),
+                            mean(raw[,paste0("F",nyr+ii,"F",nyr)]>1),
+                            mean(raw[,paste0("F",nyr+ii,"Favg")]>1),
+                            mean(raw[,paste0("F",nyr+ii,"Fmsy")]>1))
+          cols <- c(cols,
+                    paste0("P(B",nyr+1+ii,"<B",nyr+1,")"),
+                    paste0("P(B",nyr+1+ii,"<Bavg)"),
+                    paste0("P(B",nyr+1+ii,"<Bmin)"),
+                    paste0("P(B",nyr+1+ii,"<08Bmsy)"),
+                    paste0("P(B",nyr+1+ii,"<04Bmsy)"),
+                    paste0("P(B",nyr+1+ii,"<B0)"),
+                    paste0("P(F",nyr+ii,">F",nyr,")"),
+                    paste0("P(F",nyr+ii,">Favg)"),
+                    paste0("P(F",nyr+ii,">Fmsy)"))
+
+        dtable <- cbind(dtable,tmp)
+      } # end for ii
+      colnames(dtable) <- cols
+    }# end if
+  }# end for i (tac loop)
+
+return(dtable)
+
+} # end function
 
