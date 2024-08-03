@@ -29,8 +29,6 @@ run_projections <- function(posteriors){
   pyr_s <- nyr+1+1 # actual first projection year
   pyr  <-  nyr+1+npyr # actual final projection year
   pyrs <- pyr_s:pyr # actual years of projection period
-  yrs  <- dat$syr:dat$nyr # actual historical years
-  nyrs <- length(yrs) # number of historical years
 
   # List object for projection outputs
   # These will be the inputs for decision tables
@@ -85,26 +83,31 @@ run_projections <- function(posteriors){
             round(msyrefpts$bmsy[samp],2),round(msyrefpts$bo[samp],2)))
   } # end if testrefpts
 
+  message(paste("Calculating stock status for",npyr,"projection years"))
+
   # Add reference points to proj_out (they are the same for each tac)
   for(i in 1:ntac){
     proj_out[[i]]<- cbind(proj_out[[i]],histrefpts,msyrefpts)
-  }
 
   # Now we need to get stock status estimates
   # (dividing F or Biomass by refpoints or benchmarks)
   # As in project_model(), need to be robust to proj_year >1
+
+
   if(npyr==1){
+    # just one projection year for tac
     tmp <- proj_out[[i]]
     tmp1 <- data.frame((tmp[,paste0("B",nyr+2)]/tmp[,paste0("B",nyr+1)]),
                       (tmp[,paste0("B",nyr+2)]/tmp[,"bavg"]),
                       (tmp[,paste0("B",nyr+2)]/tmp[,"bmin"]),
-                      (tmp[,paste0("B",nyr+2)]/0.8*tmp[,"bmsy"]),
-                      (tmp[,paste0("B",nyr+2)]/0.4*tmp[,"bmsy"]),
+                      (tmp[,paste0("B",nyr+2)]/(0.8*tmp[,"bmsy"])),
+                      (tmp[,paste0("B",nyr+2)]/(0.4*tmp[,"bmsy"])),
                       (tmp[,paste0("B",nyr+2)]/tmp[,"bo"]),
                       (tmp[,paste0("F",nyr+1)]/tmp[,paste0("F",nyr)]),
                       (tmp[,paste0("F",nyr+1)]/tmp[,"favg"]),
                       (tmp[,paste0("F",nyr+1)]/tmp[,"fmsy"]))
-    colnames(output)<-c(paste0("B",nyr+2,"B",nyr+1),
+
+    colnames(tmp1)<-c(paste0("B",nyr+2,"B",nyr+1),
                         paste0("B",nyr+2,"Bavg"),
                         paste0("B",nyr+2,"Bmin"),
                         paste0("B",nyr+2,"08Bmsy"),
@@ -113,17 +116,21 @@ run_projections <- function(posteriors){
                         paste0("F",nyr+1,"F",nyr),
                         paste0("F",nyr+1,"Favg"),
                         paste0("F",nyr+1,"Fmsy"))
-   proj_out[[i]]<- cbind(proj_out[[i]],tmp1)
+
+    proj_out[[i]]<- cbind(proj_out[[i]],tmp1)
+
   }else{
-    tmp1 <- data.frame((biomass[nyrs+2]/biomass[nyrs+1]),
-                       (biomass[nyrs+2]/bavg),
-                       (biomass[nyrs+2]/bmin),
-                       (biomass[nyrs+2]/(0.8*bmsy)),
-                       (biomass[nyrs+2]/(0.4*bmsy)),
-                       (biomass[nyrs+2]/bo),
-                       (ft[nyrs+1]/ft[nyrs]),
-                       (ft[nyrs+1]/favg),
-                       (ft[nyrs+1]/fmsy))
+    # more than one projection year for tac
+    tmp <- proj_out[[i]]
+    tmp1 <- data.frame((tmp[,paste0("B",nyr+2)]/tmp[,paste0("B",nyr+1)]),
+                       (tmp[,paste0("B",nyr+2)]/tmp[,"bavg"]),
+                       (tmp[,paste0("B",nyr+2)]/tmp[,"bmin"]),
+                       (tmp[,paste0("B",nyr+2)]/(0.8*tmp[,"bmsy"])),
+                       (tmp[,paste0("B",nyr+2)]/(0.4*tmp[,"bmsy"])),
+                       (tmp[,paste0("B",nyr+2)]/tmp[,"bo"]),
+                       (tmp[,paste0("F",nyr+1)]/tmp[,paste0("F",nyr)]),
+                       (tmp[,paste0("F",nyr+1)]/tmp[,"favg"]),
+                       (tmp[,paste0("F",nyr+1)]/tmp[,"fmsy"]))
     cols<-c(paste0("B",nyr+2,"B",nyr+1),
             paste0("B",nyr+2,"Bavg"),
             paste0("B",nyr+2,"Bmin"),
@@ -135,30 +142,33 @@ run_projections <- function(posteriors){
             paste0("F",nyr+1,"Fmsy"))
 
     for(ii in 2:npyr){
-      tmp2 <- data.frame((biomass[nyrs+1+ii]/biomass[nyrs+1]),
-                         (biomass[nyrs+1+ii]/bavg),
-                         (biomass[nyrs+1+ii]/bmin),
-                         (biomass[nyrs+1+ii]/(0.8*bmsy)),
-                         (biomass[nyrs+1+ii]/(0.4*bmsy)),
-                         (biomass[nyrs+1+ii]/bo),
-                         (ft[nyrs+ii]/ft[nyrs]),
-                         (ft[nyrs+ii]/favg),
-                         (ft[nyrs+ii]/fmsy))
-      tmp1 <- cbind(tmp1,tmp2)
-      cols<-c(paste0("B",nyrs+1+ii,"B",nyr+1),
-              paste0("B",nyrs+1+ii,"Bavg"),
-              paste0("B",nyrs+1+ii,"Bmin"),
-              paste0("B",nyrs+1+ii,"08Bmsy"),
-              paste0("B",nyrs+1+ii,"04Bmsy"),
-              paste0("B",nyrs+1+ii,"B0"),
+      tmp2 <- data.frame((tmp[,paste0("B",nyr+1+ii)]/tmp[,paste0("B",nyr+1)]),
+                         (tmp[,paste0("B",nyr+1+ii)]/tmp[,"bavg"]),
+                         (tmp[,paste0("B",nyr+1+ii)]/tmp[,"bmin"]),
+                         (tmp[,paste0("B",nyr+1+ii)]/0.8*tmp[,"bmsy"]),
+                         (tmp[,paste0("B",nyr+1+ii)]/0.4*tmp[,"bmsy"]),
+                         (tmp[,paste0("B",nyr+1+ii)]/tmp[,"bo"]),
+                         (tmp[,paste0("F",nyr+ii)]/tmp[,paste0("F",nyr)]),
+                         (tmp[,paste0("F",nyr+ii)]/tmp[,"favg"]),
+                         (tmp[,paste0("F",nyr+ii)]/tmp[,"fmsy"]))
+      cols<-c(cols,
+              paste0("B",nyr+1+ii,"B",nyr+1),
+              paste0("B",nyr+1+ii,"Bavg"),
+              paste0("B",nyr+1+ii,"Bmin"),
+              paste0("B",nyr+1+ii,"08Bmsy"),
+              paste0("B",nyr+1+ii,"04Bmsy"),
+              paste0("B",nyr+1+ii,"B0"),
               paste0("F",nyr+ii,"F",nyr),
               paste0("F",nyr+ii,"Favg"),
               paste0("F",nyr+ii,"Fmsy"))
 
+      tmp1 <- cbind(tmp1,tmp2)
+
     } # end for ii
-    colnames(tmp3) <- cols
+    colnames(tmp1) <- cols
     proj_out[[i]]<- cbind(proj_out[[i]],tmp1)
-  }# end ifelse
+   }# end ifelse
+ }# end for i (tac loop)
 
   # Now we have a lovely list of all the metrics we need for decision tables
   #  one list object per tac :-)
