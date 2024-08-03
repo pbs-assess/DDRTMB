@@ -1,19 +1,29 @@
-decision_table <- function(proj_outputs){
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# MAKE DECISION TABLE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# make_decision_table
+# Called from run-model-v1.R
+
+# Author: Robyn Forrest
+# Date created:  August 2, 2024
+# Last Modified: August 2, 2024
+
+# This function takes the outputs of the projection model and calculates probabilities
+# of various metrics for each TAC
+
+# arguments:
+# proj_outputs = the list object returned by run_projections()
+
+# Returns:
+# A decision table
+
+make_decision_table <- function(proj_outputs){
 
   dtable <- as.data.frame(matrix(NA,
                               ncol = 6,
                               nrow = length(tac)))
-  col.names <- c("2021 Catch (mt)",
-                   "P(B2022 < B2021)",
-                   "P(F2021 > F2020)",
-                   "P(B2022 < LRP)",
-                   "P(B2022 < USR)",
-                   "P(F2021 > LRR)")
+  tac <- pfc$num.tac
 
-  tac <- model$proj$tac.vec
-  if(!is.na(tac.vec[1])){
-    tac <- tac.vec[tac.vec %in% tac]
-  }
   for(t in seq_along(tac)){
     d <- as.data.frame(model$mcmccalcs$proj.dat)
     d <- d[d$TAC == tac[t],]
@@ -25,14 +35,11 @@ decision_table <- function(proj_outputs){
     dat[t, 6] <- f(mean(d$F2021FAvgS > 1), 2)
   }
 
-  if(make.lt.gt){
-    dat <- mutate_at(dat, -1,
-                     function(x) gsub('0.00', '<0.01', x))
-    dat <- mutate_at(dat, -1,
-                     function(x) gsub('1.00', '>0.99', x))
-  }
-
-
-
+  col.names <- c("2021 Catch (mt)",
+                 "P(B2022 < B2021)",
+                 "P(F2021 > F2020)",
+                 "P(B2022 < LRP)",
+                 "P(B2022 < USR)",
+                 "P(F2021 > LRR)")
 }
 

@@ -335,9 +335,11 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 # Read in posterior samples (instead of re-running mcmcs)
 posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 
+# Get a list containing projected values, ref points and stock status for each TAC
+# Each tac list object has nsample rows
 projections_output <- run_projections(posteriors_by_sample)
 
-write_csv(as.data.frame(projections_output[[1]]), here("outputs","proj_output_tmp.csv"))
+#write_csv(as.data.frame(projections_output[[1]]), here("outputs","proj_output_tmp.csv"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Make decision tables
