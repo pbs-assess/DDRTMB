@@ -59,6 +59,7 @@ project_model <- function(posteriors,
   # The model projects biomass into nyr+1 based on catches to nyr.
   #  pyr determines the number of projection years *after* this for
   #    decision tables
+  nyr <-  dat$nyr # actual final historical year
   npyr <- posteriors$proj_years # number of projection years (set by user)
   pyr  <- dat$nyr+1+npyr # actual final projection year
   pyrs <- (dat$nyr+1+1):(dat$nyr+1+npyr) # actual years of projection period

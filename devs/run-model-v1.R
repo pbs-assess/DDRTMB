@@ -11,7 +11,7 @@
 # Authors: Robyn Forrest (RF), Catarina Wor (CW), Sean Anderson (SA) (Pacific Biological Station, Nanaimo, Canada)
 
 # Date created:  May 15, 2024
-# Last Modified: August 2, 2024
+# Last Modified: August 3, 2024
 
 # Notes:
 # - The iscam input files are already loaded into the package:
@@ -85,7 +85,7 @@ source(here("R/make_decision_tables.R"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nsample <- 1000 # number of posterior samples for the mcmc
+nsample <- 5000 # number of posterior samples for the mcmc
 nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 2 # How many projection years for decision table
 
@@ -182,8 +182,7 @@ par
 ## from TMB help: map = List defining how to optionally collect and fix parameters
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
 # Fixing rho and kappa  log_m=factor(NA) h=factor(NA),
-# Note the model is in model.R and was sourced above
-message("Estimating parameters in delay-difference model")
+# Note the model is in model.R
 obj <- MakeADFun(model, par, silent=FALSE,
                map=list(rho=factor(NA), kappa=factor(NA)))
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
@@ -279,6 +278,7 @@ saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 # saveRDS(mon4ch, here("outputs","MCMCDiagnostics_4chain_list.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Beginning of "mc_eval()" stage (per ADMB)
 # 5. Get posteriors for derived variables (REPORT objects)
 # Rerun model with posterior parameter estimates (extract REPORT objects)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,17 +287,16 @@ mc.df <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
 # Get the posterior output from tmbstan, as matrix
 mcdf <- as.matrix(mc.df)
 
-# Version 1: for reporting, graphs etc
-#  posteriors_by_variable
-#  see notes in get_posterior_derived_variables.R
+# Version 1: group together variables, for reporting, graphs etc
+#  posteriors_by_variable (see notes in get_posterior_derived_variables.R)
 #  Notes will eventually be part of package documentation
 # DO NOT CHANGE THESE ARGUMENTS
 posteriors_by_variable <- get_posterior_derived_variables(obj,
                                                           mcdf,
                                                           type="byvariable",
                                                           proj_years=proj_years)
-# Version 2: outputs needed to pass to projection_model
-#  posteriors_by_variable (see notes in get_posterior_derived_variables.R)
+# Version 2: group together posterior samples, needed to pass to projection_model
+# posteriors_by_sample (see notes in get_posterior_derived_variables.R)
 # DO NOT CHANGE THESE ARGUMENTS
 posteriors_by_sample <- get_posterior_derived_variables(obj,
                                                         mcdf,
@@ -338,15 +337,14 @@ posteriors_by_sample <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))
 # Get a list containing projected values, ref points and stock status for each TAC
 # Each tac list object has nsample rows
 projections_output <- run_projections(posteriors_by_sample)
-
-#write_csv(as.data.frame(projections_output[[1]]), here("outputs","proj_output_tmp.csv"))
+saveRDS(projections_output,here("outputs","Projections_output.rda"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Make decision tables
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# TODO: Check the numbers make sense.
+# Make biomass and F plots with ref points.
+#Check against figures and do longhand calcs
 decision_table <- make_decision_table(projections_output,proj_years)
-
-# TODO:
-# Add decision table code
-# Produce decision tables and graphics
+saveRDS(decision_table,here("outputs","Decision_table.rda"))
 
