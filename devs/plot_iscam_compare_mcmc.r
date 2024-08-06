@@ -57,7 +57,7 @@ iscampars <- iscampars[1001:2000,]
 iscamrecruits <- iscamrecruits[1001:2000,]
 iscamrecdevs <- iscamrecdevs[1001:2000,]
 iscamfmort <- iscamfmort[1001:2000,1:(dat$nyr-dat$syr+1)] # take  only gear 1, remove survey gears
-projoutput_iscam <- projoutput_iscam[30971:62001,]
+projoutput_iscam <- projoutput_iscam[30971:62001,] # results in the desired 1000 samples for each TAC
 
 # Parameter histograms (without and with priors)
 # 1. Simple individual histograms
@@ -219,8 +219,8 @@ refpt_quants_iscam <- projoutput_iscam %>%
   tibble::rownames_to_column(var <- "refpt")
 
 # Table of reference point quantiles
-write_csv(refpt_quants_rtmb, here("outputs","Posterior_reference_points_quants.csv"))
-write_csv(refpt_quants_iscam, here("outputs","Posterior_reference_points_quants.csv"))
+write_csv(refpt_quants_rtmb, here("outputs","Posterior_reference_points_quants_rtmb.csv"))
+write_csv(refpt_quants_iscam, here("outputs","Posterior_reference_points_quants_iscam.csv"))
 
 # Biomass
 #1. Historical reference points
