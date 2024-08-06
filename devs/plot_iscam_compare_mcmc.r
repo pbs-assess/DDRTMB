@@ -54,7 +54,7 @@ iscampars <- iscampars[1001:2000,]
 iscamrecruits <- iscamrecruits[1001:2000,]
 iscamrecdevs <- iscamrecdevs[1001:2000,]
 iscamfmort <- iscamfmort[1001:2000,1:(dat$nyr-dat$syr+1)] # take  only gear 1, remove survey gears
-projoutput_iscam <- projoutput_iscam[31002:62001,]
+projoutput_iscam <- projoutput_iscam[30971:62001,]
 
 # Parameter histograms (without and with priors)
 # 1. Simple individual histograms
@@ -309,7 +309,8 @@ rtmb_proj  <- projoutput[[1]]%>%
   as.data.frame()
 iscam_proj <- projoutput_iscam %>%
   rename(bavg=BAvgS, favg=FAvgS, bmin=Bmin,
-         bo=B0,fmsy=FMSY,bmsy=BMSY,B2022Bavg=B2022BAvgS) %>%
+         bo=B0,fmsy=FMSY,bmsy=BMSY,B2022Bavg=B2022BAvgS,
+         B202208Bmsy=B20220.8BMSY,B202204Bmsy=B20220.4BMSY,F2021Favg=F2021FAvgS) %>%
   filter(TAC==0) %>%
   as.data.frame()
 
@@ -429,4 +430,23 @@ png(here("outputs","figs","CompareRefPt_B2022relHistLRP_MCMC.png"), width=8, hei
   legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
 dev.off()
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Compare decision tables and stock status densities for some other TACs
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Whole list
+rtmb_proj  <- projoutput
+# convert dataframe to list
+iscam_proj <- projoutput_iscam %>%
+  rename(bavg=BAvgS, favg=FAvgS, bmin=Bmin,
+         bo=B0,fmsy=FMSY,bmsy=BMSY,B2022Bavg=B2022BAvgS,
+         B202208Bmsy=B20220.8BMSY,B202204Bmsy=B20220.4BMSY,
+         F2021Favg=F2021FAvgS, F2021Fmsy=F2021FMSY)
+iscam_proj <- split(iscam_proj, list(iscam_proj$TAC))
+
+# get decision tables, just for one year projection
+# NOTE: If making this again, need to comment out the B2022B0 cols in
+#  make_decision_table.R because this wasn't calculated in iscam
+decision_table_rtmb <- make_decision_table(rtmb_proj,npyr=1)
+decision_table_iscam <- make_decision_table(iscam_proj,npyr=1)
+saveRDS(decision_table,here("outputs","Compare_decision_table.rda"))
 
