@@ -80,14 +80,15 @@ source(here("R/model.R"))
 source(here("R/project_model.R"))
 source(here("R/run_projections.R"))
 source(here("R/get_posterior_derived_variables.R"))
-source(here("R/make_decision_tables.R"))
+source(here("R/make_decision_table.R"))
+source(here("R/make_decision_table_iscam.R"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 nsample <- 5000 # number of posterior samples for the mcmc
 nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for now)
-proj_years <- 2 # How many projection years for decision table
+proj_years <- 1 # How many projection years for decision table
 
 # Set test modes
 # Delete these eventually. The test code for the model is currently commented out anyway.
@@ -344,10 +345,12 @@ saveRDS(projections_output,here("outputs","Projections_output.rda"))
 decision_table <- make_decision_table(projections_output,proj_years)
 saveRDS(decision_table,here("outputs","Decision_table.rda"))
 
+# plot results
+source(here("devs","plot_rtmb_results_mcmc.r"))
 # Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mcmc.r"))
-source(here("devs","plot_rtmb_results_mcmc.r"))
+
 
 # TODO: compare some stock statuses for some other TACs in density plots
 # Compare decision tables (will need to make iscam decision table)

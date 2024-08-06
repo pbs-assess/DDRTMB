@@ -24,6 +24,8 @@ library(cowplot)
 library(here)
 library(gfplot)
 source("devs/load-models.R")
+source("devs/make_decision_table.R")
+source("devs/make_decision_table_iscam.R")
 
 # Settings
 # Colours for data, iscam and RTMB
@@ -444,9 +446,8 @@ iscam_proj <- projoutput_iscam %>%
 iscam_proj <- split(iscam_proj, list(iscam_proj$TAC))
 
 # get decision tables, just for one year projection
-# NOTE: If making this again, need to comment out the B2022B0 cols in
-#  make_decision_table.R because this wasn't calculated in iscam
-decision_table_rtmb <- make_decision_table(rtmb_proj,npyr=1)
-decision_table_iscam <- make_decision_table(iscam_proj,npyr=1)
-saveRDS(decision_table,here("outputs","Compare_decision_table.rda"))
+decision_table_rtmb  <- make_decision_table(rtmb_proj,npyr=1)
+decision_table_iscam <- make_decision_table_iscam(iscam_proj,npyr=1) # has its own function bc no B20xx/B0
+
+# saveRDS(decision_table,here("outputs","Compare_decision_table.rda"))
 
