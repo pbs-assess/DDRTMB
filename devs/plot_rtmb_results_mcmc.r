@@ -33,7 +33,7 @@ if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recu
 mcmcpars <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
 mcmcderived <- readRDS(here("outputs","MCMC_outputs_byvariable.rda"))
 mcmcdiagnostics <- readRDS(here("outputs","MCMC_diagnostics.rda"))
-projoutput <- readRDS(here("outputs","Projections_output.rda"))[[1]] # contains reference points
+projoutput <- readRDS(here("outputs","Projections_output.rda")) # contains reference points
 
 # Put all estimated scalar parameters together
 # Normally EIV pars would be here too but they are fixed for pcod
@@ -124,26 +124,28 @@ write_csv(mcmcdiagnostics, here("outputs","RTMB_MCMC_Diagnostic.csv"))
 
 # PLOTS WITH REFERENCE POINTS
 # Get reference points
-refpt_quants <- projoutput %>%
-  select(bavg,favg,bmin,fmsy,bmsy,bo) %>%
+refpt_quants_rtmb <- projoutput[[1]] %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
-  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`)
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  tibble::rownames_to_column(var <- "refpt")
 
 # Table of reference point quantiles
-write_csv(refpt_quants, here("outputs","Posterior_reference_points_quants.csv"))
+write_csv(refpt_quants_rtmb, here("outputs","Posterior_reference_points_quants.csv"))
 
 # Biomass
 #1. Historical reference points
-USR <- refpt_quants[1,] # Bavg
-LRP <- refpt_quants[3,] # Bmin
+USRrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="bavg")
+LRPrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="bmin")
 post_biomass_rp <- mcmcderived$biomass %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USR$lwr, USRmed=USR$med, USRupr=USR$upr,LRPlwr=LRP$lwr, LRPmed=LRP$med, LRPupr=LRP$upr) %>%
+  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USRrtmb$lwr, USRmed=USRrtmb$med, USRupr=USRrtmb$upr,LRPlwr=LRPrtmb$lwr, LRPmed=LRPrtmb$med, LRPupr=LRPrtmb$upr) %>%
   ggplot()+
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.5) +
   geom_line(aes(x=Year,y=med),color="black")+
@@ -157,14 +159,17 @@ post_biomass_rp <- mcmcderived$biomass %>%
 ggsave(here("outputs","figs","RTMB_MCMC_Biomass_HistRefPts.png"), width=8, height=6, units="in")
 
 # 2. MSY reference points
-USR <- 0.8*refpt_quants[5,] # 0.8Bmsy
-LRP <- 0.4*refpt_quants[5,] # 0.4Bmsy
+BMSY <- refpt_quants_rtmb %>%
+  filter(refpt=="bmsy") %>%
+  select(lwr,med,upr)
+USRrtmb <- 0.8*BMSY
+LRPrtmb <- 0.4*BMSY
 post_biomass_rp <- mcmcderived$biomass %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USR$lwr, USRmed=USR$med, USRupr=USR$upr,LRPlwr=LRP$lwr, LRPmed=LRP$med, LRPupr=LRP$upr) %>%
+  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USRrtmb$lwr, USRmed=USRrtmb$med, USRupr=USRrtmb$upr,LRPlwr=LRPrtmb$lwr, LRPmed=LRPrtmb$med, LRPupr=LRPrtmb$upr) %>%
   ggplot()+
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.5) +
   geom_line(aes(x=Year,y=med),color="black")+
@@ -179,13 +184,14 @@ ggsave(here("outputs","figs","RTMB_MCMC_Biomass_MSYRefPts.png"), width=8, height
 
 # Fishing mortality
 #1. Historical reference points
-LRR <- refpt_quants[2,] # Favg
+LRRrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="favg")
 post_ft_rp <- mcmcderived$Ft %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRR$lwr, LRRmed=LRR$med, LRRupr=LRR$upr) %>%
+  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRRrtmb$lwr, LRRmed=LRRrtmb$med, LRRupr=LRRrtmb$upr) %>%
   ggplot()+
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="black")+
@@ -197,13 +203,14 @@ post_ft_rp <- mcmcderived$Ft %>%
 ggsave(here("outputs","figs","RTMB_MCMC_Ft_HistRefPts.png"), width=8, height=6, units="in")
 
 # 2. MSY reference points
-LRR <- refpt_quants[4,] # Fmsy
+LRRrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="fmsy")
 post_ft_rp <- mcmcderived$Ft %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRR$lwr, LRRmed=LRR$med, LRRupr=LRR$upr) %>%
+  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRRrtmb$lwr, LRRmed=LRRrtmb$med, LRRupr=LRRrtmb$upr) %>%
   ggplot()+
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="black")+
@@ -213,3 +220,6 @@ post_ft_rp <- mcmcderived$Ft %>%
   theme_pbs()
 #print(post_ft_rp)
 ggsave(here("outputs","figs","RTMB_MCMC_Ft_MSYRefPts.png"), width=8, height=6, units="in")
+
+
+

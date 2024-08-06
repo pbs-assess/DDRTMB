@@ -339,7 +339,8 @@ saveRDS(projections_output,here("outputs","Projections_output.rda"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # TODO: Check the numbers make sense.
 # Make biomass and F plots with ref points.
-#Check against figures and do longhand calcs
+# Check against figures and do longhand calcs
+# Make iscam plot with reference points (need for ref case only)
 decision_table <- make_decision_table(projections_output,proj_years)
 saveRDS(decision_table,here("outputs","Decision_table.rda"))
 

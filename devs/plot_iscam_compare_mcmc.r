@@ -37,6 +37,8 @@ if(!file.exists(here("outputs","figs"))) dir.create(here("outputs","figs"), recu
 mcmcpars <- readRDS(here("outputs","MCMC_parameter_estimates.rda"))
 mcmcderived <- readRDS(here("outputs","MCMC_outputs_byvariable.rda"))
 mcmcdiagnostics <- readRDS(here("outputs","MCMC_diagnostics.rda"))
+# Projection_model results including ref points
+projoutput <- readRDS(here("outputs","Projections_output.rda")) # contains reference points
 
 # 2. iscam Read in MCMC outputs
 iscampars <- read_csv(here("data-raw/iscam_mcmc.csv"))
@@ -44,12 +46,15 @@ iscambiomass <- read_csv(here("data-raw/iscam_sbt_mcmc.csv"))
 iscamrecruits <- read_csv(here("data-raw/iscam_rt_mcmc.csv"))
 iscamrecdevs <- read_csv(here("data-raw/iscam_rdev_mcmc.csv"))
 iscamfmort <- read_csv(here("data-raw/iscam_ft_mcmc.csv"))
+# Projection_model results including ref points
+projoutput_iscam <- read_csv(here("data-raw/iscammcmc_proj_Gear1.csv"))
 
-# Remove burn in samples
+# Remove burn in samples for iscam ouputs
 iscampars <- iscampars[1001:2000,]
 iscamrecruits <- iscamrecruits[1001:2000,]
 iscamrecdevs <- iscamrecdevs[1001:2000,]
 iscamfmort <- iscamfmort[1001:2000,1:(dat$nyr-dat$syr+1)] # take  only gear 1, remove survey gears
+projoutput_iscam <- projoutput_iscam[31002:62001,]
 
 # Parameter histograms (without and with priors)
 # 1. Simple individual histograms
@@ -190,5 +195,116 @@ post_logrecdevs_iscam <- iscamrecdevs %>%
 #print(post_logrecdevs_iscam)
 cowplot::plot_grid(post_logrecdevs_rtmb,post_logrecdevs_iscam, ncol=1)
 ggsave(here("outputs","figs","CompareLogrecdevs_MCMC.png"), width=8, height=6, units="in")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ Compare projection outputs including ref points ~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Get reference points (same for every TAC so just take first)
+refpt_quants_rtmb <- projoutput[[1]] %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  tibble::rownames_to_column(var <- "refpt")
+
+refpt_quants_iscam <- projoutput_iscam %>%
+  filter(TAC==0) %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`)%>%
+  tibble::rownames_to_column(var <- "refpt")
+
+# Table of reference point quantiles
+write_csv(refpt_quants_rtmb, here("outputs","Posterior_reference_points_quants.csv"))
+write_csv(refpt_quants_iscam, here("outputs","Posterior_reference_points_quants.csv"))
+
+# Biomass
+#1. Historical reference points
+USRrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="bavg")
+LRPrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="bmin")
+post_biomass_rp <- mcmcderived$biomass %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USRrtmb$lwr, USRmed=USRrtmb$med, USRupr=USRrtmb$upr,LRPlwr=LRPrtmb$lwr, LRPmed=LRPrtmb$med, LRPupr=LRPrtmb$upr) %>%
+  ggplot()+
+  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.5) +
+  geom_line(aes(x=Year,y=med),color="black")+
+  geom_ribbon(aes(x=Year,ymin=USRlwr,ymax=USRupr), fill="green",alpha=0.2)+
+  geom_ribbon(aes(x=Year,ymin=LRPlwr,ymax=LRPupr), fill="red",alpha=0.2)+
+  geom_line(aes(x=Year,y=USRmed),color="green", lty=2)+
+  geom_line(aes(x=Year,y=LRPmed),color="red", lty=2)+
+  xlab("Year") + ylab("Posterior biomass (t)")+
+  theme_pbs()
+#print(post_biomass_rp)
+ggsave(here("outputs","figs","RTMB_MCMC_Biomass_HistRefPts.png"), width=8, height=6, units="in")
+
+# 2. MSY reference points
+BMSY <- refpt_quants_rtmb %>%
+  filter(refpt=="bmsy") %>%
+  select(lwr,med,upr)
+USRrtmb <- 0.8*BMSY
+LRPrtmb <- 0.4*BMSY
+post_biomass_rp <- mcmcderived$biomass %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USRrtmb$lwr, USRmed=USRrtmb$med, USRupr=USRrtmb$upr,LRPlwr=LRPrtmb$lwr, LRPmed=LRPrtmb$med, LRPupr=LRPrtmb$upr) %>%
+  ggplot()+
+  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.5) +
+  geom_line(aes(x=Year,y=med),color="black")+
+  geom_ribbon(aes(x=Year,ymin=USRlwr,ymax=USRupr), fill="green",alpha=0.2)+
+  geom_ribbon(aes(x=Year,ymin=LRPlwr,ymax=LRPupr), fill="red",alpha=0.2)+
+  geom_line(aes(x=Year,y=USRmed),color="green", lty=2)+
+  geom_line(aes(x=Year,y=LRPmed),color="red", lty=2)+
+  xlab("Year") + ylab("Posterior biomass (t)")+
+  theme_pbs()
+#print(post_biomass_rp)
+ggsave(here("outputs","figs","RTMB_MCMC_Biomass_MSYRefPts.png"), width=8, height=6, units="in")
+
+# Fishing mortality
+#1. Historical reference points
+LRRrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="favg")
+post_ft_rp <- mcmcderived$Ft %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRRrtmb$lwr, LRRmed=LRRrtmb$med, LRRupr=LRRrtmb$upr) %>%
+  ggplot()+
+  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.3) +
+  geom_line(aes(x=Year,y=med),color="black")+
+  geom_ribbon(aes(x=Year,ymin=LRRlwr,ymax=LRRupr), fill="darkgray",alpha=0.2)+
+  geom_line(aes(x=Year,y=LRRmed),color="black", lty=2)+
+  xlab("Year") + ylab("Posterior biomass (t)")+
+  theme_pbs()
+#print(post_ft_rp)
+ggsave(here("outputs","figs","RTMB_MCMC_Ft_HistRefPts.png"), width=8, height=6, units="in")
+
+# 2. MSY reference points
+LRRrtmb <- refpt_quants_rtmb %>%
+  filter(refpt=="fmsy")
+post_ft_rp <- mcmcderived$Ft %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRRrtmb$lwr, LRRmed=LRRrtmb$med, LRRupr=LRRrtmb$upr) %>%
+  ggplot()+
+  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.3) +
+  geom_line(aes(x=Year,y=med),color="black")+
+  geom_ribbon(aes(x=Year,ymin=LRRlwr,ymax=LRRupr), fill="darkgray",alpha=0.2)+
+  geom_line(aes(x=Year,y=LRRmed),color="black", lty=2)+
+  xlab("Year") + ylab("Posterior biomass (t)")+
+  theme_pbs()
+#print(post_ft_rp)
+ggsave(here("outputs","figs","RTMB_MCMC_Ft_MSYRefPts.png"), width=8, height=6, units="in")
+
 
 
