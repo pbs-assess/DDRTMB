@@ -1,15 +1,17 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # MAKE DECISION TABLE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# make_decision_table
+# make_decision_table_iscam
 # Called from run-model-v1.R
 
 # Author: Robyn Forrest
 # Date created:  August 2, 2024
 # Last Modified: August 3, 2024
 
-# This function takes the outputs of the projection model and calculates probabilities
+# This function takes the outputs of the ISCAM projection model and calculates probabilities
 # of various metrics for each TAC
+# The only difference between this and make_decision_table is that
+# iscam did not output B20xx/B0 so these lines are commented out
 
 # arguments:
 # proj_outputs = the list object returned by run_projections()

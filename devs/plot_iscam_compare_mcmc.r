@@ -449,5 +449,12 @@ iscam_proj <- split(iscam_proj, list(iscam_proj$TAC))
 decision_table_rtmb  <- make_decision_table(rtmb_proj,npyr=1)
 decision_table_iscam <- make_decision_table_iscam(iscam_proj,npyr=1) # has its own function bc no B20xx/B0
 
-# saveRDS(decision_table,here("outputs","Compare_decision_table.rda"))
+# remove column P(B2022<B0) because iscam doesn't have it
+decision_table_rtmb <- decision_table_rtmb %>%
+  select(-"P(B2022<B0)")
+
+decision_table_rtmb <- rbind(rep("RTMB",ncol(decision_table_rtmb)),decision_table_rtmb)
+decision_table_iscam <- rbind(rep("iscam",ncol(decision_table_iscam)),decision_table_iscam)
+decision_table_compare <- rbind(decision_table_rtmb,decision_table_iscam)
+write_csv(decision_table_compare,here("outputs","Compare_decision_table.csv"))
 
