@@ -349,4 +349,6 @@ saveRDS(decision_table,here("outputs","Decision_table.rda"))
 source(here("devs","plot_iscam_compare_mcmc.r"))
 source(here("devs","plot_rtmb_results_mcmc.r"))
 
+# TODO: compare some stock statuses for some other TACs in density plots
+# Compare decision tables (will need to make iscam decision table)
 
