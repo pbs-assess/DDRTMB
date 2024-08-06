@@ -17,6 +17,7 @@
 # Also the dat and control file for model dimensions and priors settings
 # dat <- pcod2020dat
 # ctl <- pcod2020ctl
+# pfc <- pcod2020pfc
 
 library(tidyverse)
 library(reshape2)
@@ -24,8 +25,8 @@ library(cowplot)
 library(here)
 library(gfplot)
 source("devs/load-models.R")
-source("devs/make_decision_table.R")
-source("devs/make_decision_table_iscam.R")
+source("R/make_decision_table.R")
+source("R/make_decision_table_iscam.R")
 
 # Settings
 # Colours for data, iscam and RTMB
@@ -445,6 +446,59 @@ iscam_proj <- projoutput_iscam %>%
          F2021Favg=F2021FAvgS, F2021Fmsy=F2021FMSY)
 iscam_proj <- split(iscam_proj, list(iscam_proj$TAC))
 
+tactest <- c(2,5,10,20,25,30)
+
+# plot B2022/Hist ref points and F2021/Historical ref point for 6 TACs
+png(here("outputs","figs","CompareRefPt_F2021relHistLRR_sixtac.png"), width=8, height=6, units="in", res=300)
+par(mfrow=c(2,3))
+for(i in tactest){
+  rtmb_proj_tac <- rtmb_proj[[i]]
+  iscam_proj_tac <- iscam_proj[[i]]
+
+  rtmbden <- density(rtmb_proj_tac$F2021Favg)
+  iscamden <- density(iscam_proj_tac$F2021Favg)
+  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+}
+dev.off()
+
+png(here("outputs","figs","CompareRefPt_B2022relHistUSR_sixtac.png"), width=8, height=6, units="in", res=300)
+par(mfrow=c(2,3))
+for(i in tactest){
+  rtmb_proj_tac <- rtmb_proj[[i]]
+  iscam_proj_tac <- iscam_proj[[i]]
+
+  rtmbden <- density(rtmb_proj_tac$B2022Bavg)
+  iscamden <- density(iscam_proj_tac$B2022Bavg)
+  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+}
+dev.off()
+
+png(here("outputs","figs","CompareRefPt_B2022relHistLRP_sixtac.png"), width=8, height=6, units="in", res=300)
+par(mfrow=c(2,3))
+for(i in tactest){
+  rtmb_proj_tac <- rtmb_proj[[i]]
+  iscam_proj_tac <- iscam_proj[[i]]
+
+  rtmbden <- density(rtmb_proj_tac$B2022Bmin)
+  iscamden <- density(iscam_proj_tac$B2022Bmin)
+  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+}
+dev.off()
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # get decision tables, just for one year projection
 decision_table_rtmb  <- make_decision_table(rtmb_proj,npyr=1)
 decision_table_iscam <- make_decision_table_iscam(iscam_proj,npyr=1) # has its own function bc no B20xx/B0
