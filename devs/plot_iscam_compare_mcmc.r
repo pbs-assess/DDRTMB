@@ -303,16 +303,19 @@ post_ft_rp_iscam <- iscamfmort %>%
 cowplot::plot_grid(post_ft_rp_rtmb,post_ft_rp_iscam, ncol=1)
 ggsave(here("outputs","figs","CompareFt_MCMC_HistRefpts.png"), width=8, height=6, units="in")
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Plot densities of reference points and other projection benchmarks and stock status
 rtmb_proj  <- projoutput[[1]]%>%
   as.data.frame()
 iscam_proj <- projoutput_iscam %>%
+  rename(bavg=BAvgS, favg=FAvgS, bmin=Bmin,
+         bo=B0,fmsy=FMSY,bmsy=BMSY,B2022Bavg=B2022BAvgS) %>%
   filter(TAC==0) %>%
   as.data.frame()
 
 # Bavg
 rtmbden <- density(rtmb_proj$bavg)
-iscamden <- density(iscam_proj$BAvgS)
+iscamden <- density(iscam_proj$bavg)
 png(here("outputs","figs","CompareRefPt_HistUSR_MCMC.png"), width=8, height=6, units="in", res=300)
   plot(rtmbden, main="USR (Historical average biomass)", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
   lines(iscamden, col="red",lwd=2)
@@ -323,7 +326,7 @@ dev.off()
 
 # FAvg
 rtmbden <- density(rtmb_proj$favg)
-iscamden <- density(iscam_proj$FAvgS)
+iscamden <- density(iscam_proj$favg)
 png(here("outputs","figs","CompareRefPt_HistLRR_MCMC.png"), width=8, height=6, units="in", res=300)
   plot(rtmbden, main="LRR (Historical average F)", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
   lines(iscamden, col="red",lwd=2)
@@ -333,7 +336,7 @@ png(here("outputs","figs","CompareRefPt_HistLRR_MCMC.png"), width=8, height=6, u
 dev.off()
 
 rtmbden <- density(rtmb_proj$bmin)
-iscamden <- density(iscam_proj$Bmin)
+iscamden <- density(iscam_proj$bmin)
 png(here("outputs","figs","CompareRefPt_HistLRP_MCMC.png"), width=8, height=6, units="in", res=300)
 plot(rtmbden, main="LRP (Historical Bmin)", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
   lines(iscamden, col="red",lwd=2)
@@ -344,7 +347,7 @@ dev.off()
 
 # Bmsy
 rtmbden <- density(rtmb_proj$bmsy)
-iscamden <- density(iscam_proj$BMSY)
+iscamden <- density(iscam_proj$bmsy)
 png(here("outputs","figs","CompareRefPt_Bmsy_MCMC.png"), width=8, height=6, units="in", res=300)
   plot(rtmbden, main="Bmsy", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
   lines(iscamden, col="red",lwd=2)
@@ -355,8 +358,19 @@ dev.off()
 
 # Fmsy
 rtmbden <- density(rtmb_proj$fmsy)
-iscamden <- density(iscam_proj$FMSY)
+iscamden <- density(iscam_proj$fmsy)
 png(here("outputs","figs","CompareRefPt_Fmsy_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="Fmsy", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+# B0
+rtmbden <- density(rtmb_proj$bo)
+iscamden <- density(iscam_proj$bo)
+png(here("outputs","figs","CompareRefPt_B0_MCMC.png"), width=8, height=6, units="in", res=300)
   plot(rtmbden, main="Fmsy", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
   lines(iscamden, col="red",lwd=2)
   polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
@@ -396,7 +410,7 @@ png(here("outputs","figs","CompareRefPt_B2022relB2021_MCMC.png"), width=8, heigh
 dev.off()
 
 rtmbden <- density(rtmb_proj$B2022Bavg)
-iscamden <- density(iscam_proj$B2022BAvgS)
+iscamden <- density(iscam_proj$B2022Bavg)
 png(here("outputs","figs","CompareRefPt_B2022relHistUSR_MCMC.png"), width=8, height=6, units="in", res=300)
   plot(rtmbden, main="B2022 relative to Historical USR", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
   lines(iscamden, col="red",lwd=2)

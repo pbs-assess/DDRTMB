@@ -259,6 +259,13 @@ png(here("outputs","figs","RTMB_RefPt_Fmsy_MCMC.png"), width=8, height=6, units=
   polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
 dev.off()
 
+# B0
+rtmbden <- density(rtmb_proj$bo)
+png(here("outputs","figs","RTMB_RefPt_B0_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="Fmsy", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
 # Look at some stock status indicators
 rtmbden <- density(rtmb_proj$B2021)
 png(here("outputs","figs","RTMB_RefPt_B2021_MCMC.png"), width=8, height=6, units="in", res=300)
