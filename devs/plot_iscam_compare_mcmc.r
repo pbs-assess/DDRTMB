@@ -199,7 +199,7 @@ ggsave(here("outputs","figs","CompareLogrecdevs_MCMC.png"), width=8, height=6, u
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Compare projection outputs including ref points ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Get reference points (same for every TAC so just take first)
+# Get reference points quantiles (same for every TAC so just take first)
 refpt_quants_rtmb <- projoutput[[1]] %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
@@ -225,31 +225,8 @@ USRrtmb <- refpt_quants_rtmb %>%
   filter(refpt=="bavg")
 LRPrtmb <- refpt_quants_rtmb %>%
   filter(refpt=="bmin")
-post_biomass_rp <- mcmcderived$biomass %>%
-  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
-  t() %>%
-  as.data.frame() %>%
-  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USRrtmb$lwr, USRmed=USRrtmb$med, USRupr=USRrtmb$upr,LRPlwr=LRPrtmb$lwr, LRPmed=LRPrtmb$med, LRPupr=LRPrtmb$upr) %>%
-  ggplot()+
-  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.5) +
-  geom_line(aes(x=Year,y=med),color="black")+
-  geom_ribbon(aes(x=Year,ymin=USRlwr,ymax=USRupr), fill="green",alpha=0.2)+
-  geom_ribbon(aes(x=Year,ymin=LRPlwr,ymax=LRPupr), fill="red",alpha=0.2)+
-  geom_line(aes(x=Year,y=USRmed),color="green", lty=2)+
-  geom_line(aes(x=Year,y=LRPmed),color="red", lty=2)+
-  xlab("Year") + ylab("Posterior biomass (t)")+
-  theme_pbs()
-#print(post_biomass_rp)
-ggsave(here("outputs","figs","RTMB_MCMC_Biomass_HistRefPts.png"), width=8, height=6, units="in")
 
-# 2. MSY reference points
-BMSY <- refpt_quants_rtmb %>%
-  filter(refpt=="bmsy") %>%
-  select(lwr,med,upr)
-USRrtmb <- 0.8*BMSY
-LRPrtmb <- 0.4*BMSY
-post_biomass_rp <- mcmcderived$biomass %>%
+post_biomass_rp_rtmb <- mcmcderived$biomass %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
@@ -262,16 +239,38 @@ post_biomass_rp <- mcmcderived$biomass %>%
   geom_ribbon(aes(x=Year,ymin=LRPlwr,ymax=LRPupr), fill="red",alpha=0.2)+
   geom_line(aes(x=Year,y=USRmed),color="green", lty=2)+
   geom_line(aes(x=Year,y=LRPmed),color="red", lty=2)+
-  xlab("Year") + ylab("Posterior biomass (t)")+
+  xlab("Year") + ylab("Posterior biomass (t)")+ggtitle("rtmb")+
   theme_pbs()
-#print(post_biomass_rp)
-ggsave(here("outputs","figs","RTMB_MCMC_Biomass_MSYRefPts.png"), width=8, height=6, units="in")
+
+USRiscam <- refpt_quants_iscam %>%
+  filter(refpt=="BAvgS")
+LRPiscam <- refpt_quants_iscam %>%
+  filter(refpt=="Bmin")
+
+post_biomass_rp_iscam <- iscambiomass %>%
+  apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
+  t() %>%
+  as.data.frame() %>%
+  rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
+  mutate(Year=dat$syr:(dat$nyr+1), USRlwr=USRiscam$lwr, USRmed=USRiscam$med, USRupr=USRiscam$upr,LRPlwr=LRPiscam$lwr, LRPmed=LRPiscam$med, LRPupr=LRPiscam$upr) %>%
+  ggplot()+
+  geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.5) +
+  geom_line(aes(x=Year,y=med),color="black")+
+  geom_ribbon(aes(x=Year,ymin=USRlwr,ymax=USRupr), fill="green",alpha=0.2)+
+  geom_ribbon(aes(x=Year,ymin=LRPlwr,ymax=LRPupr), fill="red",alpha=0.2)+
+  geom_line(aes(x=Year,y=USRmed),color="green", lty=2)+
+  geom_line(aes(x=Year,y=LRPmed),color="red", lty=2)+
+  xlab("Year") + ylab("Posterior biomass (t)")+ggtitle("iscam")+
+  theme_pbs()
+cowplot::plot_grid(post_biomass_rp_rtmb,post_biomass_rp_iscam, ncol=1)
+ggsave(here("outputs","figs","CompareBiomass_MCMC_HistRefpts.png"), width=8, height=6, units="in")
 
 # Fishing mortality
 #1. Historical reference points
 LRRrtmb <- refpt_quants_rtmb %>%
   filter(refpt=="favg")
-post_ft_rp <- mcmcderived$Ft %>%
+
+post_ft_rp_rtmb <- mcmcderived$Ft %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
@@ -282,29 +281,138 @@ post_ft_rp <- mcmcderived$Ft %>%
   geom_line(aes(x=Year,y=med),color="black")+
   geom_ribbon(aes(x=Year,ymin=LRRlwr,ymax=LRRupr), fill="darkgray",alpha=0.2)+
   geom_line(aes(x=Year,y=LRRmed),color="black", lty=2)+
-  xlab("Year") + ylab("Posterior biomass (t)")+
+  xlab("Year") + ylab("Posterior biomass (t)")+ggtitle("rtmb")+
   theme_pbs()
-#print(post_ft_rp)
-ggsave(here("outputs","figs","RTMB_MCMC_Ft_HistRefPts.png"), width=8, height=6, units="in")
 
-# 2. MSY reference points
-LRRrtmb <- refpt_quants_rtmb %>%
-  filter(refpt=="fmsy")
-post_ft_rp <- mcmcderived$Ft %>%
+LRRiscam <- refpt_quants_iscam %>%
+  filter(refpt=="FAvgS")
+
+post_ft_rp_iscam <- iscamfmort %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
   as.data.frame() %>%
   rename(lwr=`2.5%`, med=`50%`, upr=`97.5%`) %>%
-  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRRrtmb$lwr, LRRmed=LRRrtmb$med, LRRupr=LRRrtmb$upr) %>%
+  mutate(Year=dat$syr:(dat$nyr), LRRlwr=LRRiscam$lwr, LRRmed=LRRiscam$med, LRRupr=LRRiscam$upr) %>%
   ggplot()+
   geom_ribbon(aes(x=Year, ymin=lwr, ymax=upr), fill="darkgrey", alpha = 0.3) +
   geom_line(aes(x=Year,y=med),color="black")+
   geom_ribbon(aes(x=Year,ymin=LRRlwr,ymax=LRRupr), fill="darkgray",alpha=0.2)+
   geom_line(aes(x=Year,y=LRRmed),color="black", lty=2)+
-  xlab("Year") + ylab("Posterior biomass (t)")+
+  xlab("Year") + ylab("Posterior biomass (t)")+ggtitle("iscam")+
   theme_pbs()
-#print(post_ft_rp)
-ggsave(here("outputs","figs","RTMB_MCMC_Ft_MSYRefPts.png"), width=8, height=6, units="in")
+cowplot::plot_grid(post_ft_rp_rtmb,post_ft_rp_iscam, ncol=1)
+ggsave(here("outputs","figs","CompareFt_MCMC_HistRefpts.png"), width=8, height=6, units="in")
 
+# Plot densities of reference points and other projection benchmarks and stock status
+rtmb_proj  <- projoutput[[1]]%>%
+  as.data.frame()
+iscam_proj <- projoutput_iscam %>%
+  filter(TAC==0) %>%
+  as.data.frame()
+
+# Bavg
+rtmbden <- density(rtmb_proj$bavg)
+iscamden <- density(iscam_proj$BAvgS)
+png(here("outputs","figs","CompareRefPt_HistUSR_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="USR (Historical average biomass)", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+# FAvg
+rtmbden <- density(rtmb_proj$favg)
+iscamden <- density(iscam_proj$FAvgS)
+png(here("outputs","figs","CompareRefPt_HistLRR_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="LRR (Historical average F)", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+rtmbden <- density(rtmb_proj$bmin)
+iscamden <- density(iscam_proj$Bmin)
+png(here("outputs","figs","CompareRefPt_HistLRP_MCMC.png"), width=8, height=6, units="in", res=300)
+plot(rtmbden, main="LRP (Historical Bmin)", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+# Bmsy
+rtmbden <- density(rtmb_proj$bmsy)
+iscamden <- density(iscam_proj$BMSY)
+png(here("outputs","figs","CompareRefPt_Bmsy_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="Bmsy", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+# Fmsy
+rtmbden <- density(rtmb_proj$fmsy)
+iscamden <- density(iscam_proj$FMSY)
+png(here("outputs","figs","CompareRefPt_Fmsy_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="Fmsy", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+# Look at some stock status indicators
+rtmbden <- density(rtmb_proj$B2021)
+iscamden <- density(iscam_proj$B2021)
+png(here("outputs","figs","CompareRefPt_B2021_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2021", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022)
+iscamden <- density(iscam_proj$B2022)
+png(here("outputs","figs","CompareRefPt_B2022_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022B2021)
+iscamden <- density(iscam_proj$B2022B2021)
+png(here("outputs","figs","CompareRefPt_B2022relB2021_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022 relative to B2021", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022Bavg)
+iscamden <- density(iscam_proj$B2022BAvgS)
+png(here("outputs","figs","CompareRefPt_B2022relHistUSR_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022 relative to Historical USR", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022Bmin)
+iscamden <- density(iscam_proj$B2022Bmin)
+png(here("outputs","figs","CompareRefPt_B2022relHistLRP_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022 relative to Historical LRP", col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  lines(iscamden, col="red",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+  polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
+  legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
+dev.off()
 
 

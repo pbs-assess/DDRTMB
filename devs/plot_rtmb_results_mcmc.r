@@ -123,7 +123,7 @@ ggsave(here("outputs","figs","RTMB_MCMC_Logrecdevs.png"), width=8, height=6, uni
 write_csv(mcmcdiagnostics, here("outputs","RTMB_MCMC_Diagnostic.csv"))
 
 # PLOTS WITH REFERENCE POINTS
-# Get reference points
+# Get reference points quantiles
 refpt_quants_rtmb <- projoutput[[1]] %>%
   apply(2,quantile,probs=c(0.025,0.5,0.975))%>%
   t() %>%
@@ -221,5 +221,72 @@ post_ft_rp <- mcmcderived$Ft %>%
 #print(post_ft_rp)
 ggsave(here("outputs","figs","RTMB_MCMC_Ft_MSYRefPts.png"), width=8, height=6, units="in")
 
+# Plot densities of reference points and other projection benchmarks and stock status
+rtmb_proj  <- projoutput[[1]]%>%
+  as.data.frame()
 
+# Bavg
+rtmbden <- density(rtmb_proj$bavg)
+png(here("outputs","figs","RTMB_RefPt_HistUSR_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="USR (Historical average biomass)", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+# FAvg
+rtmbden <- density(rtmb_proj$favg)
+png(here("outputs","figs","RTMB_RefPt_HistLRR_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="LRR (Historical average F)", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+rtmbden <- density(rtmb_proj$bmin)
+png(here("outputs","figs","RTMB_RefPt_HistLRP_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="LRP (Historical Bmin)", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+# Bmsy
+rtmbden <- density(rtmb_proj$bmsy)
+png(here("outputs","figs","RTMB_RefPt_Bmsy_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="Bmsy", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+# Fmsy
+rtmbden <- density(rtmb_proj$fmsy)
+png(here("outputs","figs","RTMB_RefPt_Fmsy_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="Fmsy", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+# Look at some stock status indicators
+rtmbden <- density(rtmb_proj$B2021)
+png(here("outputs","figs","RTMB_RefPt_B2021_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2021", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022)
+png(here("outputs","figs","RTMB_RefPt_B2022_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022B2021)
+png(here("outputs","figs","RTMB_RefPt_B2022relB2021_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022 relative to B2021", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022Bavg)
+png(here("outputs","figs","RTMB_RefPt_B2022relHistUSR_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022 relative to Historical USR", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
+
+rtmbden <- density(rtmb_proj$B2022Bmin)
+png(here("outputs","figs","RTMB_RefPt_B2022relHistLRP_MCMC.png"), width=8, height=6, units="in", res=300)
+  plot(rtmbden, main="B2022 relative to Historical LRP", col="blue",lwd=2)
+  polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
+dev.off()
 
