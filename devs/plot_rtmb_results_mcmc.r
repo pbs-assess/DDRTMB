@@ -262,7 +262,7 @@ dev.off()
 # B0
 rtmbden <- density(rtmb_proj$bo)
 png(here("outputs","figs","RTMB_RefPt_B0_MCMC.png"), width=8, height=6, units="in", res=300)
-  plot(rtmbden, main="Fmsy", col="blue",lwd=2)
+  plot(rtmbden, main="B0", col="blue",lwd=2)
   polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
 dev.off()
 

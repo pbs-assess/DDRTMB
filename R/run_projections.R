@@ -84,7 +84,7 @@ run_projections <- function(posteriors){
             round(msyrefpts$bmsy[samp],2),round(msyrefpts$bo[samp],2)))
   } # end if testrefpts
 
-  message(paste("Calculating stock status for",npyr,"projection years"))
+  message(paste("Calculating stock status for",npyr,"projection year(s)"))
 
   # Add reference points to proj_out (they are the same for each tac)
   for(i in 1:ntac){
