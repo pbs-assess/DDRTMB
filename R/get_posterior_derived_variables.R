@@ -54,6 +54,7 @@ get_posterior_derived_variables <- function(obj,mc,type="bysample", proj_years){
   # posteriors_by_variable
   if(type=="byvariable"){
     message("Calculating posteriors for REPORT objects (derived model variables): sorting by variable")
+    message("This will take a while for a lot of samples")
     # prepare the list
     posteriors_by_variable <- list()
     posteriors_by_variable$biomass  <- matrix(NA, ncol=nyrs+1, nrow=nrow(mcdf))
@@ -81,7 +82,7 @@ get_posterior_derived_variables <- function(obj,mc,type="bysample", proj_years){
   # posteriors_by_sample
   if(type=="bysample"){
     message("Calculating posteriors for REPORT objects (derived model variables): sorting by posterior sample")
-
+    message("This will take a while for a lot of samples")
     # prepare the list
     posteriors_by_sample <- list()
 
