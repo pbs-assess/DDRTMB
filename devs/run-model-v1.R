@@ -34,7 +34,6 @@
 #         but be careful that the model steps are preserved in order
 #         i.e., will still need the model function to be called (this is what
 #          is optimised), rather than letting users build their own
-#  - Implement MCMC - tmbstan
 #  - Check source of fished equilibrium equation and check code - or remove it (in calcNumbersBiomass_deldiff)
 # Think about a consistent way to move objects around.
 #  Some are in global space and some come in through the getAll func
@@ -48,14 +47,10 @@
 #  - Add time-varying M
 #  - Think about how to make this a multi-species, multi-area model? (MICE)
 #  - Some of the architecture is already in iscam
-#  - consider a stan version if this doesn't work well
-#  - consider a delay differential model in continuous time (see CJW correspondence)
+#  - Consider a delay differential model in continuous time (see CJW correspondence)
 
 # 3. Graphic outputs and diagnostics
 #  - Coordinate with Sean, Nick, Catarina, others, ... for standardized set of visualizations of outputs and diagnostics
-
-# Document and build package (these are also buttons in Rstudio)
-#    this will incorporate new functions saved in the R and data folders
 
 # Load documentation and inputs
 # All the functions called here assume that this has been done and
@@ -86,7 +81,7 @@ source(here("R/make_decision_table_iscam.R"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nsample <- 5000 # number of posterior samples for the mcmc
+nsample <- 20000 # number of posterior samples for the mcmc
 nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 1 # How many projection years for decision table
 
@@ -235,7 +230,7 @@ fitmcmc <- tmbstan(obj, chains=nchain,
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))))
 
-# Remove burn in (warmup)
+# Extract samples and remove burn in (warmup)
 mc <- extract(fitmcmc, pars=names(obj$par),
               inc_warmup=FALSE, permuted=FALSE)
 
