@@ -53,4 +53,4 @@ devs/0_1a_5ABCD_BASE_2020
 *.rda
 *.png
 *.pdf
-/outputs
+/outputs*
