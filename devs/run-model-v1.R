@@ -155,10 +155,9 @@ par$log_m <- theta_control[3,1] #-1.18317 # (rep file estimate) theta_control[3,
 #par$log_avgrec <- theta_control[4,1] # log average recruitment (syr+1 to nyr)
 #par$log_recinit <- ptheta_control[5,1] #l og average of initial recruitments to fill first year if population if population is not unfished at syr
 
-# Variance parameters are fixed for P cod so should not be in par
+# Variance parameters are fixed for P cod: fixed in obj (using map argument)
 par$rho <- theta_control[6,1] # Errors in Variables: fraction of the total variance associated with observation error
 par$kappa <- theta_control[7,1] # Errors in Variables: total precision (inverse of variance) of the total error.
-# TODO: Check these are dimensioned and initialized correctly
 par$log_ft_pars <- numeric(nyrs) # estimated log fishing mortalities (total across fleets)
 par$init_log_rec_devs <- numeric(length=length((dat$sage+1):dat$nage)) # I think this is length nage-sage+1 (i.e., length 2:9)
 par$log_rec_devs <- numeric(nyrs)
@@ -178,7 +177,7 @@ par
 ## from TMB help: map = List defining how to optionally collect and fix parameters
 ## Means you can fix some instances of a vector/matrix of parameters and estimate ones with the same factor id to be the same
 # Fixing rho and kappa  log_m=factor(NA) h=factor(NA),
-# Note the model is in model.R
+# Note the model function is in model.R
 obj <- MakeADFun(model, par, silent=FALSE,
                map=list(rho=factor(NA), kappa=factor(NA)))
 # The optimization step - gets passed the parameters, likelihood function and gradients Makeby ADFun
@@ -202,10 +201,11 @@ saveRDS(plsd, here("outputs","parameter_sds.rda"))
 saveRDS(plrad, here("outputs","derived_estimates.rda"))
 saveRDS(plradsd, here("outputs","derived_sds.rda"))
 
-# Plot results and comparisons with iscam
+# Plot mpd results
+source(here("devs","plot_rtmb_results_mpd.r"))
+# And comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mpd.r"))
-source(here("devs","plot_rtmb_results_mpd.r"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 4. MCMCs - Posterior parameter estimates
@@ -240,16 +240,16 @@ mon <- monitor(mc)
 #max(mon$Rhat)
 #min(mon$Tail_ESS)
 
-# Save results as a data frame
+# Save results as a data frame, also save diagnostics
 # (if running more than one chain, then would do this for each chain)
 mc.df <- as.data.frame(mc[,1,])
 
 saveRDS(mc.df, here("outputs","MCMC_parameter_estimates.rda"))
 saveRDS(mon, here("outputs","MCMC_diagnostics.rda"))
 
-# # Four chains
+# # Four chains - commented out for now
 # fitmcmc_4ch <- tmbstan(obj, chains=4,
-#                    iter=Iter,
+#                    iter=nsample,
 #                    init=list(opt$par),
 #                    lower=c(1.,0.2,-2.3,
 #                            rep(-5,length(par$log_ft_pars)),
@@ -312,7 +312,7 @@ saveRDS(posteriors_by_sample, here("outputs","MCMC_outputs_bysample.rda"))
 # 2. A vector of future TACs (from pfc file)
 # 3. Number of projection years (added above to posteriors_by_sample object)
 
-# Outputs are in a list:
+# Outputs are in the list posteriors_by_sample:
 #   one list item per tac (from pfc$tac.vec)
 # each list item is a dataframe with dim:
 #    nrow=number of posterior samples,
@@ -345,8 +345,3 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 # Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mcmc.r"))
-
-
-# TODO: compare some stock statuses for some other TACs in density plots
-# Compare decision tables (will need to make iscam decision table)
-
