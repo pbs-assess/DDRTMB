@@ -457,12 +457,15 @@ for(i in tactest){
 
   rtmbden <- density(rtmb_proj_tac$F2021Favg)
   iscamden <- density(iscam_proj_tac$F2021Favg)
-  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2,
+       ylim=c(0,max(c(rtmbden$y, iscamden$y))),
+       xlim=c(0,max(c(rtmbden$x, iscamden$x))),
+       xlab="F2021/HistLRR")
   lines(iscamden, col="red",lwd=2)
   polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
   polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
   legend("topright",legend=c("RTMB", "iscam"), lwd=2, col=c("blue","red"), bty="n")
-}
+ }
 dev.off()
 
 png(here("outputs","figs","CompareRefPt_B2022relHistUSR_sixtac.png"), width=8, height=6, units="in", res=300)
@@ -473,7 +476,10 @@ for(i in tactest){
 
   rtmbden <- density(rtmb_proj_tac$B2022Bavg)
   iscamden <- density(iscam_proj_tac$B2022Bavg)
-  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2,
+       ylim=c(0,max(c(rtmbden$y, iscamden$y))),
+       xlim=c(0,max(c(rtmbden$x, iscamden$x))),
+       xlab="B2022/HistUSR")
   lines(iscamden, col="red",lwd=2)
   polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
   polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
@@ -489,7 +495,10 @@ for(i in tactest){
 
   rtmbden <- density(rtmb_proj_tac$B2022Bmin)
   iscamden <- density(iscam_proj_tac$B2022Bmin)
-  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2, ylim=c(0,max(c(rtmbden$y, iscamden$y))), xlim=c(0,max(c(rtmbden$x, iscamden$x))))
+  plot(rtmbden, main=paste("TAC=",pfc$tac.vec[i]), col="blue",lwd=2,
+       ylim=c(0,max(c(rtmbden$y, iscamden$y))),
+       xlim=c(0,max(c(rtmbden$x, iscamden$x))),
+       xlab="B2022/HistLRP")
   lines(iscamden, col="red",lwd=2)
   polygon(rtmbden, col=adjustcolor("blue", alpha.f = 0.2))
   polygon(iscamden, col=adjustcolor("red", alpha.f = 0.2))
