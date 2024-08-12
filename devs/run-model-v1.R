@@ -669,7 +669,7 @@ model <- function(par){
   jnll # return joint neg log likelihood
 }
 
-model(pars)
+model(par)
 
 ## MakeADFun builds the graph, basically "compiles" the model with random effects identified
 ## from TMB help: map = List defining how to optionally collect and fix parameters
