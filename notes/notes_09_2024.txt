@@ -1,0 +1,5 @@
+#Notes to discuss on 04/09/2024
+
+- Running devs/run-model-v1.R -- we do not need to source any of the files in the R folder, as they will all 
+
+- On R/project_model the library calls should be removed
