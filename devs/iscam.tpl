@@ -4087,7 +4087,7 @@ FUNCTION calcObjectiveFunction
 	qvec.initialize();
 	for(k=1;k<=nits;k++)
 	{
-		if(q_prior(k) == 1 )
+		if(q_prior(k) == 1)
 		{
 			qvec(k) = dnorm( log(q(k)), mu_log_q(k), sd_log_q(k) );
 		}
@@ -4183,13 +4183,14 @@ FUNCTION calcObjectiveFunction
 					objfun += sum(pvec);
 					objfun += sum(qvec);
 
-					/*
+					if(verbose)
+	                               {
 					LOG<<"nlvec_dd  "<<'\n'<<nlvec_dd<<'\n';
 					LOG<<"priors  "<<priors<<'\n';
 					LOG<<"pvec  "<<pvec<<'\n';
 					LOG<<"qvec  "<<qvec<<'\n';
 					LOG<<"objfun  "<<objfun<<'\n';
-					 */
+					}
 				break;
 				}
 	nf++;
@@ -4287,7 +4288,7 @@ FUNCTION void calcReferencePoints()
   	[ ] - allow user to specify which selectivity years are used in reference point
   	      calculations. This should probably be done in the projection File Control.
   	*/
-  	if(delaydiff){
+  if(delaydiff){
       run_FRPdd();
     }else{
       if(d_iscamCntrl(13) || d_iscamCntrl(17)){
@@ -4955,7 +4956,7 @@ REPORT_SECTION
 	if(verbose){
     LOG<<"Start of Report Section...\n";
   }
-	report<<"ObjectiveFunction\n"<<objfun<<'\n';
+  report<<"ObjectiveFunction\n"<<objfun<<'\n';
   report<<"FuncEvals\n"<<nf<<'\n';
   report<<"NumParams\n"<<npar<<'\n';
   report<<"MaxGrad\n"<<objective_function_value::gmax<<'\n';
@@ -4969,6 +4970,9 @@ REPORT_SECTION
 	REPORT(objfun);
 	if(!delaydiff) REPORT(nlvec);
 	if(delaydiff) REPORT(nlvec_dd);
+	REPORT(priors);
+	REPORT(qvec);
+	REPORT(pvec);
 	REPORT(ro);
 	dvector rbar=value(exp(log_avgrec));
 	REPORT(rbar);
@@ -6003,7 +6007,7 @@ FUNCTION void projection_model_dd(const double& tac)
 	//double pso = value (so(1));
 	//double pbeta =value(beta(1));
 
-	dvector p_bt(syr,pyr);
+	dvector p_bt(syr,pyr); 
 	dvector p_ft(syr,pyr);
 	dvector p_N(syr,pyr);
 	dvector p_S(syr,pyr);
@@ -6174,6 +6178,7 @@ GLOBALS_SECTION
   #include <string.h>
   #include <unistd.h>
   #include <fcntl.h>
+  #include "C:/admb/build/admb/include/contrib/statsLib.h" //added July 2024. Hardwired for robyn's computer so that makefiles workj
   #include "../../include/baranov.h"
   #include "../../include/gdbprintlib.h"
   #include "../../include/LogisticNormal.h"
