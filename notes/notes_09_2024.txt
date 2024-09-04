@@ -5,4 +5,21 @@
 - On R/project_model the library calls should be removed
 
 - for mcmc, there are a lot of divergent transitions, but I think it may get better with more chains. 
-Dan, who uses stan a lot recommends always using 6+ chains.  
+Dan, who uses stan a lot recommends always using 6+ chains. 
+
+
++====================================
+TODO
+
+- replace likelihood functions: Robyn
+- built in testing functions
+- build template input files and read data functions - similar to chisca structure: Catarina
+- Move global objects to data object: Robyn
+- Explore map options for logRo- mirror?: Catarina to see notes from TMB course. 
+- Move everything fro ctl into the dat file.
+- remove par$ , dat$ and ctl$ from the main RTMB model
+
+Later model improvements
+- Explore setting up the recruitment deviations as random effects
+- Weight of survey observations
+- 
