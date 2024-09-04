@@ -28,11 +28,6 @@
 #  all the variables of interest for the decision tables
 #  If pyr>1, projections for subsequent years will be appended columnwise
 
-library(here)
-library(RTMB)
-source(here("R","get_ftdd.R"))
-source(here("R","calc_reference_points.R"))
-
 # Load documentation and inputs
 # devtools::document()
 # devtools::load_all()
