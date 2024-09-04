@@ -195,6 +195,9 @@ plradsd <- as.list(sdreport(obj),"Std", report=TRUE)
 # get them out like this: obj$report()$X
 plr <- as.list(obj$report())
 
+
+#check if "outputs" exists, if not create it
+ifelse(!dir.exists(file.path(".","outputs")), dir.create(file.path(".","outputs")), FALSE)
 # Write out MPD results for plotting
 saveRDS(pl, here("outputs","parameter_estimates.rda"))
 saveRDS(plsd, here("outputs","parameter_sds.rda"))
@@ -228,7 +231,8 @@ fitmcmc <- tmbstan(obj, chains=nchain,
                    upper=c(12.,1.,0.,
                            rep(5,length(par$log_ft_pars)),
                            rep(5, length(par$log_rec_devs)),
-                           rep(5, length(par$init_log_rec_devs))))
+                           rep(5, length(par$init_log_rec_devs))),
+                   ontrol = list(adapt_delta = 0.98))
 
 # Extract samples and remove burn in (warmup)
 mc <- extract(fitmcmc, pars=names(obj$par),

@@ -3,3 +3,6 @@
 - Running devs/run-model-v1.R -- we do not need to source any of the files in the R folder, as they will all 
 
 - On R/project_model the library calls should be removed
+
+- for mcmc, there are a lot of divergent transitions, but I think it may get better with more chains. 
+Dan, who uses stan a lot recommends always using 6+ chains.  
