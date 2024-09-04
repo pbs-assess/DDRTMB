@@ -39,7 +39,10 @@
 #  Some are in global space and some come in through the getAll func
 
 # 2. Potential model changes:
-#  - Tidy up the three recruitment parameters - currently set to all be the same as per Paul Starr's request
+#  - Tidy up the three recruitment parameters
+      # - currently set to all be the same as per Paul Starr's request
+      # try map=list(1,2,3,1,1,NA,NA, ...) # Include all parameters. This mirrors all the ro parameters, and switches off rho and kappa. Need to add log_avrec and log_recinit back into parameter list
+
 #  - Need for Jacobian transformations?
 #  - Look at bias correction (see Thorson and Kristensen paper - but not needed for Bayesian)
 #  - Look at alternate settings for Errors in Variables (e.g., weights additive instead of multiplicative)
@@ -195,7 +198,6 @@ plradsd <- as.list(sdreport(obj),"Std", report=TRUE)
 # get them out like this: obj$report()$X
 plr <- as.list(obj$report())
 
-
 #check if "outputs" exists, if not create it
 ifelse(!dir.exists(file.path(".","outputs")), dir.create(file.path(".","outputs")), FALSE)
 # Write out MPD results for plotting
@@ -232,7 +234,7 @@ fitmcmc <- tmbstan(obj, chains=nchain,
                            rep(5,length(par$log_ft_pars)),
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))),
-                   ontrol = list(adapt_delta = 0.98))
+                   control = list(adapt_delta = 0.98))
 
 # Extract samples and remove burn in (warmup)
 mc <- extract(fitmcmc, pars=names(obj$par),
