@@ -3,7 +3,8 @@ Title: Delay difference model in RTMB
 Version: 1.0.9000
 Authors@R: 
     c(person("Forrest", "Robyn", , "Robyn.Forrest@dfo-mpo.gc.ca", role = c("aut", "cre")),
-      person("Wor", "Catarina", , "Catarina.Wor@dfo-mpo.gc.ca", role = c("aut")))     
+      person("Wor", "Catarina", , "Catarina.Wor@dfo-mpo.gc.ca", role = c("aut")),
+      person("Folkes", "Michael", "Michael.Folkes@dfo-mpo.gc.ca", role = c("ctb")))     
 Description: Delay difference model in RTMB.
 License: GPL (>= 3)
 Encoding: UTF-8

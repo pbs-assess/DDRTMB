@@ -1,25 +1,29 @@
+#functions originally written by Michael Folkes for fun. 
 
 
-readMixedcsv <- function(filename){
-  data.tmp <- readLines(filename)
-  
-  data.tmp <- trimws(data.tmp)
-  df <- data.frame(comment.lines = grep("^#", data.tmp))
-  
-  df$data.rows.length <- diff(c(df$comment.lines, length(data.tmp)+1))-1
-  
-  comments <- data.tmp[df$comment.lines]
-  comments <- gsub("^# *", "", comments)
-  
-  data.list <- apply(df, 1, function(index){
-    index <- as.list(index)
-    if(index$data.rows.length>0){
-    read.table(text=data.tmp, skip = index$comment.lines, nrows = index$data.rows.length, sep = ",")
-    }
-  })
-  names(data.list) <- comments
-  data.list
-}#END readMixedcsv
+
+#this still needs to be adapted to double nesting lists
+#readMixedcsv <- function(filename){
+#
+#  data.tmp <- readLines(filename)
+#  
+#  data.tmp <- trimws(data.tmp)
+#  df <- data.frame(comment.lines = grep("^#", data.tmp))
+#  
+#  df$data.rows.length <- diff(c(df$comment.lines, length(data.tmp)+1))-1
+#  
+#  comments <- data.tmp[df$comment.lines]
+#  comments <- gsub("^# *", "", comments)
+#  
+#  data.list <- apply(df, 1, function(index){
+#    index <- as.list(index)
+#    if(index$data.rows.length>0){
+#    read.table(text=data.tmp, skip = index$comment.lines, nrows = index$data.rows.length, sep = ",")
+#    }
+#  })
+#  names(data.list) <- comments
+#  data.list
+#}#END readMixedcsv
 
 
 writeMixedcsv <- function(x, filename="test.csv"){
@@ -57,12 +61,3 @@ writeMixedcsv <- function(x, filename="test.csv"){
 }#END writeMixedcsv
 
 
-
-#use diff merge to see if basecase and testoutput match
-data.list <- readMixedcsv("basecase_in.csv")
-writeMixedcsv(data.list, filename = "testouput.csv")
-
-
-#use diff merge to see if testoutput and testoutput2 match
-data.list <- readMixedcsv("testouput.csv")
-writeMixedcsv(data.list, filename = "testouput2.csv")
