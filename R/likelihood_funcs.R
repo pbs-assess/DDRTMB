@@ -10,6 +10,8 @@
 # ~~~ dnorm (statslib/dnorm.cpp) ~~~
 # dnorm with a constant estimate, constant mean and constant standard deviation
 # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L46
+# NOTE: THIS IS MISSING THE MINUS SIGN OF THE LOG OF THE NORMAL DIST FN with log=T
+# dnorm(x,mu,std,log=T) = -0.5*log(2.*pi)-log(std)-(0.5*(x-mu)^2)/(std*std)
 admb_dnorm_const_const <- function(x,mu,std){
   negloglike <- 0.5*log(2.*pi)+log(std)+(0.5*(x-mu)^2)/(std*std)
   negloglike
@@ -17,6 +19,7 @@ admb_dnorm_const_const <- function(x,mu,std){
 
 # dnorm with a vector of residuals and constant standard deviation
 # See https://github.com/admb-project/admb/blob/dd6ccb3a46d44582455f76d9569b012918dc2338/contrib/statslib/dnorm.cpp#L259
+# So why is this one returning the same as dnorm?
 admb_dnorm_vector_const <- function(resid, std){
   n <- length(resid)
   SS <- sum(resid^2) # in ADMB: norm2(x-mu);
