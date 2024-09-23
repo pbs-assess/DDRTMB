@@ -415,6 +415,7 @@ model <- function(par){
   }
 
   # Now loop through gears and index obs to predict survey obs
+  # Then calculate likelihood component
   for(kk in 1:nit){
     # Vulnerable numbers or biomass
     V <- numeric(length=nitnobs[kk])
@@ -500,8 +501,7 @@ model <- function(par){
     # tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
     # nlvec_dd_it[kk] <- tmp
 
-    # For now, take the negative but look into why admb function returns +ve values
-    nlvec_dd_it[kk] <- -sum(dnorm(zt,zbar,sig_it,log=T))
+    nlvec_dd_it[kk] <- sum(dnorm(zt,zbar,sig_it,log=T))
 
   } #end kk loop
 
@@ -568,6 +568,13 @@ model <- function(par){
   # Calculate delta: process errors (deviations from S-R function)
   # RF: ADD A NOTE WHY BIAS CORRECTION ADDED HERE
   delta <- log(rt)-log(tmp_rt[(sage+1):nyrs])+0.5*tau*tau # RF Checked against rep file
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+  # LIKELIHOOD FOR RECRUITMENT
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+  tmp <- admb_dnorm_vector_const(delta, tau)
+  nlvec_dd_rt <- tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
+  nlvec_dd_rt <- sum(dnorm(log(rt), log(tmp_rt[(sage+1):nyrs])+0.5*tau*tau,tau, log=T))
 
   # End calcStockRecruitment_deldiff
   #|---------------------------------------------------------------------|
