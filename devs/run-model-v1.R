@@ -67,10 +67,10 @@ library(purrr)
 library(RTMB)
 library(tmbstan)
 
-# Once the package is set up correctly, will not have to source individual files
-# eventually move to standard R statistical functions
-# Currently using facsimiles of the needed functions from ADMB statsLib.h
-source(here("R/likelihood_funcs.R"))
+# # Once the package is set up correctly, will not have to source individual files
+# # eventually move to standard R statistical functions
+# # Currently using facsimiles of the needed functions from ADMB statsLib.h
+# source(here("R/likelihood_funcs.R"))
 
 # The model function is in a separate file
 # There is a bunch of stuff in the global space that it needs

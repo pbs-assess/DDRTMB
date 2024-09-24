@@ -91,33 +91,33 @@ model <- function(par){
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~ TESTING VALUES FROM data-raw/iscam.rep and data-raw/iscam.par (2020 PCOD RESULTS) ~
-  # if(test==T){
-  #   # DELETE THIS ONCE MODEL EQUATIONS ARE TESTED
-  #    ro        <- 3376.55
-  #    steepness <- 0.809901
-  #    m         <- 0.306306
-  #    rho       <- 0.058824
-  #    kap       <- 1.470588
-  #    log_avgrec <- log(ro)
-  #    log_recinit <- log(ro)
-  #
-  #    # reverse engineer the logs for ro and m, used in the priors calcs
-  #    theta <- c(log(ro),
-  #               steepness,
-  #               log(m),
-  #               rho,
-  #               kap)
-  #
-  #   # from iscam.par file
-  #   log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
-  #   init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
-  #   log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
-  #
-  #   # Variances fixed for P cod
-  #   varphi    <- sqrt(1.0/kap)
-  #   sig       <- sqrt(rho)*varphi # 0.2 for P cod
-  #   tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
-  #  } # end if test
+  if(test==T){
+    # DELETE THIS ONCE MODEL EQUATIONS ARE TESTED
+     ro        <- 3376.55
+     steepness <- 0.809901
+     m         <- 0.306306
+     rho       <- 0.058824
+     kap       <- 1.470588
+     log_avgrec <- log(ro)
+     log_recinit <- log(ro)
+
+     # reverse engineer the logs for ro and m, used in the priors calcs
+     theta <- c(log(ro),
+                steepness,
+                log(m),
+                rho,
+                kap)
+
+    # from iscam.par file
+    log_ft_pars <- c(-2.29361, -1.81516, -1.52265, -1.75990, -1.99738, -2.38600, -1.96696, -2.56048, -2.04428, -1.65530, -1.44354, -1.56225, -1.68573, -1.89923, -2.53602, -2.00452, -1.99661, -2.16381, -1.87796, -1.72526, -1.78542, -1.97597, -2.04832, -1.38198, -1.55781, -1.92887, -1.98627, -2.11772, -2.25886, -2.71592, -1.82257, -1.02055, -1.41985, -1.95312, -1.88346, -1.08038, -1.18403, -1.29623, -2.10493, -2.29368, -2.19147, -2.11395, -2.28967, -2.53718, -2.71805, -3.39986, -3.27054, -2.89189, -2.72193, -2.52443, -2.59201, -3.34633, -3.53683, -2.94841, -2.34753, -2.56502, -2.88457, -2.87729, -2.74026, -2.64641, -3.14998, -3.54423, -3.96561, -3.51804, -3.65543)
+    init_log_rec_devs <- c(-0.297834, -0.195054, -0.126748, -0.0955628, -0.0934589, -0.108359, -0.130301, 1.04734)
+    log_rec_devs <- c(1.05722, 1.10583, -0.139089, -0.165389, -0.298059, -0.336892, -0.173463, 2.84111, 0.284625, 0.163418, -0.0760200, -0.352092, -0.626335, -0.538303, -0.320139, -0.0816409, 2.69634, 0.0765257, 0.524992, 0.510128, 0.356662, 0.953328, 0.574398, 0.840802, 0.173325, 0.402038, 0.278233, -0.103700, 0.166054, 0.213154, 1.49743, 2.13800, -0.221516, -0.0713425, 0.874159, 1.27436, -0.245994, -0.775609, -0.898877, -0.701367, -0.142345, -0.829222, -0.954500, -1.11217, -1.11537, 0.209017, 0.409310, -0.409217, -0.845547, -1.24699, -1.39305, -1.25216, -0.294358, 0.668812, 0.131646, -0.489765, -0.691204, -0.667682, -0.629868, -0.792061, -0.796493, -0.646523, 0.347852, -0.110935, -0.232896)
+
+    # Variances fixed for P cod
+    varphi    <- sqrt(1.0/kap)
+    sig       <- sqrt(rho)*varphi # 0.2 for P cod
+    tau       <- sqrt(1.0-rho)*varphi # 0.8 for P. cod
+   } # end if test
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Get the Goodyear Compensation Ratio
 
@@ -242,6 +242,23 @@ model <- function(par){
       tmp_nAge[j] <- exp(log_recinit + init_log_rec_devs[j-1]) * exp(-Mt[1]*(j-1))
     }
     tmp_nAge[j] <- (exp(log_recinit + init_log_rec_devs[j-1]) * exp(-Mt[1]*(j-1)))/(1 - exp(-Mt[1])) # plus group
+
+    ## TEST (see iscam calcNumbersAtAge function) - make sure tr is the same as log(tmp_nAge)
+    ## DELETE THIS IN LATER VERSIONS
+    ## A little tricky  because ADMB indexes actual ages or years rather than indexes
+    ## **YES, calculations are identical**
+    # tr <- vector(length=length(sage:nage)) # iscam ASM's version of log(tmp_n_Age)
+    # lx <- vector(length=length(sage:nage)) # unfished survivorship at age
+    # lx[1] <- 1
+    # for(j in 2:length(sage:nage)){
+    #   lx[j] = lx[j-1] * exp(-Mt[1])
+    # }
+    # lx[j] <- lx[j]/(1-exp(-Mt[1]))
+    #
+    # tr[1]  <- log_avgrec+log_rec_devs[1]
+    # tr[2:length(tr)] <- log_recinit +init_log_rec_devs
+    # tr[2:length(tr)] <- tr[2:length(tr)]+log(lx[2:length(tr)])
+    # exp(tr)
 
     # Add up the numbers at age to get numbers in year 1
     # RF confirmed numbers, biomass and mean wt calculations with rep file
@@ -404,13 +421,19 @@ model <- function(par){
     V <- numeric(length=nitnobs[kk])
     V[1:nitnobs[kk]] <- 0.
 
-     for(ii in 1:nitnobs[kk]){
+    # not sure why we need these
+    #nz <- 0 # counter for number of observations
+    #iz <- 1  # index for first year of data for prospective analysis
+
+    for(ii in 1:nitnobs[kk]){
       iyear    <- indices[[kk]][ii,1] # actual year (not used)
       i <- as.integer(year_lookup[which(year_lookup[,1]==iyear),2]) # year index - need this to match biomass to survey obs
       k    <- indices[[kk]][ii,3] # gear
       di   <- indices[[kk]][ii,5] # timing
 
-      # Checked against rep file
+      #nz <- nz+1  # counter for number of observations
+
+      # TODO: check these correctly matched up with years - yes, checked against rep file
       z = ft[k,i]+Mt[i]
       # Adjust numbers and biomass for survey timing. If di=0, no adjustment
       Np = numbers[i] * exp( -z * di)
@@ -472,6 +495,11 @@ model <- function(par){
     it_wt <- dat$indices[[kk]][,4]/it_wt_mean #devs/iscam.tpl L466
     # vector for weights for each obs in survey k
     sig_it <- sig/it_wt
+
+    # TO DELETE: Old version using admb statslib function
+    # NOTE: this gives positive results! dnorm below returns a negative
+    # tmp <- admb_dnorm_vector_vector(epsilon[[kk]], sig_it)
+    # nlvec_dd_it[kk] <- tmp
 
     nlvec_dd_it[kk] <- sum(dnorm(zt,zbar,sig_it,log=T))
 
@@ -607,6 +635,35 @@ model <- function(par){
   # End calcAnnualMeanWeight_deldiff
   #|---------------------------------------------------------------------|
 
+  #|---------------------------------------------------------------------|
+  # calcObjectiveFunction();
+
+  # !!Distributions that match those in ADMB are
+  #   provided in the file R\likelihood_funcs.R!! (sourced above)
+
+  #==============================================================================================
+  # ~Data and recruitment~ (nlvec_dd)
+  #==============================================================================================
+
+  ## ~~ September 20 2024:
+  ## ~~ MOVED LIKELIHOOD EQNS INTO RELEVANT MAIN MODEL SECTIONS ~~
+  # Likelihood for catch
+  # TO DELETE: Old version using admb statslib function
+  #tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
+
+  # Moved likelihood for survey indices. Too long to leave here.
+
+  # Likelihood for recruitment
+  # tmp <- admb_dnorm_vector_const(delta, tau)
+  # nlvec_dd_rt <- tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
+
+  # Likelihood for mean weight
+  # We are entering the likelihood in log space here - do we need a Jacobian transformation?
+  # for(kk in 1:nmeanwt){
+  #   tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
+  #   nlvec_dd_wt <- tmp # 3.407 Yes. Matches nlvec_dd in rep file.
+  # }
+
   #==============================================================================================
   # ~PRIORS~ (priors)
   #==============================================================================================
@@ -618,26 +675,31 @@ model <- function(par){
     if(theta_control$phz[i]>=1){
       # Uniform
       if(ptype==0){
+        #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
         # For testing use the same as iscam. Why is the uniform set up like this?
         ptmp <- -log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
       }
       # Normal
       if(ptype==1){
+        #ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
         ptmp <- dnorm(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
       }
       # Lognormal
       if(ptype==2){
+        #ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
         ptmp <- dlnorm(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
       }
       # Beta
       if(ptype==3){
         # Constrain between 0.2 and 1
         trans <- (theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i])
+        #ptmp <- admb_dbeta_const_const(trans, theta_control$p1[i],theta_control$p2[i])
         ptmp <- dbeta(trans, theta_control$p1[i],theta_control$p2[i], log=T)
       }
       # Gamma
       if(ptype==4){
-         ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
+        #ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
+        ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
        }
       priors[i] <- ptmp
     } # end if
@@ -646,6 +708,8 @@ model <- function(par){
   # Catchability coefficients q
   for(kk in 1:nit){
     if(q_control$priortype[kk] == 1){
+      #qtmp <- admb_dnorm_const_const(log(q[kk]), q_control$priormeanlog[kk], q_control$priorsd[kk])
+      #qvec[kk] <- qtmp
       qvec[kk] <- dnorm(log(q[kk]), q_control$priormeanlog[kk], q_control$priorsd[kk], log=T)
     }
   }
@@ -667,11 +731,14 @@ model <- function(par){
   # Fishing mortality
   nft <- length(log_ft_pars)
   mean_log_ft_pars <- sum(log_ft_pars)/nft # getting the mean manually prevents lost class attribute error
+  #pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
   pvec[1] <- dnorm(mean_log_ft_pars,log(mean_f),sig_f, log=T) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
   bigsd <- 2. # possibly put this in the data
 
+  # pvec[2] <- admb_dnorm_vector_const(log_rec_devs, bigsd)
+  # pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
   pvec[2] <- sum(dnorm(log_rec_devs,0, bigsd, log=T))
   pvec[3] <- sum(dnorm(init_log_rec_devs,0, bigsd, log=T))
 
@@ -685,6 +752,14 @@ model <- function(par){
   pvec[5] <- -1.e5*meanidev*meanidev
 
   # joint likelihood, priors and penalties
+  # objfun <- nlvec_dd_ct +
+  #   sum(nlvec_dd_it) +
+  #   nlvec_dd_rt +
+  #   nlvec_dd_wt +
+  #   sum(priors) +
+  #   sum(qvec) +
+  #   sum(pvec)
+
   objfun <- -nlvec_dd_ct -
     sum(nlvec_dd_it) -
     nlvec_dd_rt -
