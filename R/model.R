@@ -708,8 +708,9 @@ model <- function(par){
   # Catchability coefficients q
   for(kk in 1:nit){
     if(q_control$priortype[kk] == 1){
-      qtmp <- admb_dnorm_const_const(log(q[kk]), q_control$priormeanlog[kk], q_control$priorsd[kk])
-      qvec[kk] <- qtmp
+      #qtmp <- admb_dnorm_const_const(log(q[kk]), q_control$priormeanlog[kk], q_control$priorsd[kk])
+      #qvec[kk] <- qtmp
+      qvec[kk] <- dnorm(log(q[kk]), q_control$priormeanlog[kk], q_control$priorsd[kk], log=T)
     }
   }
 
