@@ -677,7 +677,7 @@ model <- function(par){
       if(ptype==0){
         #ptmp <- log(1./(theta_control$p2[i]-theta_control$p1[i])) # Note, iscam used the bounds not p1 and p2
         # For testing use the same as iscam. Why is the uniform set up like this?
-        ptmp <- log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
+        ptmp <- -log(1./(theta_control$ub[i]-theta_control$lb[i])) # Note, iscam used the bounds not p1 and p2
       }
       # Normal
       if(ptype==1){
@@ -698,7 +698,7 @@ model <- function(par){
       }
       # Gamma
       if(ptype==4){
-        ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
+        #ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
         ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
        }
       priors[i] <- ptmp
@@ -734,7 +734,6 @@ model <- function(par){
   #pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
   pvec[1] <- dnorm(mean_log_ft_pars,log(mean_f),sig_f, log=T) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
 
-
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
   bigsd <- 2. # possibly put this in the data
 
@@ -746,11 +745,11 @@ model <- function(par){
   #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
   ndev <- length(log_rec_devs) # getting the mean manually prevents lost class attribute error
   meandev <- sum(log_rec_devs)/ndev # this was s in iscam
-  pvec[4] <- 1.e5*meandev*meandev #mean(log_rec_devs)*mean(log_rec_devs)
+  pvec[4] <- -1.e5*meandev*meandev #mean(log_rec_devs)*mean(log_rec_devs)
 
   nidev <- length(init_log_rec_devs) # getting the mean manually prevents lost class attribute error
   meanidev <- sum(init_log_rec_devs)/nidev # this was s in iscam
-  pvec[5] <- 1.e5*meanidev*meanidev
+  pvec[5] <- -1.e5*meanidev*meanidev
 
   # joint likelihood, priors and penalties
   # objfun <- nlvec_dd_ct +
