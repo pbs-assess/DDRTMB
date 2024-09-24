@@ -572,9 +572,7 @@ model <- function(par){
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
   # LIKELIHOOD FOR RECRUITMENT
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
-  tmp <- admb_dnorm_vector_const(delta, tau)
-  nlvec_dd_rt <- tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
-  nlvec_dd_rt <- sum(dnorm(log(rt), log(tmp_rt[(sage+1):nyrs])+0.5*tau*tau,tau, log=T))
+  nlvec_dd_rt <- sum(dnorm(log(rt), log(tmp_rt[(sage+1):nyrs])-0.5*tau*tau,tau, log=T))
 
   # End calcStockRecruitment_deldiff
   #|---------------------------------------------------------------------|
@@ -627,6 +625,11 @@ model <- function(par){
       #  residual
       epsilon_mean_weight[[kk]][ii] <-  log(annual_mean_weight[[kk]][ii]) - log(obs_annual_mean_weight[[kk]][ii])
     }	# end ii loop
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+    # LIKELIHOOD FOR ANNUAL MEAN WEIGHT
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+    nlvec_dd_wt <- sum(dnorm(log(annual_mean_weight[[kk]]),log(obs_annual_mean_weight[[kk]]), sig_w, log=T)) # 3.407 Yes. Matches nlvec_dd in rep file.
   } # end kk loop
 
   # End calcAnnualMeanWeight_deldiff
@@ -648,16 +651,18 @@ model <- function(par){
   # TO DELETE: Old version using admb statslib function
   #tmp <- admb_dnorm_vector_const(eta, sig_c) # Yes. -134.716 Matches nlvec_dd in rep file.
 
+  # Moved likelihood for survey indices. Too long to leave here.
+
   # Likelihood for recruitment
-  tmp <- admb_dnorm_vector_const(delta, tau)
-  nlvec_dd_rt <- tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
+  # tmp <- admb_dnorm_vector_const(delta, tau)
+  # nlvec_dd_rt <- tmp # 82.9127 Yes. Matches nlvec_dd in rep file.
 
   # Likelihood for mean weight
   # We are entering the likelihood in log space here - do we need a Jacobian transformation?
-  for(kk in 1:nmeanwt){
-    tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
-    nlvec_dd_wt <- tmp # 3.407 Yes. Matches nlvec_dd in rep file.
-  }
+  # for(kk in 1:nmeanwt){
+  #   tmp <- admb_dnorm_vector_const(epsilon_mean_weight[[kk]], sig_w)
+  #   nlvec_dd_wt <- tmp # 3.407 Yes. Matches nlvec_dd in rep file.
+  # }
 
   #==============================================================================================
   # ~PRIORS~ (priors)
