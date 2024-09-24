@@ -681,22 +681,26 @@ model <- function(par){
       }
       # Normal
       if(ptype==1){
-        ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+        #ptmp <- admb_dnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+        ptmp <- dnorm(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
       }
       # Lognormal
       if(ptype==2){
-        ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+        #ptmp <- admb_dlnorm_const_const(theta[i],theta_control$p1[i],theta_control$p2[i])
+        ptmp <- dlnorm(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
       }
       # Beta
       if(ptype==3){
         # Constrain between 0.2 and 1
         trans <- (theta[i]-theta_control$lb[i])/(theta_control$ub[i]-theta_control$lb[i])
-        ptmp <- admb_dbeta_const_const(trans, theta_control$p1[i],theta_control$p2[i])
+        #ptmp <- admb_dbeta_const_const(trans, theta_control$p1[i],theta_control$p2[i])
+        ptmp <- dbeta(trans, theta_control$p1[i],theta_control$p2[i], log=T)
       }
       # Gamma
       if(ptype==4){
         ptmp <- admb_dgamma_const_const(theta[i],theta_control$p1[i],theta_control$p2[i]);
-      }
+        ptmp <- dgamma(theta[i],theta_control$p1[i],theta_control$p2[i], log=T)
+       }
       priors[i] <- ptmp
     } # end if
   }# end i
