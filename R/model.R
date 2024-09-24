@@ -731,13 +731,17 @@ model <- function(par){
   # Fishing mortality
   nft <- length(log_ft_pars)
   mean_log_ft_pars <- sum(log_ft_pars)/nft # getting the mean manually prevents lost class attribute error
-  pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  #pvec[1] <- admb_dnorm_const_const(mean_log_ft_pars,log(mean_f),sig_f) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+  pvec[1] <- dnorm(mean_log_ft_pars,log(mean_f),sig_f, log=T) # Note, there are no phases in rtmb so use last phase settings - might mess up estimation
+
 
   # Penalty for log_rec_devs and init_log_rec_devs (large variance here)
   bigsd <- 2. # possibly put this in the data
 
-  pvec[2] <- admb_dnorm_vector_const(log_rec_devs, bigsd)
-  pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
+  # pvec[2] <- admb_dnorm_vector_const(log_rec_devs, bigsd)
+  # pvec[3] <- admb_dnorm_vector_const(init_log_rec_devs, bigsd)
+  pvec[2] <- sum(dnorm(log_rec_devs,0, bigsd, log=T))
+  pvec[3] <- sum(dnorm(init_log_rec_devs,0, bigsd, log=T))
 
   #constrain so that sum of log_rec_dev and sum of init_log_rec_dev = 0
   ndev <- length(log_rec_devs) # getting the mean manually prevents lost class attribute error
@@ -749,12 +753,20 @@ model <- function(par){
   pvec[5] <- 1.e5*meanidev*meanidev
 
   # joint likelihood, priors and penalties
-  objfun <- nlvec_dd_ct +
-    sum(nlvec_dd_it) +
-    nlvec_dd_rt +
-    nlvec_dd_wt +
-    sum(priors) +
-    sum(qvec) +
+  # objfun <- nlvec_dd_ct +
+  #   sum(nlvec_dd_it) +
+  #   nlvec_dd_rt +
+  #   nlvec_dd_wt +
+  #   sum(priors) +
+  #   sum(qvec) +
+  #   sum(pvec)
+
+  objfun <- -nlvec_dd_ct -
+    sum(nlvec_dd_it) -
+    nlvec_dd_rt -
+    nlvec_dd_wt -
+    sum(priors) -
+    sum(qvec) -
     sum(pvec)
 
   # if(test==T){
