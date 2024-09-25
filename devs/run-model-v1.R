@@ -74,12 +74,12 @@ library(tmbstan)
 
 # The model function is in a separate file
 # There is a bunch of stuff in the global space that it needs
-source(here("R/model.R"))
-source(here("R/project_model.R"))
-source(here("R/run_projections.R"))
-source(here("R/get_posterior_derived_variables.R"))
-source(here("R/make_decision_table.R"))
-source(here("R/make_decision_table_iscam.R"))
+# source(here("R/model.R"))
+# source(here("R/project_model.R"))
+# source(here("R/run_projections.R"))
+# source(here("R/get_posterior_derived_variables.R"))
+# source(here("R/make_decision_table.R"))
+# source(here("R/make_decision_table_iscam.R"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
