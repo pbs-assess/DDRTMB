@@ -2701,7 +2701,7 @@ FUNCTION calcSurveyObservations
 
 		// | survey residuals
 		epsilon(kk).sub(iz,nz) = zt - zbar;
-		 it_hat(kk).sub(iz,nz) = q(kk) * t1(iz,nz);
+		it_hat(kk).sub(iz,nz) = q(kk) * t1(iz,nz);
 
 		// | SPECIAL CASE: penalized random walk in q.
 		if( q_prior(kk)==2 )

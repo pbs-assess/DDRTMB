@@ -44,7 +44,6 @@
 #posteriors <- readRDS(here("outputs","MCMC_outputs_bysample.rda"))[[1]]
 #tac <- 0
 ########################################################################
-
 project_model <- function(posteriors,
                           tac){
 
