@@ -84,7 +84,7 @@ source(here("R/make_decision_table_iscam.R"))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  ~ SETTINGS ~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nsample <- 20000 # number of posterior samples for the mcmc
+nsample <- 2000 # number of posterior samples for the mcmc
 nchain <- 1 # number of chains for the mcmc (outputs only look at one chain for now)
 proj_years <- 1 # How many projection years for decision table
 
@@ -234,7 +234,7 @@ fitmcmc <- tmbstan(obj, chains=nchain,
                            rep(5,length(par$log_ft_pars)),
                            rep(5, length(par$log_rec_devs)),
                            rep(5, length(par$init_log_rec_devs))),
-                   control = list(adapt_delta = 0.98))
+                   control = list(adapt_delta = 0.8, max_treedepth=12))
 
 # Extract samples and remove burn in (warmup)
 mc <- extract(fitmcmc, pars=names(obj$par),
@@ -348,3 +348,6 @@ source(here("devs","plot_rtmb_results_mcmc.r"))
 # Plot results and comparisons with iscam
 # Delete this for package
 source(here("devs","plot_iscam_compare_mcmc.r"))
+
+library(shinystan)
+launch_shinystan(fitmcmc)
